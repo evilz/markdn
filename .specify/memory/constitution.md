@@ -1,50 +1,178 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+SYNC IMPACT REPORT
+==================
+Version: N/A → 1.0.0 (Initial constitution for Markdn .NET project)
+Ratified: 2025-11-08
+Last Amended: 2025-11-08
+
+Changes:
+- ADDED: Initial constitution with five core .NET development principles
+- ADDED: Principle I - Test-First Development (TDD)
+- ADDED: Principle II - Production-Ready by Default
+- ADDED: Principle III - Clean Code Architecture
+- ADDED: Principle IV - Async-First Programming
+- ADDED: Principle V - Performance & Cloud-Native
+- ADDED: .NET Technology Standards section
+- ADDED: Development Workflow & Quality Gates section
+- ADDED: Governance rules
+
+Templates Status:
+✅ plan-template.md - Reviewed, aligns with constitution principles
+✅ spec-template.md - Reviewed, aligns with constitution principles
+✅ tasks-template.md - Reviewed, aligns with test-first approach
+
+Follow-up Actions:
+- None (initial version, all placeholders resolved)
+
+Commit Message:
+docs: establish Markdn constitution v1.0.0 (.NET development principles)
+-->
+
+# Markdn Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Test-First Development (TDD) — NON-NEGOTIABLE
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+**Tests MUST be written before implementation.** All new features and changes to public APIs require tests written first, approved by stakeholders, confirmed to fail, and only then implemented following the Red-Green-Refactor cycle.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+**Rationale**: TDD ensures code is testable by design, reduces defects, provides living documentation, and enforces clear requirements before implementation begins. This is foundational to delivering reliable, maintainable .NET applications.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+**Requirements**:
+- Tests written and reviewed before any implementation code
+- Tests MUST fail initially (proving they test the right thing)
+- Test coverage required for all public APIs and critical paths
+- Follow AAA pattern (Arrange-Act-Assert)
+- One behavior per test; no branching logic in tests
+- Tests MUST be able to run in any order or in parallel
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### II. Production-Ready by Default
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+**All code MUST be secure, resilient, and observable from day one.** Security is not optional; applications MUST validate inputs, protect sensitive data, use least-privilege principles, and never expose secrets. Resilient I/O with timeouts and retry logic is required. Structured logging with appropriate scopes provides operational visibility.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+**Rationale**: Production incidents are expensive and damage user trust. Building quality in from the start is far more efficient than retrofitting security and reliability later.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+**Requirements**:
+- **Security**: Input validation, no hardcoded secrets, least privilege, authentication/authorization where applicable
+- **Resilience**: Timeouts on I/O operations, retry with exponential backoff for transient failures
+- **Observability**: Structured logging (ILogger), meaningful log context, appropriate log levels, no log spam
+- **Error Handling**: Precise exception types, no silent catches, preserve context when rethrowing
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### III. Clean Code Architecture
+
+**Follow SOLID principles and maintain minimal exposure.** Code MUST use the least-exposure rule: prefer `private` over `internal` over `protected` over `public`. Do NOT add interfaces or abstractions unless needed for external dependencies or testing. Do NOT wrap existing abstractions unnecessarily. Reuse existing methods extensively before creating new ones.
+
+**Rationale**: Over-engineering leads to maintenance burden. Simple, well-structured code with appropriate encapsulation is easier to understand, test, and evolve.
+
+**Requirements**:
+- Apply SOLID principles consistently
+- Default to `private`; only widen visibility when necessary
+- No unused methods, parameters, or abstractions
+- Comments explain **why**, not **what**
+- Consistent naming conventions within the project
+- Never edit auto-generated code (files with `// <auto-generated>` or `*.g.cs`)
+- Move user-facing strings to resource files for localization
+
+### IV. Async-First Programming
+
+**Asynchronous code is the default for I/O-bound operations.** All async methods MUST end with `Async` suffix. Always await tasks; no fire-and-forget. Accept and propagate `CancellationToken` through the call chain. Use `ConfigureAwait(false)` in library code. Return non-zero exit codes when operations are cancelled.
+
+**Rationale**: Async programming enables scalable, responsive applications. Proper async patterns prevent deadlocks, resource leaks, and unhandled exceptions.
+
+**Requirements**:
+- All async method names end with `Async`
+- Always `await` tasks; no fire-and-forget patterns
+- Accept `CancellationToken` parameters and pass through entire call chain
+- Use `ThrowIfCancellationRequested()` in loops
+- Make delays cancellable: `Task.Delay(ms, cancellationToken)`
+- Implement timeouts via `CancellationTokenSource.CancelAfter` or linked tokens
+- Use `ConfigureAwait(false)` in helper/library code
+- Stream large payloads; use `ResponseHeadersRead` and `ReadAsStreamAsync`
+- Prefer `await using` for async disposable resources
+- Return `Task<T>` by default; use `ValueTask<T>` only when measured to help
+
+### V. Performance & Cloud-Native
+
+**Optimize intentionally; design for cloud deployment.** Start simple, measure performance, then optimize hot paths. Stream large data; minimize allocations using `Span<T>`, `Memory<T>`, and object pooling where it matters. Applications MUST be cross-platform compatible and avoid OS-specific APIs without guards.
+
+**Rationale**: Premature optimization wastes time. Measured, targeted optimization delivers real performance gains. Cloud-native practices ensure applications can scale and be deployed anywhere.
+
+**Requirements**:
+- Simple code first; profile before optimizing
+- Stream large payloads to avoid memory pressure
+- Use `Span<T>`, `Memory<T>`, and pooling for hot paths when measured
+- Async I/O end-to-end; no sync-over-async anti-patterns
+- Cross-platform by default; guard OS-specific code explicitly
+- Configuration from environment variables (12-factor app principles)
+- Support health/readiness checks for containerized deployments
+- Expose metrics and traces (OpenTelemetry where appropriate)
+
+## .NET Technology Standards
+
+**Target Framework & Language Version**:
+- Respect project TFM (Target Framework Moniker) and C# version
+- Do NOT change TFM, SDK version, or `<LangVersion>` unless explicitly requested
+- Use modern C# features appropriate to the TFM (file-scoped namespaces, raw strings, switch expressions, etc.)
+- Check `global.json` for SDK requirements
+- Enable nullable reference types (`<Nullable>enable</Nullable>`) for new projects
+
+**Build & Testing**:
+- Use `dotnet build` and `dotnet publish` for .NET 5+ projects
+- Use framework-native test runners: `dotnet test` with xUnit, NUnit, or MSTest
+- Run tests after every change to verify correctness
+- Check for custom build targets in `Directory.Build.targets` or build scripts
+- Use `dotnet-coverage` for code coverage analysis
+
+**Dependencies & Package Management**:
+- Prefer centralized package management via `Directory.Packages.props`
+- Keep dependencies up-to-date and audit for security vulnerabilities
+- Multi-target libraries only when necessary
+
+## Development Workflow & Quality Gates
+
+**Constitution Compliance**:
+- All pull requests MUST demonstrate adherence to these principles
+- Code reviews MUST verify test-first approach, security practices, and architectural alignment
+- Any deviation from principles MUST be explicitly justified and documented
+
+**Test Workflow**:
+- Write tests first for all new features and public API changes
+- Ensure tests fail before implementation (Red)
+- Implement minimal code to make tests pass (Green)
+- Refactor while keeping tests green (Refactor)
+- Run full test suite before committing
+- Work on one test at a time until it passes
+
+**Code Quality**:
+- Follow existing project conventions before general .NET conventions
+- Maintain consistent naming, formatting, and project structure
+- When fixing one method, check sibling methods for the same issue
+- Reuse existing methods extensively before writing new ones
+- Add comments when introducing public methods
+
+**Complexity Justification**:
+- Any complexity beyond straightforward implementations MUST be justified
+- Document rationale for architectural decisions
+- Prefer simple solutions that meet requirements over clever abstractions
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+**Authority**: This constitution supersedes all other development practices, guidelines, and conventions. In case of conflict, constitution principles take precedence.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Amendments**: Changes to this constitution require:
+1. Documented proposal with clear rationale
+2. Review and approval from project stakeholders
+3. Version increment following semantic versioning:
+   - **MAJOR**: Backward-incompatible changes (principle removal/redefinition)
+   - **MINOR**: New principles added or material expansions
+   - **PATCH**: Clarifications, wording fixes, non-semantic refinements
+4. Update to ratification metadata and Sync Impact Report
+5. Propagation of changes to dependent templates and documentation
+
+**Compliance Review**:
+- All development artifacts (specs, plans, tasks, code) MUST align with these principles
+- Use `.specify/templates/` artifacts for consistent application of principles
+- The `/speckit.analyze` command verifies constitutional compliance (critical violations block progress)
+- Refer to `.github/prompts/` for agent-specific guidance that implements these principles
+
+**Version**: 1.0.0 | **Ratified**: 2025-11-08 | **Last Amended**: 2025-11-08
