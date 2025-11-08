@@ -48,32 +48,32 @@ All paths are relative to repository root:
 
 ### Configuration & Options
 
-- [ ] T013 Create `MarkdnOptions.cs` in `src/Markdn.Api/Configuration/` with ContentDirectory, MaxFileSizeBytes, DefaultPageSize, EnableFileWatching properties
-- [ ] T014 Add configuration binding in `src/Markdn.Api/Program.cs` for MarkdnOptions from appsettings.json
-- [ ] T015 Create `appsettings.json` and `appsettings.Development.json` in `src/Markdn.Api/` with Markdn configuration section
+- [X] T013 Create `MarkdnOptions.cs` in `src/Markdn.Api/Configuration/` with ContentDirectory, MaxFileSizeBytes, DefaultPageSize, EnableFileWatching properties
+- [X] T014 Add configuration binding in `src/Markdn.Api/Program.cs` for MarkdnOptions from appsettings.json
+- [X] T015 Create `appsettings.json` and `appsettings.Development.json` in `src/Markdn.Api/` with Markdn configuration section
 
 ### Core Models & DTOs
 
-- [ ] T016 [P] Create `ContentItem.cs` domain entity in `src/Markdn.Api/Models/` with 20 properties per data-model.md
-- [ ] T017 [P] Create `FrontMatter.cs` entity in `src/Markdn.Api/Models/` with flexible schema support
-- [ ] T018 [P] Create `ContentCollection.cs` entity in `src/Markdn.Api/Models/` with pagination properties
-- [ ] T019 [P] Create `ContentItemResponse.cs` DTO in `src/Markdn.Api/Models/` per OpenAPI schema
-- [ ] T020 [P] Create `ContentListResponse.cs` DTO in `src/Markdn.Api/Models/` per OpenAPI schema
-- [ ] T021 [P] Create `ContentItemSummary.cs` DTO in `src/Markdn.Api/Models/` per OpenAPI schema
-- [ ] T022 [P] Create `PaginationMetadata.cs` DTO in `src/Markdn.Api/Models/` per OpenAPI schema
-- [ ] T023 [P] Create `ErrorResponse.cs` DTO in `src/Markdn.Api/Models/` per OpenAPI schema
-- [ ] T024 [P] Create `ContentQueryRequest.cs` DTO in `src/Markdn.Api/Models/` with filtering parameters
+- [X] T016 [P] Create `ContentItem.cs` domain entity in `src/Markdn.Api/Models/` with 20 properties per data-model.md
+- [X] T017 [P] Create `FrontMatter.cs` entity in `src/Markdn.Api/Models/` with flexible schema support
+- [X] T018 [P] Create `ContentCollection.cs` entity in `src/Markdn.Api/Models/` with pagination properties
+- [X] T019 [P] Create `ContentItemResponse.cs` DTO in `src/Markdn.Api/Models/` per OpenAPI schema
+- [X] T020 [P] Create `ContentListResponse.cs` DTO in `src/Markdn.Api/Models/` per OpenAPI schema
+- [X] T021 [P] Create `ContentItemSummary.cs` DTO in `src/Markdn.Api/Models/` per OpenAPI schema
+- [X] T022 [P] Create `PaginationMetadata.cs` DTO in `src/Markdn.Api/Models/` per OpenAPI schema
+- [X] T023 [P] Create `ErrorResponse.cs` DTO in `src/Markdn.Api/Models/` per OpenAPI schema
+- [X] T024 [P] Create `ContentQueryRequest.cs` DTO in `src/Markdn.Api/Models/` with filtering parameters
 
 ### Global Error Handling & Middleware
 
-- [ ] T025 Create `GlobalExceptionMiddleware.cs` in `src/Markdn.Api/Middleware/` for unhandled exceptions with structured logging
-- [ ] T026 Register GlobalExceptionMiddleware in `src/Markdn.Api/Program.cs` pipeline
-- [ ] T027 Configure Serilog or Microsoft.Extensions.Logging in `src/Markdn.Api/Program.cs` with structured output
+- [X] T025 Create `GlobalExceptionMiddleware.cs` in `src/Markdn.Api/Middleware/` for unhandled exceptions with structured logging
+- [X] T026 Register GlobalExceptionMiddleware in `src/Markdn.Api/Program.cs` pipeline
+- [X] T027 Configure Serilog or Microsoft.Extensions.Logging in `src/Markdn.Api/Program.cs` with structured output
 
 ### Health Check Infrastructure
 
-- [ ] T028 Create `HealthCheckService.cs` in `src/Markdn.Api/Services/` implementing content directory accessibility check
-- [ ] T029 Register health checks in `src/Markdn.Api/Program.cs` with dependency on HealthCheckService
+- [X] T028 Create `HealthCheckService.cs` in `src/Markdn.Api/Services/` implementing content directory accessibility check
+- [X] T029 Register health checks in `src/Markdn.Api/Program.cs` with dependency on HealthCheckService
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
