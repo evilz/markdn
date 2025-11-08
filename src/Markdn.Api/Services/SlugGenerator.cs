@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 namespace Markdn.Api.Services;
 
 /// <summary>
-/// Service for generating slugs from filenames and front-matter
+/// Service for generating URL-safe slugs from filenames and front-matter with precedence logic
 /// </summary>
 public partial class SlugGenerator
 {
@@ -13,6 +13,12 @@ public partial class SlugGenerator
     [GeneratedRegex(@"[^a-z0-9-]+")]
     private static partial Regex NonSlugCharsPattern();
 
+    /// <summary>
+    /// Generates a URL-safe slug with precedence: front-matter slug > filename
+    /// </summary>
+    /// <param name="frontMatterSlug">Optional slug from front-matter</param>
+    /// <param name="fileName">Filename to derive slug from if front-matter slug not provided</param>
+    /// <returns>Sanitized URL-safe slug</returns>
     public string GenerateSlug(string? frontMatterSlug, string fileName)
     {
         // Priority 1: Use front-matter slug if available

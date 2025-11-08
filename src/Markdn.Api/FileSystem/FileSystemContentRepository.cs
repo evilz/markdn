@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 namespace Markdn.Api.FileSystem;
 
 /// <summary>
-/// File system-based implementation of content repository
+/// File system-based implementation of content repository with security validation
 /// </summary>
 public class FileSystemContentRepository : IContentRepository
 {
@@ -15,6 +15,13 @@ public class FileSystemContentRepository : IContentRepository
     private readonly MarkdownParser _markdownParser;
     private readonly SlugGenerator _slugGenerator;
 
+    /// <summary>
+    /// Initializes a new instance of the FileSystemContentRepository
+    /// </summary>
+    /// <param name="options">Configuration options</param>
+    /// <param name="frontMatterParser">Front-matter parser service</param>
+    /// <param name="markdownParser">Markdown parser service</param>
+    /// <param name="slugGenerator">Slug generator service</param>
     public FileSystemContentRepository(
         IOptions<MarkdnOptions> options,
         FrontMatterParser frontMatterParser,
@@ -27,9 +34,14 @@ public class FileSystemContentRepository : IContentRepository
         _slugGenerator = slugGenerator;
     }
 
+    /// <summary>
+    /// Retrieves all content items from the file system with security validation
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Collection of all valid content items</returns>
     public async Task<ContentCollection> GetAllAsync(CancellationToken cancellationToken)
     {
-        var contentDirectory = Path.GetFullPath(_options.ContentDirectory);
+        var contentDirectory = GetSafeContentDirectory();
         
         if (!Directory.Exists(contentDirectory))
         {
@@ -47,6 +59,12 @@ public class FileSystemContentRepository : IContentRepository
 
         foreach (var filePath in markdownFiles)
         {
+            // Security: Verify file is within content directory
+            if (!IsPathSafe(filePath, contentDirectory))
+            {
+                continue;
+            }
+
             try
             {
                 var fileInfo = new FileInfo(filePath);
@@ -77,8 +95,20 @@ public class FileSystemContentRepository : IContentRepository
         };
     }
 
+    /// <summary>
+    /// Retrieves a single content item by slug with input validation
+    /// </summary>
+    /// <param name="slug">Unique slug identifier</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Content item if found and valid, null otherwise</returns>
     public async Task<ContentItem?> GetBySlugAsync(string slug, CancellationToken cancellationToken)
     {
+        // Security: Validate slug input
+        if (!IsSlugValid(slug))
+        {
+            return null;
+        }
+
         var contentDirectory = Path.GetFullPath(_options.ContentDirectory);
         
         if (!Directory.Exists(contentDirectory))
@@ -218,4 +248,60 @@ public class FileSystemContentRepository : IContentRepository
 
         return string.Join('\n', lines[(endIndex + 1)..]).TrimStart();
     }
+
+    /// <summary>
+    /// Gets the content directory with full path resolution and validation
+    /// </summary>
+    private string GetSafeContentDirectory()
+    {
+        return Path.GetFullPath(_options.ContentDirectory);
+    }
+
+    /// <summary>
+    /// Validates that a file path is within the content directory (prevents path traversal attacks)
+    /// </summary>
+    private static bool IsPathSafe(string filePath, string contentDirectory)
+    {
+        try
+        {
+            var fullFilePath = Path.GetFullPath(filePath);
+            var fullContentDir = Path.GetFullPath(contentDirectory);
+            
+            // Ensure the file path starts with the content directory path
+            return fullFilePath.StartsWith(fullContentDir, StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            // If any path operation fails, consider it unsafe
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Validates slug input to prevent injection attacks and path traversal
+    /// </summary>
+    private static bool IsSlugValid(string slug)
+    {
+        // Reject null/empty
+        if (string.IsNullOrWhiteSpace(slug))
+        {
+            return false;
+        }
+
+        // Reject excessive length (max 200 chars)
+        if (slug.Length > 200)
+        {
+            return false;
+        }
+
+        // Reject path traversal attempts
+        if (slug.Contains("..") || slug.Contains('/') || slug.Contains('\\'))
+        {
+            return false;
+        }
+
+        // Only allow alphanumeric, hyphens, and underscores
+        return System.Text.RegularExpressions.Regex.IsMatch(slug, @"^[a-zA-Z0-9\-_]+$");
+    }
 }
+

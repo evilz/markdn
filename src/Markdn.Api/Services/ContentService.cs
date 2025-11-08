@@ -3,22 +3,41 @@ using Markdn.Api.Models;
 namespace Markdn.Api.Services;
 
 /// <summary>
-/// Service for content operations
+/// Service for content operations with filtering, sorting, and pagination
 /// </summary>
 public class ContentService
 {
     private readonly IContentRepository _repository;
 
+    /// <summary>
+    /// Initializes a new instance of the ContentService
+    /// </summary>
+    /// <param name="repository">Content repository implementation</param>
     public ContentService(IContentRepository repository)
     {
         _repository = repository;
     }
 
+    /// <summary>
+    /// Retrieves all content with pagination
+    /// </summary>
+    /// <param name="page">Page number (1-indexed)</param>
+    /// <param name="pageSize">Number of items per page</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Paginated content collection</returns>
     public async Task<ContentCollection> GetAllAsync(int page, int pageSize, CancellationToken cancellationToken)
     {
         return await GetAllAsync(new ContentQueryRequest { Page = page, PageSize = pageSize }, page, pageSize, cancellationToken);
     }
 
+    /// <summary>
+    /// Retrieves content with filtering, sorting, and pagination
+    /// </summary>
+    /// <param name="query">Query request with filter and sort parameters</param>
+    /// <param name="page">Page number (1-indexed)</param>
+    /// <param name="pageSize">Number of items per page</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Filtered and sorted paginated content collection</returns>
     public async Task<ContentCollection> GetAllAsync(ContentQueryRequest query, int page, int pageSize, CancellationToken cancellationToken)
     {
         var allContent = await _repository.GetAllAsync(cancellationToken);
@@ -65,6 +84,9 @@ public class ContentService
         };
     }
 
+    /// <summary>
+    /// Applies sorting to content items based on the specified field and order
+    /// </summary>
     private static IEnumerable<ContentItem> ApplySorting(IEnumerable<ContentItem> items, string sortBy, string sortOrder)
     {
         var isDescending = sortOrder.Equals("desc", StringComparison.OrdinalIgnoreCase);
@@ -84,6 +106,12 @@ public class ContentService
         };
     }
 
+    /// <summary>
+    /// Retrieves a single content item by its slug
+    /// </summary>
+    /// <param name="slug">Unique slug identifier</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Content item if found, null otherwise</returns>
     public Task<ContentItem?> GetBySlugAsync(string slug, CancellationToken cancellationToken)
     {
         return _repository.GetBySlugAsync(slug, cancellationToken);

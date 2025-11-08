@@ -27,6 +27,17 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// Add security headers
+app.Use(async (context, next) =>
+{
+    context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+    context.Response.Headers.Append("X-Frame-Options", "DENY");
+    context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
+    context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
+    context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'");
+    await next();
+});
+
 // Add global exception handling
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
@@ -53,6 +64,18 @@ app.MapGet("/api/content", async Task<Results<Ok<ContentListResponse>, BadReques
     CancellationToken cancellationToken = default) =>
 {
     if (page < 1 || pageSize < 1 || pageSize > 100)
+    {
+        return TypedResults.BadRequest();
+    }
+
+    // Security: Validate tag input (prevent injection)
+    if (!string.IsNullOrEmpty(tag) && (tag.Length > 100 || tag.Contains('\0')))
+    {
+        return TypedResults.BadRequest();
+    }
+
+    // Security: Validate category input (prevent injection)
+    if (!string.IsNullOrEmpty(category) && (category.Length > 100 || category.Contains('\0')))
     {
         return TypedResults.BadRequest();
     }

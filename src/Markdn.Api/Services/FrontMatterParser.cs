@@ -5,12 +5,15 @@ using YamlDotNet.Serialization.NamingConventions;
 namespace Markdn.Api.Services;
 
 /// <summary>
-/// Service for parsing front-matter from Markdown content
+/// Service for parsing YAML front-matter from Markdown content
 /// </summary>
 public class FrontMatterParser
 {
     private readonly IDeserializer _deserializer;
 
+    /// <summary>
+    /// Initializes a new instance of the FrontMatterParser with YAML deserializer configuration
+    /// </summary>
     public FrontMatterParser()
     {
         _deserializer = new DeserializerBuilder()
@@ -19,6 +22,12 @@ public class FrontMatterParser
             .Build();
     }
 
+    /// <summary>
+    /// Parses YAML front-matter from Markdown content
+    /// </summary>
+    /// <param name="content">Full Markdown content including front-matter</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>Parsed front-matter metadata</returns>
     public Task<FrontMatter> ParseAsync(string content, CancellationToken cancellationToken)
     {
         var frontMatter = new FrontMatter();
