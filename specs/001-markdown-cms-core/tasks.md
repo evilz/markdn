@@ -25,18 +25,18 @@ All paths are relative to repository root:
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create solution file at root: `Markdn.sln`
-- [ ] T002 Create ASP.NET Core Web API project: `src/Markdn.Api/Markdn.Api.csproj` with .NET 8 SDK
-- [ ] T003 [P] Create xUnit test project: `tests/Markdn.Api.Tests.Unit/Markdn.Api.Tests.Unit.csproj`
-- [ ] T004 [P] Create xUnit integration test project: `tests/Markdn.Api.Tests.Integration/Markdn.Api.Tests.Integration.csproj`
-- [ ] T005 [P] Create xUnit contract test project: `tests/Markdn.Api.Tests.Contract/Markdn.Api.Tests.Contract.csproj`
-- [ ] T006 Add Markdig package to `src/Markdn.Api/Markdn.Api.csproj`
-- [ ] T007 Add YamlDotNet package to `src/Markdn.Api/Markdn.Api.csproj`
-- [ ] T008 [P] Add FluentAssertions package to all test projects
-- [ ] T009 [P] Add Microsoft.AspNetCore.Mvc.Testing package to `tests/Markdn.Api.Tests.Integration/Markdn.Api.Tests.Integration.csproj`
-- [ ] T010 Create directory structure: `src/Markdn.Api/Models/`, `Services/`, `FileSystem/`, `Configuration/`, `Middleware/`
-- [ ] T011 Create `.editorconfig` at root with C# naming conventions per constitution
-- [ ] T012 Create sample content directory: `content/` with sample Markdown files for testing
+- [X] T001 Create solution file at root: `Markdn.sln`
+- [X] T002 Create ASP.NET Core Web API project: `src/Markdn.Api/Markdn.Api.csproj` with .NET 8 SDK
+- [X] T003 [P] Create xUnit test project: `tests/Markdn.Api.Tests.Unit/Markdn.Api.Tests.Unit.csproj`
+- [X] T004 [P] Create xUnit integration test project: `tests/Markdn.Api.Tests.Integration/Markdn.Api.Tests.Integration.csproj`
+- [X] T005 [P] Create xUnit contract test project: `tests/Markdn.Api.Tests.Contract/Markdn.Api.Tests.Contract.csproj`
+- [X] T006 Add Markdig package to `src/Markdn.Api/Markdn.Api.csproj`
+- [X] T007 Add YamlDotNet package to `src/Markdn.Api/Markdn.Api.csproj`
+- [X] T008 [P] Add FluentAssertions package to all test projects
+- [X] T009 [P] Add Microsoft.AspNetCore.Mvc.Testing package to `tests/Markdn.Api.Tests.Integration/Markdn.Api.Tests.Integration.csproj`
+- [X] T010 Create directory structure: `src/Markdn.Api/Models/`, `Services/`, `FileSystem/`, `Configuration/`, `Middleware/`
+- [X] T011 Create `.editorconfig` at root with C# naming conventions per constitution
+- [X] T012 Create sample content directory: `content/` with sample Markdown files for testing
 
 ---
 
