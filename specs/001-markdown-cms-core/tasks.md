@@ -87,69 +87,69 @@ All paths are relative to repository root:
 
 ### Unit Tests for User Story 1 (TDD - Write FIRST, verify FAIL)
 
-- [ ] T030 [P] [US1] Write failing unit test for FrontMatterParser with valid YAML in `tests/Markdn.Api.Tests.Unit/Services/FrontMatterParserTests.cs`
-- [ ] T031 [P] [US1] Write failing unit test for FrontMatterParser with invalid YAML in `tests/Markdn.Api.Tests.Unit/Services/FrontMatterParserTests.cs`
-- [ ] T032 [P] [US1] Write failing unit test for FrontMatterParser with missing front-matter in `tests/Markdn.Api.Tests.Unit/Services/FrontMatterParserTests.cs`
-- [ ] T033 [P] [US1] Write failing unit test for MarkdownParser HTML rendering in `tests/Markdn.Api.Tests.Unit/Services/MarkdownParserTests.cs`
-- [ ] T034 [P] [US1] Write failing unit test for MarkdownParser with GFM extensions in `tests/Markdn.Api.Tests.Unit/Services/MarkdownParserTests.cs`
-- [ ] T035 [P] [US1] Write failing unit test for slug generation from front-matter in `tests/Markdn.Api.Tests.Unit/Services/SlugGeneratorTests.cs`
-- [ ] T036 [P] [US1] Write failing unit test for slug generation from filename in `tests/Markdn.Api.Tests.Unit/Services/SlugGeneratorTests.cs`
-- [ ] T037 [P] [US1] Write failing unit test for slug generation from full path in `tests/Markdn.Api.Tests.Unit/Services/SlugGeneratorTests.cs`
-- [ ] T038 [P] [US1] Write failing unit test for ContentRepository reading Markdown file in `tests/Markdn.Api.Tests.Unit/FileSystem/ContentRepositoryTests.cs`
-- [ ] T039 [P] [US1] Write failing unit test for ContentRepository handling file >5MB in `tests/Markdn.Api.Tests.Unit/FileSystem/ContentRepositoryTests.cs`
-- [ ] T040 [P] [US1] Write failing unit test for ContentRepository recursive directory scan in `tests/Markdn.Api.Tests.Unit/FileSystem/ContentRepositoryTests.cs`
-- [ ] T041 [P] [US1] Write failing unit test for ContentService GetAll with pagination in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
-- [ ] T042 [P] [US1] Write failing unit test for ContentService GetBySlug found case in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
-- [ ] T043 [P] [US1] Write failing unit test for ContentService GetBySlug not found case in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
+- [X] T030 [P] [US1] Write failing unit test for FrontMatterParser with valid YAML in `tests/Markdn.Api.Tests.Unit/Services/FrontMatterParserTests.cs`
+- [X] T031 [P] [US1] Write failing unit test for FrontMatterParser with invalid YAML in `tests/Markdn.Api.Tests.Unit/Services/FrontMatterParserTests.cs`
+- [X] T032 [P] [US1] Write failing unit test for FrontMatterParser with missing front-matter in `tests/Markdn.Api.Tests.Unit/Services/FrontMatterParserTests.cs`
+- [X] T033 [P] [US1] Write failing unit test for MarkdownParser HTML rendering in `tests/Markdn.Api.Tests.Unit/Services/MarkdownParserTests.cs`
+- [X] T034 [P] [US1] Write failing unit test for MarkdownParser with GFM extensions in `tests/Markdn.Api.Tests.Unit/Services/MarkdownParserTests.cs`
+- [X] T035 [P] [US1] Write failing unit test for slug generation from front-matter in `tests/Markdn.Api.Tests.Unit/Services/SlugGeneratorTests.cs`
+- [X] T036 [P] [US1] Write failing unit test for slug generation from filename in `tests/Markdn.Api.Tests.Unit/Services/SlugGeneratorTests.cs`
+- [X] T037 [P] [US1] Write failing unit test for slug generation from full path in `tests/Markdn.Api.Tests.Unit/Services/SlugGeneratorTests.cs`
+- [X] T038 [P] [US1] Write failing unit test for ContentRepository reading Markdown file in `tests/Markdn.Api.Tests.Unit/FileSystem/ContentRepositoryTests.cs`
+- [X] T039 [P] [US1] Write failing unit test for ContentRepository handling file >5MB in `tests/Markdn.Api.Tests.Unit/FileSystem/ContentRepositoryTests.cs`
+- [X] T040 [P] [US1] Write failing unit test for ContentRepository recursive directory scan in `tests/Markdn.Api.Tests.Unit/FileSystem/ContentRepositoryTests.cs`
+- [X] T041 [P] [US1] Write failing unit test for ContentService GetAll with pagination in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
+- [X] T042 [P] [US1] Write failing unit test for ContentService GetBySlug found case in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
+- [X] T043 [P] [US1] Write failing unit test for ContentService GetBySlug not found case in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
 
 ### Contract Tests for User Story 1 (TDD - Write FIRST, verify FAIL)
 
-- [ ] T044 [P] [US1] Write failing contract test for GET /content returning 200 with ContentListResponse in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
-- [ ] T045 [P] [US1] Write failing contract test for GET /content with empty directory returning empty items array in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
-- [ ] T046 [P] [US1] Write failing contract test for GET /content/{slug} returning 200 with ContentItemResponse in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
-- [ ] T047 [P] [US1] Write failing contract test for GET /content/{slug} returning 404 for unknown slug in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
-- [ ] T048 [P] [US1] Write failing contract test for GET /health returning 200 with status healthy in `tests/Markdn.Api.Tests.Contract/Endpoints/HealthEndpointsTests.cs`
+- [X] T044 [P] [US1] Write failing contract test for GET /content returning 200 with ContentListResponse in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
+- [X] T045 [P] [US1] Write failing contract test for GET /content with empty directory returning empty items array in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
+- [X] T046 [P] [US1] Write failing contract test for GET /content/{slug} returning 200 with ContentItemResponse in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
+- [X] T047 [P] [US1] Write failing contract test for GET /content/{slug} returning 404 for unknown slug in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
+- [X] T048 [P] [US1] Write failing contract test for GET /health returning 200 with status healthy in `tests/Markdn.Api.Tests.Contract/Endpoints/HealthEndpointsTests.cs`
 
 ### Integration Tests for User Story 1 (TDD - Write FIRST, verify FAIL)
 
-- [ ] T049 [P] [US1] Write failing integration test for full file read → parse → serve workflow in `tests/Markdn.Api.Tests.Integration/ContentWorkflowTests.cs`
-- [ ] T050 [P] [US1] Write failing integration test for malformed YAML returning warnings in `tests/Markdn.Api.Tests.Integration/ContentWorkflowTests.cs`
-- [ ] T051 [P] [US1] Write failing integration test for file >5MB exclusion in `tests/Markdn.Api.Tests.Integration/ContentWorkflowTests.cs`
+- [X] T049 [P] [US1] Write failing integration test for full file read → parse → serve workflow in `tests/Markdn.Api.Tests.Integration/ContentWorkflowTests.cs`
+- [X] T050 [P] [US1] Write failing integration test for malformed YAML returning warnings in `tests/Markdn.Api.Tests.Integration/ContentWorkflowTests.cs`
+- [X] T051 [P] [US1] Write failing integration test for file >5MB exclusion in `tests/Markdn.Api.Tests.Integration/ContentWorkflowTests.cs`
 
 ### Run Tests - Verify All FAIL (Red Phase)
 
-- [ ] T052 [US1] Run all User Story 1 tests with `dotnet test` and confirm ALL tests fail (Red phase of TDD)
+- [X] T052 [US1] Run all User Story 1 tests with `dotnet test` and confirm ALL tests fail (Red phase of TDD)
 
 ### Implementation for User Story 1 (Green Phase)
 
-- [ ] T053 [P] [US1] Implement `IFrontMatterParser` interface in `src/Markdn.Api/Services/IFrontMatterParser.cs` with ParseAsync method
-- [ ] T054 [US1] Implement `FrontMatterParser` class in `src/Markdn.Api/Services/FrontMatterParser.cs` using YamlDotNet with error handling per FR-009
-- [ ] T055 [P] [US1] Implement `IMarkdownParser` interface in `src/Markdn.Api/Services/IMarkdownParser.cs` with RenderToHtmlAsync method
-- [ ] T056 [US1] Implement `MarkdownParser` class in `src/Markdn.Api/Services/MarkdownParser.cs` using Markdig with GFM extensions
-- [ ] T057 [P] [US1] Implement `ISlugGenerator` interface in `src/Markdn.Api/Services/ISlugGenerator.cs` with GenerateSlug method
-- [ ] T058 [US1] Implement `SlugGenerator` class in `src/Markdn.Api/Services/SlugGenerator.cs` with precedence logic per FR-010
-- [ ] T059 [P] [US1] Implement `IContentRepository` interface in `src/Markdn.Api/FileSystem/IContentRepository.cs` with GetAllFilesAsync, GetFileBySlugAsync
-- [ ] T060 [US1] Implement `ContentRepository` class in `src/Markdn.Api/FileSystem/ContentRepository.cs` with recursive scanning, 5MB validation, slug collision detection
-- [ ] T061 [P] [US1] Implement `IContentService` interface in `src/Markdn.Api/Services/IContentService.cs` with GetAllAsync, GetBySlugAsync
-- [ ] T062 [US1] Implement `ContentService` class in `src/Markdn.Api/Services/ContentService.cs` orchestrating repository, parsers, pagination logic
-- [ ] T063 [US1] Register all services in DI container in `src/Markdn.Api/Program.cs` (singletons for stateless, scoped where needed)
-- [ ] T064 [P] [US1] Implement GET /content endpoint in `src/Markdn.Api/Program.cs` using Minimal API with pagination parameters
-- [ ] T065 [P] [US1] Implement GET /content/{slug} endpoint in `src/Markdn.Api/Program.cs` using Minimal API
-- [ ] T066 [P] [US1] Implement GET /health endpoint in `src/Markdn.Api/Program.cs` using built-in health checks
-- [ ] T067 [US1] Add input validation for pagination parameters (page ≥1, pageSize 1-100) in endpoints
-- [ ] T068 [US1] Add structured logging to ContentService operations (file read, parse errors, slug collisions)
-- [ ] T069 [US1] Map domain entities to DTOs in ContentService (ContentItem → ContentItemResponse, ContentCollection → ContentListResponse)
+- [X] T053 [P] [US1] Implement `IFrontMatterParser` interface in `src/Markdn.Api/Services/IFrontMatterParser.cs` with ParseAsync method
+- [X] T054 [US1] Implement `FrontMatterParser` class in `src/Markdn.Api/Services/FrontMatterParser.cs` using YamlDotNet with error handling per FR-009
+- [X] T055 [P] [US1] Implement `IMarkdownParser` interface in `src/Markdn.Api/Services/IMarkdownParser.cs` with RenderToHtmlAsync method
+- [X] T056 [US1] Implement `MarkdownParser` class in `src/Markdn.Api/Services/MarkdownParser.cs` using Markdig with GFM extensions
+- [X] T057 [P] [US1] Implement `ISlugGenerator` interface in `src/Markdn.Api/Services/ISlugGenerator.cs` with GenerateSlug method
+- [X] T058 [US1] Implement `SlugGenerator` class in `src/Markdn.Api/Services/SlugGenerator.cs` with precedence logic per FR-010
+- [X] T059 [P] [US1] Implement `IContentRepository` interface in `src/Markdn.Api/FileSystem/IContentRepository.cs` with GetAllFilesAsync, GetFileBySlugAsync
+- [X] T060 [US1] Implement `ContentRepository` class in `src/Markdn.Api/FileSystem/ContentRepository.cs` with recursive scanning, 5MB validation, slug collision detection
+- [X] T061 [P] [US1] Implement `IContentService` interface in `src/Markdn.Api/Services/IContentService.cs` with GetAllAsync, GetBySlugAsync
+- [X] T062 [US1] Implement `ContentService` class in `src/Markdn.Api/Services/ContentService.cs` orchestrating repository, parsers, pagination logic
+- [X] T063 [US1] Register all services in DI container in `src/Markdn.Api/Program.cs` (singletons for stateless, scoped where needed)
+- [X] T064 [P] [US1] Implement GET /content endpoint in `src/Markdn.Api/Program.cs` using Minimal API with pagination parameters
+- [X] T065 [P] [US1] Implement GET /content/{slug} endpoint in `src/Markdn.Api/Program.cs` using Minimal API
+- [X] T066 [P] [US1] Implement GET /health endpoint in `src/Markdn.Api/Program.cs` using built-in health checks
+- [X] T067 [US1] Add input validation for pagination parameters (page ≥1, pageSize 1-100) in endpoints
+- [X] T068 [US1] Add structured logging to ContentService operations (file read, parse errors, slug collisions)
+- [X] T069 [US1] Map domain entities to DTOs in ContentService (ContentItem → ContentItemResponse, ContentCollection → ContentListResponse)
 
 ### Run Tests - Verify All PASS (Green Phase)
 
-- [ ] T070 [US1] Run all User Story 1 tests with `dotnet test` and confirm ALL tests pass (Green phase of TDD)
+- [X] T070 [US1] Run all User Story 1 tests with `dotnet test` and confirm ALL tests pass (Green phase of TDD)
 
 ### Refactor for User Story 1 (Refactor Phase)
 
-- [ ] T071 [US1] Refactor: Extract common parsing logic, ensure no code duplication
-- [ ] T072 [US1] Refactor: Review and optimize LINQ queries in ContentService
-- [ ] T073 [US1] Refactor: Ensure all async methods use ConfigureAwait(false)
-- [ ] T074 [US1] Run tests again to confirm refactoring didn't break functionality
+- [X] T071 [US1] Refactor: Extract common parsing logic, ensure no code duplication
+- [X] T072 [US1] Refactor: Review and optimize LINQ queries in ContentService
+- [X] T073 [US1] Refactor: Ensure all async methods use ConfigureAwait(false)
+- [X] T074 [US1] Run tests again to confirm refactoring didn't break functionality
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - can list all content and retrieve individual items with metadata
 
