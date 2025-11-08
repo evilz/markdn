@@ -163,14 +163,14 @@ All paths are relative to repository root:
 
 ### Unit Tests for User Story 2 (TDD - Write FIRST, verify FAIL)
 
-- [ ] T075 [P] [US2] Write failing unit test for ContentService filter by single tag in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
-- [ ] T076 [P] [US2] Write failing unit test for ContentService filter by category in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
-- [ ] T077 [P] [US2] Write failing unit test for ContentService filter by date range in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
-- [ ] T078 [P] [US2] Write failing unit test for ContentService filter by multiple criteria (tag AND category) in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
-- [ ] T079 [P] [US2] Write failing unit test for ContentService sorting by date ascending in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
-- [ ] T080 [P] [US2] Write failing unit test for ContentService sorting by date descending in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
-- [ ] T081 [P] [US2] Write failing unit test for ContentService sorting by title in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
-- [ ] T082 [P] [US2] Write failing unit test for ContentService filter with no matches returning empty collection in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
+- [X] T075 [P] [US2] Write failing unit test for ContentService filter by single tag in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
+- [X] T076 [P] [US2] Write failing unit test for ContentService filter by category in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
+- [X] T077 [P] [US2] Write failing unit test for ContentService filter by date range in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
+- [X] T078 [P] [US2] Write failing unit test for ContentService filter by multiple criteria (tag AND category) in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
+- [X] T079 [P] [US2] Write failing unit test for ContentService sorting by date ascending in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
+- [X] T080 [P] [US2] Write failing unit test for ContentService sorting by date descending in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
+- [X] T081 [P] [US2] Write failing unit test for ContentService sorting by title in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
+- [X] T082 [P] [US2] Write failing unit test for ContentService filter with no matches returning empty collection in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
 
 ### Contract Tests for User Story 2 (TDD - Write FIRST, verify FAIL)
 
@@ -188,29 +188,29 @@ All paths are relative to repository root:
 
 ### Run Tests - Verify All FAIL (Red Phase)
 
-- [ ] T091 [US2] Run all User Story 2 tests with `dotnet test --filter "FullyQualifiedName~US2"` and confirm ALL tests fail
+- [X] T091 [US2] Run all User Story 2 tests with `dotnet test --filter "FullyQualifiedName~US2"` and confirm ALL tests fail
 
 ### Implementation for User Story 2 (Green Phase)
 
-- [ ] T092 [US2] Extend `IContentService.GetAllAsync` to accept ContentQueryRequest parameter in `src/Markdn.Api/Services/IContentService.cs`
-- [ ] T093 [US2] Implement tag filtering logic in `ContentService.GetAllAsync` using LINQ Where in `src/Markdn.Api/Services/ContentService.cs`
-- [ ] T094 [US2] Implement category filtering logic in `ContentService.GetAllAsync` in `src/Markdn.Api/Services/ContentService.cs`
-- [ ] T095 [US2] Implement date range filtering logic (dateFrom, dateTo) in `ContentService.GetAllAsync` in `src/Markdn.Api/Services/ContentService.cs`
-- [ ] T096 [US2] Implement sorting logic (sortBy, sortOrder) supporting date, title, lastModified in `src/Markdn.Api/Services/ContentService.cs`
-- [ ] T097 [US2] Update GET /content endpoint to bind query parameters to ContentQueryRequest in `src/Markdn.Api/Program.cs`
-- [ ] T098 [US2] Add date format validation (ISO 8601 only) for dateFrom/dateTo parameters in `src/Markdn.Api/Program.cs` or validation attribute
-- [ ] T099 [US2] Add validation for sortBy enum (date, title, lastModified) and sortOrder enum (asc, desc) in endpoint
-- [ ] T100 [US2] Add logging for filter operations (query parameters, result count) in ContentService
+- [X] T092 [US2] Extend `IContentService.GetAllAsync` to accept ContentQueryRequest parameter in `src/Markdn.Api/Services/IContentService.cs`
+- [X] T093 [US2] Implement tag filtering logic in `ContentService.GetAllAsync` using LINQ Where in `src/Markdn.Api/Services/ContentService.cs`
+- [X] T094 [US2] Implement category filtering logic in `ContentService.GetAllAsync` in `src/Markdn.Api/Services/ContentService.cs`
+- [X] T095 [US2] Implement date range filtering logic (dateFrom, dateTo) in `ContentService.GetAllAsync` in `src/Markdn.Api/Services/ContentService.cs`
+- [X] T096 [US2] Implement sorting logic (sortBy, sortOrder) supporting date, title, lastModified in `src/Markdn.Api/Services/ContentService.cs`
+- [X] T097 [US2] Update GET /content endpoint to bind query parameters to ContentQueryRequest in `src/Markdn.Api/Program.cs`
+- [X] T098 [US2] Add date format validation (ISO 8601 only) for dateFrom/dateTo parameters in `src/Markdn.Api/Program.cs` or validation attribute
+- [X] T099 [US2] Add validation for sortBy enum (date, title, lastModified) and sortOrder enum (asc, desc) in endpoint
+- [X] T100 [US2] Add logging for filter operations (query parameters, result count) in ContentService
 
 ### Run Tests - Verify All PASS (Green Phase)
 
-- [ ] T101 [US2] Run all User Story 2 tests and confirm ALL tests pass
+- [X] T101 [US2] Run all User Story 2 tests and confirm ALL tests pass
 
 ### Refactor for User Story 2 (Refactor Phase)
 
-- [ ] T102 [US2] Refactor: Extract filtering logic into separate FilterBuilder or QuerySpecification class if complex
-- [ ] T103 [US2] Refactor: Optimize filtering performance (consider indexing by tag/category if needed)
-- [ ] T104 [US2] Run tests again to confirm refactoring didn't break functionality
+- [X] T102 [US2] Refactor: Extract filtering logic into separate FilterBuilder or QuerySpecification class if complex
+- [X] T103 [US2] Refactor: Optimize filtering performance (consider indexing by tag/category if needed)
+- [X] T104 [US2] Run tests again to confirm refactoring didn't break functionality
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work - can list all content with filtering and pagination
 

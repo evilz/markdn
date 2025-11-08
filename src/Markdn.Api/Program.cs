@@ -42,8 +42,14 @@ app.UseHttpsRedirection();
 // Map content endpoints
 app.MapGet("/api/content", async Task<Results<Ok<ContentListResponse>, BadRequest>> (
     ContentService contentService,
+    string? tag = null,
+    string? category = null,
+    DateTime? dateFrom = null,
+    DateTime? dateTo = null,
     int page = 1,
     int pageSize = 50,
+    string sortBy = "date",
+    string sortOrder = "desc",
     CancellationToken cancellationToken = default) =>
 {
     if (page < 1 || pageSize < 1 || pageSize > 100)
@@ -51,7 +57,33 @@ app.MapGet("/api/content", async Task<Results<Ok<ContentListResponse>, BadReques
         return TypedResults.BadRequest();
     }
 
-    var collection = await contentService.GetAllAsync(page, pageSize, cancellationToken);
+    // Validate sortBy values
+    var validSortBy = new[] { "date", "title", "lastmodified" };
+    if (!validSortBy.Contains(sortBy.ToLowerInvariant()))
+    {
+        return TypedResults.BadRequest();
+    }
+
+    // Validate sortOrder values
+    var validSortOrder = new[] { "asc", "desc" };
+    if (!validSortOrder.Contains(sortOrder.ToLowerInvariant()))
+    {
+        return TypedResults.BadRequest();
+    }
+
+    var query = new ContentQueryRequest
+    {
+        Tag = tag,
+        Category = category,
+        DateFrom = dateFrom,
+        DateTo = dateTo,
+        Page = page,
+        PageSize = pageSize,
+        SortBy = sortBy,
+        SortOrder = sortOrder
+    };
+
+    var collection = await contentService.GetAllAsync(query, page, pageSize, cancellationToken);
     
     var response = new ContentListResponse
     {
