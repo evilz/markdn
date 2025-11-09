@@ -1,6 +1,7 @@
 using Markdn.Api.Configuration;
 using Markdn.Api.Endpoints;
 using Markdn.Api.FileSystem;
+using Markdn.Api.HostedServices;
 using Markdn.Api.Middleware;
 using Markdn.Api.Models;
 using Markdn.Api.Querying;
@@ -54,6 +55,7 @@ builder.Services.AddSingleton<ICollectionLoader, CollectionLoader>();
 builder.Services.AddSingleton<ISchemaValidator, SchemaValidator>();
 builder.Services.AddScoped<ContentItemValidator>();
 builder.Services.AddScoped<ICollectionService, CollectionService>();
+builder.Services.AddHostedService<CollectionFileWatcherService>();
 
 // Register Query services
 builder.Services.AddScoped<IQueryParser, QueryParser>();

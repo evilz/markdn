@@ -51,4 +51,10 @@ public interface ICollectionService
     /// <returns>A dictionary of collection names to collection metadata.</returns>
     Task<IReadOnlyDictionary<string, Collection>> GetAllCollectionsAsync(
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Invalidates the cache for a specific collection, forcing reload on next access.
+    /// </summary>
+    /// <param name="collectionName">The name of the collection to invalidate.</param>
+    void InvalidateCollection(string collectionName);
 }

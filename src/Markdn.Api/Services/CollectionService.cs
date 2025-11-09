@@ -404,4 +404,12 @@ public class CollectionService : ICollectionService
 
         return string.Join('\n', lines[(endIndex + 1)..]).TrimStart();
     }
+
+    /// <inheritdoc/>
+    public void InvalidateCollection(string collectionName)
+    {
+        var cacheKey = $"collection_items_{collectionName}";
+        _cache.Remove(cacheKey);
+        _logger.LogInformation("Invalidated cache for collection {CollectionName}", collectionName);
+    }
 }
