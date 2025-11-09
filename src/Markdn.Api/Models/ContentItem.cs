@@ -53,7 +53,7 @@ public class ContentItem
     /// <summary>
     /// Gets or sets the raw Markdown body.
     /// </summary>
-    public required string MarkdownContent { get; set; }
+    public string? MarkdownContent { get; set; }
 
     /// <summary>
     /// Gets or sets the rendered HTML (lazy-loaded).

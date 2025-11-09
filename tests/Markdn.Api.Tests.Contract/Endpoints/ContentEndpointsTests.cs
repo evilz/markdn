@@ -90,4 +90,91 @@ public class ContentEndpointsTests : IClassFixture<WebApplicationFactory<Program
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
+
+    // Phase 6: User Story 4 - Content Rendering Options Contract Tests
+
+    [Fact]
+    public async Task GetContentBySlug_WithFormatMarkdown_ShouldReturnOnlyMarkdownContent()
+    {
+        // Arrange
+        var slug = "getting-started";
+
+        // Act
+        var response = await _client.GetAsync($"/api/content/{slug}?format=markdown");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var content = await response.Content.ReadFromJsonAsync<ContentItemResponse>();
+        content.Should().NotBeNull();
+        content!.MarkdownContent.Should().NotBeNullOrEmpty();
+        content.HtmlContent.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetContentBySlug_WithFormatHtml_ShouldReturnOnlyHtmlContent()
+    {
+        // Arrange
+        var slug = "getting-started";
+
+        // Act
+        var response = await _client.GetAsync($"/api/content/{slug}?format=html");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var content = await response.Content.ReadFromJsonAsync<ContentItemResponse>();
+        content.Should().NotBeNull();
+        content!.HtmlContent.Should().NotBeNullOrEmpty();
+        content.MarkdownContent.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetContentBySlug_WithFormatBoth_ShouldReturnBothContents()
+    {
+        // Arrange
+        var slug = "getting-started";
+
+        // Act
+        var response = await _client.GetAsync($"/api/content/{slug}?format=both");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var content = await response.Content.ReadFromJsonAsync<ContentItemResponse>();
+        content.Should().NotBeNull();
+        content!.MarkdownContent.Should().NotBeNullOrEmpty();
+        content!.HtmlContent.Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public async Task GetContentBySlug_WithDefaultFormat_ShouldReturnBothContents()
+    {
+        // Arrange
+        var slug = "getting-started";
+
+        // Act
+        var response = await _client.GetAsync($"/api/content/{slug}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var content = await response.Content.ReadFromJsonAsync<ContentItemResponse>();
+        content.Should().NotBeNull();
+        content!.MarkdownContent.Should().NotBeNullOrEmpty();
+        content!.HtmlContent.Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public async Task GetContentBySlug_WithInvalidFormat_ShouldReturn400BadRequest()
+    {
+        // Arrange
+        var slug = "getting-started";
+
+        // Act
+        var response = await _client.GetAsync($"/api/content/{slug}?format=invalid");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
 }

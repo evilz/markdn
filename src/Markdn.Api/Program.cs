@@ -145,12 +145,23 @@ app.MapGet("/api/content", async Task<Results<Ok<ContentListResponse>, BadReques
 .WithName("GetAllContent")
 .WithOpenApi();
 
-app.MapGet("/api/content/{slug}", async Task<Results<Ok<ContentItemResponse>, NotFound>> (
+app.MapGet("/api/content/{slug}", async Task<Results<Ok<ContentItemResponse>, NotFound, BadRequest<string>>> (
     string slug,
     ContentService contentService,
+    string? format,
     CancellationToken cancellationToken) =>
 {
-    var item = await contentService.GetBySlugAsync(slug, cancellationToken);
+    // Parse and validate format parameter
+    FormatOption formatOption = FormatOption.Both; // Default
+    if (!string.IsNullOrEmpty(format))
+    {
+        if (!Enum.TryParse<FormatOption>(format, ignoreCase: true, out formatOption))
+        {
+            return TypedResults.BadRequest($"Invalid format value: '{format}'. Valid values are: markdown, html, both");
+        }
+    }
+
+    var item = await contentService.GetBySlugAsync(slug, formatOption, cancellationToken);
 
     if (item == null)
     {

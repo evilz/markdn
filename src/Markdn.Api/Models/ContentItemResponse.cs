@@ -46,9 +46,9 @@ public class ContentItemResponse
     public Dictionary<string, object> CustomFields { get; set; } = new();
 
     /// <summary>
-    /// Gets or sets the raw Markdown body.
+    /// Gets or sets the raw Markdown body (null if format=html).
     /// </summary>
-    public required string MarkdownContent { get; set; }
+    public string? MarkdownContent { get; set; }
 
     /// <summary>
     /// Gets or sets the rendered HTML (null if format=markdown).
