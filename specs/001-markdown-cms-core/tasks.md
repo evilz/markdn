@@ -224,47 +224,47 @@ All paths are relative to repository root:
 
 ### Unit Tests for User Story 3 (TDD - Write FIRST, verify FAIL)
 
-- [ ] T105 [P] [US3] Write failing unit test for FileWatcherService detecting file created event in `tests/Markdn.Api.Tests.Unit/FileSystem/FileWatcherServiceTests.cs`
-- [ ] T106 [P] [US3] Write failing unit test for FileWatcherService detecting file changed event in `tests/Markdn.Api.Tests.Unit/FileSystem/FileWatcherServiceTests.cs`
-- [ ] T107 [P] [US3] Write failing unit test for FileWatcherService detecting file deleted event in `tests/Markdn.Api.Tests.Unit/FileSystem/FileWatcherServiceTests.cs`
-- [ ] T108 [P] [US3] Write failing unit test for FileWatcherService debouncing rapid changes (500ms window) in `tests/Markdn.Api.Tests.Unit/FileSystem/FileWatcherServiceTests.cs`
-- [ ] T109 [P] [US3] Write failing unit test for ContentCache invalidation on file change in `tests/Markdn.Api.Tests.Unit/Services/ContentCacheTests.cs`
-- [ ] T110 [P] [US3] Write failing unit test for ContentCache refresh after invalidation in `tests/Markdn.Api.Tests.Unit/Services/ContentCacheTests.cs`
+- [X] T105 [P] [US3] Write failing unit test for FileWatcherService detecting file created event in `tests/Markdn.Api.Tests.Unit/FileSystem/FileWatcherServiceTests.cs`
+- [X] T106 [P] [US3] Write failing unit test for FileWatcherService detecting file changed event in `tests/Markdn.Api.Tests.Unit/FileSystem/FileWatcherServiceTests.cs`
+- [X] T107 [P] [US3] Write failing unit test for FileWatcherService detecting file deleted event in `tests/Markdn.Api.Tests.Unit/FileSystem/FileWatcherServiceTests.cs`
+- [X] T108 [P] [US3] Write failing unit test for FileWatcherService debouncing rapid changes (500ms window) in `tests/Markdn.Api.Tests.Unit/FileSystem/FileWatcherServiceTests.cs`
+- [X] T109 [P] [US3] Write failing unit test for ContentCache invalidation on file change in `tests/Markdn.Api.Tests.Unit/Services/ContentCacheTests.cs`
+- [X] T110 [P] [US3] Write failing unit test for ContentCache refresh after invalidation in `tests/Markdn.Api.Tests.Unit/Services/ContentCacheTests.cs`
 
 ### Integration Tests for User Story 3 (TDD - Write FIRST, verify FAIL)
 
-- [ ] T111 [P] [US3] Write failing integration test for file modification detected and served within 5 seconds in `tests/Markdn.Api.Tests.Integration/FileWatchingTests.cs`
-- [ ] T112 [P] [US3] Write failing integration test for new file creation detected and added to collection in `tests/Markdn.Api.Tests.Integration/FileWatchingTests.cs`
-- [ ] T113 [P] [US3] Write failing integration test for file deletion detected and removed from collection in `tests/Markdn.Api.Tests.Integration/FileWatchingTests.cs`
+- [X] T111 [P] [US3] Write failing integration test for file modification detected and served within 5 seconds in `tests/Markdn.Api.Tests.Integration/FileWatchingTests.cs`
+- [X] T112 [P] [US3] Write failing integration test for new file creation detected and added to collection in `tests/Markdn.Api.Tests.Integration/FileWatchingTests.cs`
+- [X] T113 [P] [US3] Write failing integration test for file deletion detected and removed from collection in `tests/Markdn.Api.Tests.Integration/FileWatchingTests.cs`
 
 ### Run Tests - Verify All FAIL (Red Phase)
 
-- [ ] T114 [US3] Run all User Story 3 tests and confirm ALL tests fail
+- [X] T114 [US3] Run all User Story 3 tests and confirm ALL tests fail
 
 ### Implementation for User Story 3 (Green Phase)
 
-- [ ] T115 [P] [US3] Implement `IContentCache` interface in `src/Markdn.Api/Services/IContentCache.cs` with Get, Set, Invalidate, RefreshAsync methods
-- [ ] T116 [US3] Implement `ContentCache` class in `src/Markdn.Api/Services/ContentCache.cs` using IMemoryCache with thread-safe operations
-- [ ] T117 [P] [US3] Implement `IFileWatcherService` interface in `src/Markdn.Api/FileSystem/IFileWatcherService.cs` with StartWatching, StopWatching
-- [ ] T118 [US3] Implement `FileWatcherService` class in `src/Markdn.Api/FileSystem/FileWatcherService.cs` using FileSystemWatcher for .md files
-- [ ] T119 [US3] Add debouncing logic (500ms timer) to FileWatcherService to handle rapid file changes
-- [ ] T120 [US3] Wire FileWatcherService events (Created, Changed, Deleted) to ContentCache.InvalidateAsync in `src/Markdn.Api/FileSystem/FileWatcherService.cs`
-- [ ] T121 [US3] Update ContentService to use ContentCache for Get operations in `src/Markdn.Api/Services/ContentService.cs`
-- [ ] T122 [US3] Implement cache-aside pattern: check cache first, load from disk on miss, populate cache
-- [ ] T123 [US3] Register IMemoryCache, ContentCache, FileWatcherService in DI container in `src/Markdn.Api/Program.cs`
-- [ ] T124 [US3] Start FileWatcherService as IHostedService in `src/Markdn.Api/Program.cs` when EnableFileWatching is true
-- [ ] T125 [US3] Add error handling for FileSystemWatcher.Error event (buffer overflow) with logging
-- [ ] T126 [US3] Add logging for file watch events (file created, changed, deleted, cache invalidated)
+- [X] T115 [P] [US3] Implement `IContentCache` interface in `src/Markdn.Api/Services/IContentCache.cs` with Get, Set, Invalidate, RefreshAsync methods
+- [X] T116 [US3] Implement `ContentCache` class in `src/Markdn.Api/Services/ContentCache.cs` using IMemoryCache with thread-safe operations
+- [X] T117 [P] [US3] Implement `IFileWatcherService` interface in `src/Markdn.Api/FileSystem/IFileWatcherService.cs` with StartWatching, StopWatching
+- [X] T118 [US3] Implement `FileWatcherService` class in `src/Markdn.Api/FileSystem/FileWatcherService.cs` using FileSystemWatcher for .md files
+- [X] T119 [US3] Add debouncing logic (500ms timer) to FileWatcherService to handle rapid file changes
+- [X] T120 [US3] Wire FileWatcherService events (Created, Changed, Deleted) to ContentCache.InvalidateAsync in `src/Markdn.Api/FileSystem/FileWatcherService.cs`
+- [X] T121 [US3] Update ContentService to use ContentCache for Get operations in `src/Markdn.Api/Services/ContentService.cs`
+- [X] T122 [US3] Implement cache-aside pattern: check cache first, load from disk on miss, populate cache
+- [X] T123 [US3] Register IMemoryCache, ContentCache, FileWatcherService in DI container in `src/Markdn.Api/Program.cs`
+- [X] T124 [US3] Start FileWatcherService as IHostedService in `src/Markdn.Api/Program.cs` when EnableFileWatching is true
+- [X] T125 [US3] Add error handling for FileSystemWatcher.Error event (buffer overflow) with logging
+- [X] T126 [US3] Add logging for file watch events (file created, changed, deleted, cache invalidated)
 
 ### Run Tests - Verify All PASS (Green Phase)
 
-- [ ] T127 [US3] Run all User Story 3 tests and confirm ALL tests pass
+- [X] T127 [US3] Run all User Story 3 tests and confirm ALL tests pass
 
 ### Refactor for User Story 3 (Refactor Phase)
 
-- [ ] T128 [US3] Refactor: Review FileWatcherService disposal, ensure proper cleanup with CancellationToken
-- [ ] T129 [US3] Refactor: Consider extracting debouncing logic into reusable utility class
-- [ ] T130 [US3] Run tests again to confirm refactoring didn't break functionality
+- [X] T128 [US3] Refactor: Review FileWatcherService disposal, ensure proper cleanup with CancellationToken
+- [X] T129 [US3] Refactor: Consider extracting debouncing logic into reusable utility class
+- [X] T130 [US3] Run tests again to confirm refactoring didn't break functionality
 
 **Checkpoint**: At this point, User Stories 1, 2, AND 3 should all work - content updates automatically without restart
 
@@ -278,49 +278,49 @@ All paths are relative to repository root:
 
 ### Unit Tests for User Story 4 (TDD - Write FIRST, verify FAIL)
 
-- [ ] T131 [P] [US4] Write failing unit test for ContentService GetBySlugAsync with format=markdown returning only Markdown in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
-- [ ] T132 [P] [US4] Write failing unit test for ContentService GetBySlugAsync with format=html returning only HTML in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
-- [ ] T133 [P] [US4] Write failing unit test for ContentService GetBySlugAsync with format=both returning both formats in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
-- [ ] T134 [P] [US4] Write failing unit test for ContentService lazy-loading HTML (don't render unless requested) in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
+- [X] T131 [P] [US4] Write failing unit test for ContentService GetBySlugAsync with format=markdown returning only Markdown in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
+- [X] T132 [P] [US4] Write failing unit test for ContentService GetBySlugAsync with format=html returning only HTML in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
+- [X] T133 [P] [US4] Write failing unit test for ContentService GetBySlugAsync with format=both returning both formats in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
+- [X] T134 [P] [US4] Write failing unit test for ContentService lazy-loading HTML (don't render unless requested) in `tests/Markdn.Api.Tests.Unit/Services/ContentServiceTests.cs`
 
 ### Contract Tests for User Story 4 (TDD - Write FIRST, verify FAIL)
 
-- [ ] T135 [P] [US4] Write failing contract test for GET /content/{slug}?format=markdown returning only markdownContent field in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
-- [ ] T136 [P] [US4] Write failing contract test for GET /content/{slug}?format=html returning only htmlContent field in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
-- [ ] T137 [P] [US4] Write failing contract test for GET /content/{slug}?format=both returning both fields in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
-- [ ] T138 [P] [US4] Write failing contract test for GET /content/{slug} with default format returning both fields in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
-- [ ] T139 [P] [US4] Write failing contract test for GET /content/{slug}?format=invalid returning 400 Bad Request in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
+- [X] T135 [P] [US4] Write failing contract test for GET /content/{slug}?format=markdown returning only markdownContent field in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
+- [X] T136 [P] [US4] Write failing contract test for GET /content/{slug}?format=html returning only htmlContent field in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
+- [X] T137 [P] [US4] Write failing contract test for GET /content/{slug}?format=both returning both fields in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
+- [X] T138 [P] [US4] Write failing contract test for GET /content/{slug} with default format returning both fields in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
+- [X] T139 [P] [US4] Write failing contract test for GET /content/{slug}?format=invalid returning 400 Bad Request in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
 
 ### Integration Tests for User Story 4 (TDD - Write FIRST, verify FAIL)
 
-- [ ] T140 [P] [US4] Write failing integration test for Markdown with code blocks rendered correctly to HTML in `tests/Markdn.Api.Tests.Integration/ContentRenderingTests.cs`
-- [ ] T141 [P] [US4] Write failing integration test for GFM tables rendered correctly to HTML in `tests/Markdn.Api.Tests.Integration/ContentRenderingTests.cs`
+- [X] T140 [P] [US4] Write failing integration test for Markdown with code blocks rendered correctly to HTML in `tests/Markdn.Api.Tests.Integration/ContentRenderingTests.cs`
+- [X] T141 [P] [US4] Write failing integration test for GFM tables rendered correctly to HTML in `tests/Markdn.Api.Tests.Integration/ContentRenderingTests.cs`
 
 ### Run Tests - Verify All FAIL (Red Phase)
 
-- [ ] T142 [US4] Run all User Story 4 tests and confirm ALL tests fail
+- [X] T142 [US4] Run all User Story 4 tests and confirm ALL tests fail
 
 ### Implementation for User Story 4 (Green Phase)
 
-- [ ] T143 [US4] Add FormatOption enum (Markdown, Html, Both) in `src/Markdn.Api/Models/FormatOption.cs`
-- [ ] T144 [US4] Update `IContentService.GetBySlugAsync` signature to accept FormatOption parameter in `src/Markdn.Api/Services/IContentService.cs`
-- [ ] T145 [US4] Implement conditional HTML rendering in `ContentService.GetBySlugAsync` based on format parameter in `src/Markdn.Api/Services/ContentService.cs`
-- [ ] T146 [US4] Update ContentItemResponse DTO mapping to set htmlContent=null when format=markdown in `src/Markdn.Api/Services/ContentService.cs`
-- [ ] T147 [US4] Update ContentItemResponse DTO mapping to set markdownContent=null when format=html in `src/Markdn.Api/Services/ContentService.cs`
-- [ ] T148 [US4] Update GET /content/{slug} endpoint to bind format query parameter to FormatOption in `src/Markdn.Api/Program.cs`
-- [ ] T149 [US4] Add validation for format enum (markdown, html, both) in endpoint with 400 response for invalid values
-- [ ] T150 [US4] Add performance optimization: skip MarkdownParser.RenderToHtmlAsync when format=markdown
-- [ ] T151 [US4] Add logging for format selection in ContentService
+- [X] T143 [US4] Add FormatOption enum (Markdown, Html, Both) in `src/Markdn.Api/Models/FormatOption.cs`
+- [X] T144 [US4] Update `IContentService.GetBySlugAsync` signature to accept FormatOption parameter in `src/Markdn.Api/Services/IContentService.cs`
+- [X] T145 [US4] Implement conditional HTML rendering in `ContentService.GetBySlugAsync` based on format parameter in `src/Markdn.Api/Services/ContentService.cs`
+- [X] T146 [US4] Update ContentItemResponse DTO mapping to set htmlContent=null when format=markdown in `src/Markdn.Api/Services/ContentService.cs`
+- [X] T147 [US4] Update ContentItemResponse DTO mapping to set markdownContent=null when format=html in `src/Markdn.Api/Services/ContentService.cs`
+- [X] T148 [US4] Update GET /content/{slug} endpoint to bind format query parameter to FormatOption in `src/Markdn.Api/Program.cs`
+- [X] T149 [US4] Add validation for format enum (markdown, html, both) in endpoint with 400 response for invalid values
+- [X] T150 [US4] Add performance optimization: skip MarkdownParser.RenderToHtmlAsync when format=markdown
+- [X] T151 [US4] Add logging for format selection in ContentService
 
 ### Run Tests - Verify All PASS (Green Phase)
 
-- [ ] T152 [US4] Run all User Story 4 tests and confirm ALL tests pass
+- [X] T152 [US4] Run all User Story 4 tests and confirm ALL tests pass
 
 ### Refactor for User Story 4 (Refactor Phase)
 
-- [ ] T153 [US4] Refactor: Consider caching HTML content separately from Markdown to avoid re-rendering
-- [ ] T154 [US4] Refactor: Review DTO mapping logic, consider using AutoMapper if mappings become complex
-- [ ] T155 [US4] Run tests again to confirm refactoring didn't break functionality
+- [X] T153 [US4] Refactor: Consider caching HTML content separately from Markdown to avoid re-rendering
+- [X] T154 [US4] Refactor: Review DTO mapping logic, consider using AutoMapper if mappings become complex
+- [X] T155 [US4] Run tests again to confirm refactoring didn't break functionality
 
 **Checkpoint**: All user stories should now be independently functional - MVP + all P2/P3 features complete
 
