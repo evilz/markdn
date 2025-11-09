@@ -1,4 +1,5 @@
 using Markdn.Api.Configuration;
+using Markdn.Api.Endpoints;
 using Markdn.Api.FileSystem;
 using Markdn.Api.Middleware;
 using Markdn.Api.Models;
@@ -45,6 +46,9 @@ builder.Services.AddSingleton<IContentCache, ContentCache>();
 builder.Services.AddSingleton<IFileWatcherService, FileWatcherService>();
 builder.Services.AddHostedService<FileWatcherHostedService>();
 builder.Services.AddScoped<ContentService>();
+
+// Register Collection services
+builder.Services.AddSingleton<ICollectionLoader, CollectionLoader>();
 
 // Add health checks
 builder.Services.AddHealthChecks();
@@ -207,6 +211,9 @@ app.MapGet("/api/content/{slug}", async Task<Results<Ok<ContentItemResponse>, No
 })
 .WithName("GetContentBySlug")
 .WithOpenApi();
+
+// Map Collections endpoints
+app.MapCollectionsEndpoints();
 
 // Map health check endpoint
 app.MapHealthChecks("/api/health");

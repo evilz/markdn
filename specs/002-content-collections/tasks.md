@@ -76,24 +76,24 @@ Single Web API project structure:
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T025 [P] [US1] Unit test for CollectionLoader loading collections.json in tests/Markdn.Api.Tests.Unit/Services/CollectionLoaderTests.cs
-- [ ] T026 [P] [US1] Unit test for CollectionLoader parsing JSON Schema definitions in tests/Markdn.Api.Tests.Unit/Services/CollectionLoaderTests.cs
-- [ ] T027 [P] [US1] Unit test for CollectionLoader handling missing configuration file in tests/Markdn.Api.Tests.Unit/Services/CollectionLoaderTests.cs
-- [ ] T028 [P] [US1] Contract test for GET /api/collections endpoint in tests/Markdn.Api.Tests.Contract/Endpoints/CollectionsEndpointsTests.cs
-- [ ] T029 [P] [US1] Contract test for GET /api/collections/{name} endpoint in tests/Markdn.Api.Tests.Contract/Endpoints/CollectionsEndpointsTests.cs
-- [ ] T030 [P] [US1] Integration test for loading and retrieving collection metadata in tests/Markdn.Api.Tests.Integration/CollectionWorkflowTests.cs
+- [X] T025 [P] [US1] Unit test for CollectionLoader loading collections.json in tests/Markdn.Api.Tests.Unit/Services/CollectionLoaderTests.cs
+- [X] T026 [P] [US1] Unit test for CollectionLoader parsing JSON Schema definitions in tests/Markdn.Api.Tests.Unit/Services/CollectionLoaderTests.cs
+- [X] T027 [P] [US1] Unit test for CollectionLoader handling missing configuration file in tests/Markdn.Api.Tests.Unit/Services/CollectionLoaderTests.cs
+- [X] T028 [P] [US1] Contract test for GET /api/collections endpoint in tests/Markdn.Api.Tests.Contract/Endpoints/CollectionsEndpointsTests.cs
+- [X] T029 [P] [US1] Contract test for GET /api/collections/{name} endpoint in tests/Markdn.Api.Tests.Contract/Endpoints/CollectionsEndpointsTests.cs
+- [X] T030 [P] [US1] Integration test for loading and retrieving collection metadata in tests/Markdn.Api.Tests.Integration/CollectionWorkflowTests.cs
 
 ### Implementation for User Story 1
 
-- [ ] T031 [US1] Create ICollectionLoader interface in src/Markdn.Api/Services/ICollectionLoader.cs
-- [ ] T032 [US1] Implement CollectionLoader service in src/Markdn.Api/Services/CollectionLoader.cs (loads collections.json, parses schemas)
-- [ ] T033 [US1] Add structured logging to CollectionLoader with ILogger in src/Markdn.Api/Services/CollectionLoader.cs
-- [ ] T034 [US1] Create CollectionsEndpoints minimal API in src/Markdn.Api/Endpoints/CollectionsEndpoints.cs (GET /api/collections, GET /api/collections/{name})
-- [ ] T035 [US1] Register ICollectionLoader as singleton in src/Markdn.Api/Program.cs
-- [ ] T036 [US1] Map CollectionsEndpoints in src/Markdn.Api/Program.cs
-- [ ] T037 [US1] Add error handling for invalid JSON schemas in src/Markdn.Api/Services/CollectionLoader.cs
-- [ ] T038 [US1] Add timeout handling for file I/O operations in src/Markdn.Api/Services/CollectionLoader.cs
-- [ ] T039 [US1] Verify all tests pass (T025-T030)
+- [X] T031 [US1] Create ICollectionLoader interface in src/Markdn.Api/Services/ICollectionLoader.cs
+- [X] T032 [US1] Implement CollectionLoader service in src/Markdn.Api/Services/CollectionLoader.cs (loads collections.json, parses schemas)
+- [X] T033 [US1] Add structured logging to CollectionLoader with ILogger in src/Markdn.Api/Services/CollectionLoader.cs
+- [X] T034 [US1] Create CollectionsEndpoints minimal API in src/Markdn.Api/Endpoints/CollectionsEndpoints.cs (GET /api/collections, GET /api/collections/{name})
+- [X] T035 [US1] Register ICollectionLoader as singleton in src/Markdn.Api/Program.cs
+- [X] T036 [US1] Map CollectionsEndpoints in src/Markdn.Api/Program.cs
+- [X] T037 [US1] Add error handling for invalid JSON schemas in src/Markdn.Api/Services/CollectionLoader.cs
+- [X] T038 [US1] Add timeout handling for file I/O operations in src/Markdn.Api/Services/CollectionLoader.cs
+- [X] T039 [US1] Verify all tests pass (T025-T030)
 
 **Checkpoint**: Collections can be defined in configuration file and queried via API
 
