@@ -97,7 +97,7 @@ public class CollectionLoader : ICollectionLoader
         return collections.TryGetValue(name, out var collection) ? collection : null;
     }
 
-    private Collection ParseCollection(string name, CollectionDefinition definition, string contentRootPath)
+    private Collection ParseCollection(string name, CollectionDefinition definition, string _)
     {
         // Parse the schema from the dynamic object
         var schemaJson = JsonSerializer.Serialize(definition.Schema);

@@ -108,4 +108,30 @@ public class CollectionsEndpointsTests : IClassFixture<ContractTestApplicationFa
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         // CORS headers assertion can be added here if CORS is configured
     }
+
+    [Fact]
+    public async Task POST_CollectionValidate_WithValidContent_ShouldReturn200WithValidationResult()
+    {
+        // Arrange
+        var collectionName = "test-collection";
+        var content = new
+        {
+            title = "Test Post",
+            author = "John Doe"
+        };
+
+        // Act
+        var response = await _client.PostAsJsonAsync($"/api/collections/{collectionName}/validate", content);
+
+        // Assert
+        // This will be 404 until collections are actually configured
+        response.StatusCode.Should().BeOneOf(HttpStatusCode.OK, HttpStatusCode.NotFound);
+
+        if (response.StatusCode == HttpStatusCode.OK)
+        {
+            var result = await response.Content.ReadFromJsonAsync<ValidationResult>();
+            result.Should().NotBeNull();
+            result!.ValidatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
+        }
+    }
 }

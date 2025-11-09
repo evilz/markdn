@@ -107,31 +107,31 @@ Single Web API project structure:
 
 ### Tests for User Story 2 (TDD - Write First!)
 
-- [ ] T040 [P] [US2] Unit test for SchemaValidator validating required fields in tests/Markdn.Api.Tests.Unit/Services/SchemaValidatorTests.cs
-- [ ] T041 [P] [US2] Unit test for SchemaValidator validating field types in tests/Markdn.Api.Tests.Unit/Services/SchemaValidatorTests.cs
-- [ ] T042 [P] [US2] Unit test for SchemaValidator handling optional fields in tests/Markdn.Api.Tests.Unit/Services/SchemaValidatorTests.cs
-- [ ] T043 [P] [US2] Unit test for SchemaValidator handling extra fields with warnings in tests/Markdn.Api.Tests.Unit/Services/SchemaValidatorTests.cs
-- [ ] T044 [P] [US2] Unit test for ContentItemValidator creating ValidationResult in tests/Markdn.Api.Tests.Unit/Validation/ContentItemValidatorTests.cs
-- [ ] T045 [P] [US2] Integration test for eager validation at startup in tests/Markdn.Api.Tests.Integration/ContentRenderingTests.cs
-- [ ] T046 [P] [US2] Integration test for lazy validation at runtime in tests/Markdn.Api.Tests.Integration/ContentRenderingTests.cs
-- [ ] T047 [P] [US2] Contract test for GET /api/collections/{name}/validate endpoint in tests/Markdn.Api.Tests.Contract/Endpoints/CollectionsEndpointsTests.cs
+- [X] T040 [P] [US2] Unit test for SchemaValidator validating required fields in tests/Markdn.Api.Tests.Unit/Services/SchemaValidatorTests.cs
+- [X] T041 [P] [US2] Unit test for SchemaValidator validating field types in tests/Markdn.Api.Tests.Unit/Services/SchemaValidatorTests.cs
+- [X] T042 [P] [US2] Unit test for SchemaValidator handling optional fields in tests/Markdn.Api.Tests.Unit/Services/SchemaValidatorTests.cs
+- [X] T043 [P] [US2] Unit test for SchemaValidator handling extra fields with warnings in tests/Markdn.Api.Tests.Unit/Services/SchemaValidatorTests.cs
+- [X] T044 [P] [US2] Unit test for ContentItemValidator creating ValidationResult in tests/Markdn.Api.Tests.Unit/Validation/ContentItemValidatorTests.cs
+- [X] T045 [P] [US2] Integration test for eager validation at startup in tests/Markdn.Api.Tests.Integration/ContentRenderingTests.cs
+- [X] T046 [P] [US2] Integration test for lazy validation at runtime in tests/Markdn.Api.Tests.Integration/ContentRenderingTests.cs
+- [X] T047 [P] [US2] Contract test for POST /api/collections/{name}/validate endpoint in tests/Markdn.Api.Tests.Contract/Endpoints/CollectionsEndpointsTests.cs
 
 ### Implementation for User Story 2
 
-- [ ] T048 [US2] Create ISchemaValidator interface in src/Markdn.Api/Services/ISchemaValidator.cs
-- [ ] T049 [US2] Implement SchemaValidator service in src/Markdn.Api/Services/SchemaValidator.cs (uses NJsonSchema for validation)
-- [ ] T050 [US2] Add JSON Schema compilation caching in src/Markdn.Api/Services/SchemaValidator.cs
-- [ ] T051 [US2] Create ContentItemValidator for front-matter validation in src/Markdn.Api/Validation/ContentItemValidator.cs
-- [ ] T052 [US2] Implement ValidationResult builder with errors and warnings in src/Markdn.Api/Services/SchemaValidator.cs
-- [ ] T053 [US2] Create CollectionValidationService hosted service in src/Markdn.Api/HostedServices/CollectionValidationService.cs (eager validation at startup)
-- [ ] T054 [US2] Add lazy validation on content access in src/Markdn.Api/Services/CollectionService.cs
-- [ ] T055 [US2] Add extra field detection and warning logging in src/Markdn.Api/Services/SchemaValidator.cs
-- [ ] T056 [US2] Register ISchemaValidator as scoped service in src/Markdn.Api/Program.cs
-- [ ] T057 [US2] Register CollectionValidationService as hosted service in src/Markdn.Api/Program.cs
-- [ ] T058 [US2] Add GET /api/collections/{name}/validate endpoint to CollectionsEndpoints in src/Markdn.Api/Endpoints/CollectionsEndpoints.cs
-- [ ] T059 [US2] Add structured logging for validation operations with ILogger in src/Markdn.Api/Services/SchemaValidator.cs
-- [ ] T060 [US2] Add validation performance metrics logging in src/Markdn.Api/HostedServices/CollectionValidationService.cs
-- [ ] T061 [US2] Verify all tests pass (T040-T047)
+- [X] T048 [US2] Create ISchemaValidator interface in src/Markdn.Api/Services/ISchemaValidator.cs
+- [X] T049 [US2] Implement SchemaValidator service in src/Markdn.Api/Services/SchemaValidator.cs (uses NJsonSchema for validation)
+- [X] T050 [US2] Add JSON Schema compilation caching in src/Markdn.Api/Services/SchemaValidator.cs
+- [X] T051 [US2] Create ContentItemValidator for front-matter validation in src/Markdn.Api/Validation/ContentItemValidator.cs
+- [X] T052 [US2] Implement ValidationResult builder with errors and warnings in src/Markdn.Api/Services/SchemaValidator.cs
+- [X] T053 [US2] Create CollectionValidationService hosted service in src/Markdn.Api/HostedServices/CollectionValidationService.cs (eager validation at startup)
+- [X] T054 [US2] Add lazy validation on content access in src/Markdn.Api/Services/CollectionService.cs
+- [X] T055 [US2] Add extra field detection and warning logging in src/Markdn.Api/Services/SchemaValidator.cs
+- [X] T056 [US2] Register ISchemaValidator as scoped service in src/Markdn.Api/Program.cs
+- [X] T057 [US2] Register CollectionValidationService as hosted service in src/Markdn.Api/Program.cs
+- [X] T058 [US2] Add POST /api/collections/{name}/validate endpoint to CollectionsEndpoints in src/Markdn.Api/Endpoints/CollectionsEndpoints.cs
+- [X] T059 [US2] Add structured logging for validation operations with ILogger in src/Markdn.Api/Services/SchemaValidator.cs
+- [X] T060 [US2] Add validation performance metrics logging in src/Markdn.Api/HostedServices/CollectionValidationService.cs
+- [X] T061 [US2] Verify all tests pass (T040-T047)
 
 **Checkpoint**: Content files are validated against schemas with clear error messages
 

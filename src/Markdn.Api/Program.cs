@@ -4,6 +4,7 @@ using Markdn.Api.FileSystem;
 using Markdn.Api.Middleware;
 using Markdn.Api.Models;
 using Markdn.Api.Services;
+using Markdn.Api.Validation;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,6 +50,8 @@ builder.Services.AddScoped<ContentService>();
 
 // Register Collection services
 builder.Services.AddSingleton<ICollectionLoader, CollectionLoader>();
+builder.Services.AddSingleton<ISchemaValidator, SchemaValidator>();
+builder.Services.AddScoped<ContentItemValidator>();
 
 // Add health checks
 builder.Services.AddHealthChecks();

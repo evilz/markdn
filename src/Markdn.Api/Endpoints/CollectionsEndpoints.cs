@@ -1,5 +1,7 @@
+using System.Text.Json;
 using Markdn.Api.Models;
 using Markdn.Api.Services;
+using Markdn.Api.Validation;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Markdn.Api.Endpoints;
@@ -27,6 +29,12 @@ public static class CollectionsEndpoints
             .WithName("GetCollectionByName")
             .WithSummary("Get a specific collection by name")
             .Produces<Collection>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
+
+        group.MapPost("/{name}/validate", ValidateContentAsync)
+            .WithName("ValidateContent")
+            .WithSummary("Validate content against a collection schema")
+            .Produces<ValidationResult>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
         return app;
@@ -91,6 +99,60 @@ public static class CollectionsEndpoints
             logger.LogError(ex, "Error retrieving collection {CollectionName}", name);
             return TypedResults.Problem(
                 title: $"Error retrieving collection {name}",
+                detail: ex.Message,
+                statusCode: StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    private static async Task<Results<Ok<ValidationResult>, NotFound, ProblemHttpResult>> ValidateContentAsync(
+        string name,
+        JsonElement content,
+        ICollectionLoader loader,
+        ContentItemValidator validator,
+        ILogger<Program> logger,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            logger.LogInformation("Validating content against collection {CollectionName}", name);
+            
+            // Load the collection schema
+            var collection = await loader.LoadCollectionAsync(name, cancellationToken);
+            if (collection == null)
+            {
+                logger.LogWarning("Collection {CollectionName} not found", name);
+                return TypedResults.NotFound();
+            }
+
+            // Convert JsonElement to Dictionary for ContentItem
+            var contentDict = JsonSerializer.Deserialize<Dictionary<string, object>>(content.GetRawText());
+            
+            // Create a temporary ContentItem for validation
+            var contentItem = new ContentItem
+            {
+                Slug = contentDict?.GetValueOrDefault("slug")?.ToString() ?? "temp",
+                FilePath = "temp",
+                CustomFields = contentDict ?? new Dictionary<string, object>()
+            };
+
+            // Validate the content
+            var result = await validator.ValidateAsync(contentItem, collection.Schema, cancellationToken);
+
+            logger.LogInformation("Content validation completed: IsValid={IsValid}, Errors={ErrorCount}", 
+                result.IsValid, result.Errors.Count);
+            
+            return TypedResults.Ok(result);
+        }
+        catch (FileNotFoundException ex)
+        {
+            logger.LogWarning(ex, "Collections configuration file not found");
+            return TypedResults.NotFound();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error validating content for collection {CollectionName}", name);
+            return TypedResults.Problem(
+                title: $"Error validating content for collection {name}",
                 detail: ex.Message,
                 statusCode: StatusCodes.Status500InternalServerError);
         }
