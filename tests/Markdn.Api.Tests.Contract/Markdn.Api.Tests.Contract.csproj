@@ -26,4 +26,10 @@
     <ProjectReference Include="..\..\src\Markdn.Api\Markdn.Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="TestContent\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

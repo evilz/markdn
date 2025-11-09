@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using Markdn.Api.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace Markdn.Api.Middleware;
 
@@ -38,6 +39,7 @@ public class GlobalExceptionMiddleware
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = exception switch
         {
+            BadHttpRequestException => (int)HttpStatusCode.BadRequest,
             FileNotFoundException => (int)HttpStatusCode.NotFound,
             UnauthorizedAccessException => (int)HttpStatusCode.Forbidden,
             ArgumentException => (int)HttpStatusCode.BadRequest,

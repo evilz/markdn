@@ -7,6 +7,12 @@ using Microsoft.AspNetCore.Http.HttpResults;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Remove server header for security
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.AddServerHeader = false;
+});
+
 // Configure options
 builder.Services.Configure<MarkdnOptions>(
     builder.Configuration.GetSection("Markdn"));

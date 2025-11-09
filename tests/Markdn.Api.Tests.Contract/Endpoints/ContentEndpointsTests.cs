@@ -7,12 +7,12 @@ using Xunit;
 
 namespace Markdn.Api.Tests.Contract.Endpoints;
 
-public class ContentEndpointsTests : IClassFixture<WebApplicationFactory<Program>>
+public class ContentEndpointsTests : IClassFixture<ContractTestApplicationFactory>
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly ContractTestApplicationFactory _factory;
     private readonly HttpClient _client;
 
-    public ContentEndpointsTests(WebApplicationFactory<Program> factory)
+    public ContentEndpointsTests(ContractTestApplicationFactory factory)
     {
         _factory = factory;
         _client = _factory.CreateClient();

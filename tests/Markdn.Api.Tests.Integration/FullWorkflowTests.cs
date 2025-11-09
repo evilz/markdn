@@ -21,30 +21,74 @@ public class FullWorkflowTests : IClassFixture<WebApplicationFactory<Program>>
     [Fact]
     public async Task FullWorkflow_ReadMarkdown_ParseFrontMatter_RenderHtml_ServeAsJson()
     {
-        // Arrange
-        var client = _factory.CreateClient();
+        // Arrange - Create temporary test directory with content
+        var testContentDir = Path.Combine(Path.GetTempPath(), "markdn-workflow-test-" + Guid.NewGuid());
+        Directory.CreateDirectory(testContentDir);
 
-        // Act - Get all content
-        var listResponse = await client.GetAsync("/api/content");
-        listResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        try
+        {
+            // Create a test markdown file
+            var testFile = Path.Combine(testContentDir, "test-post.md");
+            var markdownContent = @"---
+title: Test Post
+author: Test Author
+date: 2025-01-01
+tags:
+  - test
+  - workflow
+category: Testing
+---
 
-        var contentList = await listResponse.Content.ReadFromJsonAsync<ContentListResponse>();
-        contentList.Should().NotBeNull();
-        contentList!.Items.Should().NotBeEmpty();
+# Test Content
 
-        // Act - Get specific content by slug
-        var firstSlug = contentList.Items.First().Slug;
-        var itemResponse = await client.GetAsync($"/api/content/{firstSlug}");
-        itemResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+This is a test post for the full workflow test.";
 
-        var contentItem = await itemResponse.Content.ReadFromJsonAsync<ContentItemResponse>();
+            await File.WriteAllTextAsync(testFile, markdownContent);
 
-        // Assert - Complete workflow
-        contentItem.Should().NotBeNull();
-        contentItem!.Slug.Should().Be(firstSlug);
-        contentItem.MarkdownContent.Should().NotBeNullOrEmpty();
-        contentItem.HtmlContent.Should().NotBeNullOrEmpty();
-        contentItem.Title.Should().NotBeNullOrEmpty();
+            var factory = _factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    services.Configure<MarkdnOptions>(options =>
+                    {
+                        options.ContentDirectory = testContentDir;
+                        options.EnableFileWatching = false;
+                    });
+                });
+            });
+
+            var client = factory.CreateClient();
+
+            // Act - Get all content
+            var listResponse = await client.GetAsync("/api/content");
+            listResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            var contentList = await listResponse.Content.ReadFromJsonAsync<ContentListResponse>();
+            contentList.Should().NotBeNull();
+            contentList!.Items.Should().NotBeEmpty();
+
+            // Act - Get specific content by slug
+            var firstSlug = contentList.Items.First().Slug;
+            var itemResponse = await client.GetAsync($"/api/content/{firstSlug}");
+            itemResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+
+            var contentItem = await itemResponse.Content.ReadFromJsonAsync<ContentItemResponse>();
+
+            // Assert - Complete workflow
+            contentItem.Should().NotBeNull();
+            contentItem!.Slug.Should().Be(firstSlug);
+            contentItem.MarkdownContent.Should().NotBeNullOrEmpty();
+            contentItem.HtmlContent.Should().NotBeNullOrEmpty();
+            contentItem.Title.Should().NotBeNullOrEmpty();
+        }
+        finally
+        {
+            // Cleanup
+            if (Directory.Exists(testContentDir))
+            {
+                Directory.Delete(testContentDir, true);
+            }
+        }
     }
 
     [Fact]
