@@ -131,14 +131,15 @@ public class ContentFilteringTests : IDisposable
     {
         var filePath = Path.Combine(_tempDirectory, filename);
         
-        var yamlContent = System.Text.Json.JsonSerializer.Serialize(frontMatter, new System.Text.Json.JsonSerializerOptions
-        {
-            WriteIndented = true
-        }).Replace("{", "").Replace("}", "").Replace("\"", "").Replace(",", "");
+        // Use YamlDotNet for proper YAML serialization
+        var serializer = new YamlDotNet.Serialization.SerializerBuilder()
+            .WithNamingConvention(YamlDotNet.Serialization.NamingConventions.CamelCaseNamingConvention.Instance)
+            .Build();
+        
+        var yamlContent = serializer.Serialize(frontMatter);
 
         var fileContent = $@"---
-{yamlContent}
----
+{yamlContent}---
 
 {content}";
 
