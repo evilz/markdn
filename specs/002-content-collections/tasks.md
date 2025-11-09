@@ -28,14 +28,14 @@ Single Web API project structure:
 
 **Purpose**: Project initialization and dependency installation
 
-- [ ] T001 Add NJsonSchema NuGet package (version 11.x) to src/Markdn.Api/Markdn.Api.csproj
-- [ ] T002 [P] Create Models directory structure: src/Markdn.Api/Models/
-- [ ] T003 [P] Create Services directory structure: src/Markdn.Api/Services/
-- [ ] T004 [P] Create Validation directory structure: src/Markdn.Api/Validation/
-- [ ] T005 [P] Create Querying directory structure: src/Markdn.Api/Querying/
-- [ ] T006 [P] Create Endpoints directory structure: src/Markdn.Api/Endpoints/
-- [ ] T007 [P] Create HostedServices directory structure: src/Markdn.Api/HostedServices/
-- [ ] T008 [P] Create test project directories per plan.md structure
+- [X] T001 Add NJsonSchema NuGet package (version 11.x) to src/Markdn.Api/Markdn.Api.csproj
+- [X] T002 [P] Create Models directory structure: src/Markdn.Api/Models/
+- [X] T003 [P] Create Services directory structure: src/Markdn.Api/Services/
+- [X] T004 [P] Create Validation directory structure: src/Markdn.Api/Validation/
+- [X] T005 [P] Create Querying directory structure: src/Markdn.Api/Querying/
+- [X] T006 [P] Create Endpoints directory structure: src/Markdn.Api/Endpoints/
+- [X] T007 [P] Create HostedServices directory structure: src/Markdn.Api/HostedServices/
+- [X] T008 [P] Create test project directories per plan.md structure
 
 ---
 
@@ -45,22 +45,22 @@ Single Web API project structure:
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T009 [P] Create FieldType enum in src/Markdn.Api/Models/FieldType.cs
-- [ ] T010 [P] Create ValidationErrorType enum in src/Markdn.Api/Models/ValidationErrorType.cs
-- [ ] T011 [P] Create ValidationWarningType enum in src/Markdn.Api/Models/ValidationWarningType.cs
-- [ ] T012 [P] Create ComparisonOperator enum in src/Markdn.Api/Models/ComparisonOperator.cs
-- [ ] T013 [P] Create SortDirection enum in src/Markdn.Api/Models/SortDirection.cs
-- [ ] T014 Create FieldDefinition model in src/Markdn.Api/Models/FieldDefinition.cs
-- [ ] T015 Create CollectionSchema model in src/Markdn.Api/Models/CollectionSchema.cs (depends on T014)
-- [ ] T016 Create Collection model in src/Markdn.Api/Models/Collection.cs (depends on T015)
-- [ ] T017 [P] Create ValidationError model in src/Markdn.Api/Models/ValidationError.cs
-- [ ] T018 [P] Create ValidationWarning model in src/Markdn.Api/Models/ValidationWarning.cs
-- [ ] T019 Create ValidationResult model in src/Markdn.Api/Models/ValidationResult.cs (depends on T017, T018)
-- [ ] T020 [P] Create ContentIdentifier model in src/Markdn.Api/Models/ContentIdentifier.cs
-- [ ] T021 Create ContentItem model in src/Markdn.Api/Models/ContentItem.cs (depends on T019, T020)
-- [ ] T022 Create CollectionsConfiguration model in src/Markdn.Api/Configuration/CollectionsConfiguration.cs
-- [ ] T023 Create CollectionsOptions model in src/Markdn.Api/Configuration/CollectionsOptions.cs
-- [ ] T024 Register IOptions<CollectionsOptions> in src/Markdn.Api/Program.cs
+- [X] T009 [P] Create FieldType enum in src/Markdn.Api/Models/FieldType.cs
+- [X] T010 [P] Create ValidationErrorType enum in src/Markdn.Api/Models/ValidationErrorType.cs
+- [X] T011 [P] Create ValidationWarningType enum in src/Markdn.Api/Models/ValidationWarningType.cs
+- [X] T012 [P] Create ComparisonOperator enum in src/Markdn.Api/Models/ComparisonOperator.cs
+- [X] T013 [P] Create SortDirection enum in src/Markdn.Api/Models/SortDirection.cs
+- [X] T014 Create FieldDefinition model in src/Markdn.Api/Models/FieldDefinition.cs
+- [X] T015 Create CollectionSchema model in src/Markdn.Api/Models/CollectionSchema.cs (depends on T014)
+- [X] T016 Create Collection model in src/Markdn.Api/Models/Collection.cs (depends on T015)
+- [X] T017 [P] Create ValidationError model in src/Markdn.Api/Models/ValidationError.cs
+- [X] T018 [P] Create ValidationWarning model in src/Markdn.Api/Models/ValidationWarning.cs
+- [X] T019 Create ValidationResult model in src/Markdn.Api/Models/ValidationResult.cs (depends on T017, T018)
+- [X] T020 [P] Create ContentIdentifier model in src/Markdn.Api/Models/ContentIdentifier.cs
+- [X] T021 Create ContentItem model in src/Markdn.Api/Models/ContentItem.cs (depends on T019, T020)
+- [X] T022 Create CollectionsConfiguration model in src/Markdn.Api/Configuration/CollectionsConfiguration.cs
+- [X] T023 Create CollectionsOptions model in src/Markdn.Api/Configuration/CollectionsOptions.cs
+- [X] T024 Register IOptions<CollectionsOptions> in src/Markdn.Api/Program.cs
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 

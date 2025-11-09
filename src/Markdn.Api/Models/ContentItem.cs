@@ -11,6 +11,11 @@ public class ContentItem
     public required string Slug { get; set; }
 
     /// <summary>
+    /// Gets or sets the name of the parent collection (null for non-collection content).
+    /// </summary>
+    public string? CollectionName { get; set; }
+
+    /// <summary>
     /// Gets or sets the absolute path to the source file.
     /// </summary>
     public required string FilePath { get; set; }
@@ -79,4 +84,14 @@ public class ContentItem
     /// Gets or sets error messages if any.
     /// </summary>
     public List<string> ParsingWarnings { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets whether content passes schema validation (for collection items).
+    /// </summary>
+    public bool IsValid { get; set; } = true;
+
+    /// <summary>
+    /// Gets or sets the schema validation result (for collection items).
+    /// </summary>
+    public ValidationResult? ValidationResult { get; set; }
 }

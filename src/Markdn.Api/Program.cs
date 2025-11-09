@@ -27,6 +27,9 @@ if (builder.Environment.IsDevelopment())
 builder.Services.Configure<MarkdnOptions>(
     builder.Configuration.GetSection("Markdn"));
 
+builder.Services.Configure<CollectionsOptions>(
+    builder.Configuration.GetSection(CollectionsOptions.SectionName));
+
 // Add memory cache
 builder.Services.AddMemoryCache(options =>
 {
