@@ -1,0 +1,478 @@
+openapi: 3.0.3
+info:
+  title: Markdn CMS API
+  description: |
+    Lightweight headless CMS that serves Markdown files as structured JSON.
+    
+    ## Features
+    - Read Markdown files with YAML front-matter
+    - Filter and query content by metadata
+    - Pagination support
+    - File system watching for live updates
+    - Markdown to HTML rendering
+    
+    ## Slug Generation
+    Slugs are generated using this precedence:
+    1. Custom `slug` field from front-matter
+    2. Filename without extension
+    3. Full relative path from content root
+    4. Error if collision still exists
+    
+    ## Date Format
+    All date fields must use ISO 8601 format: `YYYY-MM-DD` or `YYYY-MM-DDTHH:MM:SS`
+    
+  version: 1.0.0
+  contact:
+    name: Markdn CMS
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:5000/api
+    description: Local development server
+  - url: https://api.example.com/api
+    description: Production server
+
+tags:
+  - name: content
+    description: Content operations
+  - name: health
+    description: Health and readiness checks
+
+paths:
+  /content:
+    get:
+      tags:
+        - content
+      summary: List all content items
+      description: |
+        Retrieve a paginated list of content items with optional filtering by metadata.
+        
+        **Performance**: Response time < 200ms for collections up to 1,000 items.
+      operationId: listContent
+      parameters:
+        - name: tag
+          in: query
+          description: Filter by tag
+          schema:
+            type: string
+            example: dotnet
+        - name: category
+          in: query
+          description: Filter by category
+          schema:
+            type: string
+            example: blog
+        - name: dateFrom
+          in: query
+          description: Filter by date range start (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+            example: 2025-01-01
+        - name: dateTo
+          in: query
+          description: Filter by date range end (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+            example: 2025-12-31
+        - name: page
+          in: query
+          description: Page number (1-indexed)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: sortBy
+          in: query
+          description: Field to sort by
+          schema:
+            type: string
+            enum: [date, title, lastModified]
+            default: date
+        - name: sortOrder
+          in: query
+          description: Sort direction
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Successful response with content list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentListResponse'
+              examples:
+                success:
+                  summary: Example response with 2 items
+                  value:
+                    items:
+                      - slug: getting-started
+                        title: Getting Started with Markdn
+                        date: 2025-11-08T00:00:00Z
+                        author: John Doe
+                        tags: [tutorial, basics]
+                        category: documentation
+                        description: Learn how to use Markdn CMS
+                        lastModified: 2025-11-08T10:30:00Z
+                      - slug: advanced-features
+                        title: Advanced Features
+                        date: 2025-11-07T00:00:00Z
+                        author: Jane Smith
+                        tags: [advanced, features]
+                        category: documentation
+                        description: Explore advanced Markdn capabilities
+                        lastModified: 2025-11-07T15:45:00Z
+                    pagination:
+                      totalCount: 42
+                      page: 1
+                      pageSize: 50
+                      totalPages: 1
+                      hasPrevious: false
+                      hasNext: false
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /content/{slug}:
+    get:
+      tags:
+        - content
+      summary: Get content by slug
+      description: |
+        Retrieve a single content item by its slug.
+        
+        **Performance**: Response time < 100ms for files up to 1MB.
+      operationId: getContentBySlug
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          description: Content item slug
+          schema:
+            type: string
+            example: getting-started
+        - name: format
+          in: query
+          description: Content format (markdown, html, or both)
+          schema:
+            type: string
+            enum: [markdown, html, both]
+            default: both
+      responses:
+        '200':
+          description: Successful response with content item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentItemResponse'
+              examples:
+                withoutErrors:
+                  summary: Content without parsing errors
+                  value:
+                    slug: getting-started
+                    title: Getting Started with Markdn
+                    date: 2025-11-08T00:00:00Z
+                    author: John Doe
+                    tags: [tutorial, basics]
+                    category: documentation
+                    description: Learn how to use Markdn CMS
+                    customFields:
+                      featured: true
+                      readingTime: 5
+                    markdownContent: "# Getting Started\n\nWelcome to Markdn..."
+                    htmlContent: "<h1>Getting Started</h1><p>Welcome to Markdn...</p>"
+                    lastModified: 2025-11-08T10:30:00Z
+                withWarnings:
+                  summary: Content with YAML parsing warnings
+                  value:
+                    slug: example-post
+                    title: null
+                    date: null
+                    author: null
+                    tags: []
+                    category: null
+                    description: null
+                    customFields: {}
+                    markdownContent: "# Example Post\n\nContent here..."
+                    htmlContent: "<h1>Example Post</h1><p>Content here...</p>"
+                    lastModified: 2025-11-08T10:30:00Z
+                    warnings:
+                      - "YAML front-matter parsing failed: Invalid syntax at line 3"
+        '404':
+          description: Content not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: NotFound
+                message: Content with slug 'unknown-slug' not found
+                statusCode: 404
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /health:
+    get:
+      tags:
+        - health
+      summary: Health check
+      description: |
+        Basic health check endpoint for container orchestration and monitoring.
+        Returns 200 OK if the system is running and ready to serve requests.
+      operationId: healthCheck
+      responses:
+        '200':
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy]
+                  timestamp:
+                    type: string
+                    format: date-time
+                example:
+                  status: healthy
+                  timestamp: 2025-11-08T10:30:00Z
+        '503':
+          description: System is unhealthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [unhealthy]
+                  error:
+                    type: string
+                example:
+                  status: unhealthy
+                  error: Content directory not accessible
+
+components:
+  schemas:
+    ContentListResponse:
+      type: object
+      required:
+        - items
+        - pagination
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContentItemSummary'
+        pagination:
+          $ref: '#/components/schemas/PaginationMetadata'
+
+    ContentItemSummary:
+      type: object
+      required:
+        - slug
+        - tags
+        - lastModified
+      properties:
+        slug:
+          type: string
+          description: URL-safe unique identifier
+          example: getting-started
+        title:
+          type: string
+          nullable: true
+          description: Content title from front-matter
+          example: Getting Started with Markdn
+        date:
+          type: string
+          format: date-time
+          nullable: true
+          description: Publication date (ISO 8601)
+          example: 2025-11-08T00:00:00Z
+        author:
+          type: string
+          nullable: true
+          description: Author name
+          example: John Doe
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags for categorization
+          example: [tutorial, basics]
+        category:
+          type: string
+          nullable: true
+          description: Primary category
+          example: documentation
+        description:
+          type: string
+          nullable: true
+          description: Short description
+          example: Learn how to use Markdn CMS
+        lastModified:
+          type: string
+          format: date-time
+          description: File last modified timestamp
+          example: 2025-11-08T10:30:00Z
+
+    ContentItemResponse:
+      type: object
+      required:
+        - slug
+        - tags
+        - customFields
+        - markdownContent
+        - lastModified
+      properties:
+        slug:
+          type: string
+          description: URL-safe unique identifier
+          example: getting-started
+        title:
+          type: string
+          nullable: true
+          description: Content title from front-matter
+          example: Getting Started with Markdn
+        date:
+          type: string
+          format: date-time
+          nullable: true
+          description: Publication date (ISO 8601)
+          example: 2025-11-08T00:00:00Z
+        author:
+          type: string
+          nullable: true
+          description: Author name
+          example: John Doe
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags for categorization
+          example: [tutorial, basics]
+        category:
+          type: string
+          nullable: true
+          description: Primary category
+          example: documentation
+        description:
+          type: string
+          nullable: true
+          description: Short description
+          example: Learn how to use Markdn CMS
+        customFields:
+          type: object
+          additionalProperties: true
+          description: Custom front-matter fields
+          example:
+            featured: true
+            readingTime: 5
+        markdownContent:
+          type: string
+          description: Raw Markdown body
+          example: "# Getting Started\n\nWelcome to Markdn..."
+        htmlContent:
+          type: string
+          nullable: true
+          description: Rendered HTML (null if format=markdown)
+          example: "<h1>Getting Started</h1><p>Welcome to Markdn...</p>"
+        lastModified:
+          type: string
+          format: date-time
+          description: File last modified timestamp
+          example: 2025-11-08T10:30:00Z
+        warnings:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: Parsing warnings (present only if errors occurred)
+          example:
+            - "YAML front-matter parsing failed: Invalid syntax at line 3"
+
+    PaginationMetadata:
+      type: object
+      required:
+        - totalCount
+        - page
+        - pageSize
+        - totalPages
+        - hasPrevious
+        - hasNext
+      properties:
+        totalCount:
+          type: integer
+          description: Total items matching query
+          example: 42
+        page:
+          type: integer
+          description: Current page number (1-indexed)
+          example: 1
+        pageSize:
+          type: integer
+          description: Items per page
+          example: 50
+        totalPages:
+          type: integer
+          description: Total pages
+          example: 1
+        hasPrevious:
+          type: boolean
+          description: Whether previous page exists
+          example: false
+        hasNext:
+          type: boolean
+          description: Whether next page exists
+          example: false
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - statusCode
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: NotFound
+        message:
+          type: string
+          nullable: true
+          description: Human-readable error message
+          example: Content with slug 'unknown-slug' not found
+        statusCode:
+          type: integer
+          description: HTTP status code
+          example: 404
+        detail:
+          type: string
+          nullable: true
+          description: Additional error details
+          example: null
