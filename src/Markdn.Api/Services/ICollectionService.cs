@@ -57,4 +57,14 @@ public interface ICollectionService
     /// </summary>
     /// <param name="collectionName">The name of the collection to invalidate.</param>
     void InvalidateCollection(string collectionName);
+
+    /// <summary>
+    /// Validates all items in a collection and generates a comprehensive report.
+    /// </summary>
+    /// <param name="collectionName">The name of the collection to validate.</param>
+    /// <param name="cancellationToken">Cancellation token for async operation.</param>
+    /// <returns>A validation report with errors for invalid items.</returns>
+    Task<CollectionValidationReport> ValidateCollectionAsync(
+        string collectionName,
+        CancellationToken cancellationToken = default);
 }

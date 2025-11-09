@@ -2,6 +2,7 @@ using FluentAssertions;
 using Markdn.Api.Models;
 using Markdn.Api.Services;
 using Markdn.Api.Configuration;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -62,8 +63,9 @@ public class CollectionWorkflowTests
         {
             ConfigurationFilePath = collectionsFile
         });
+        var cache = new MemoryCache(new MemoryCacheOptions());
         var logger = new Mock<ILogger<CollectionLoader>>().Object;
-        var loader = new CollectionLoader(options, logger);
+        var loader = new CollectionLoader(options, cache, logger);
 
         // Act
         var collections = await loader.LoadCollectionsAsync();
@@ -134,8 +136,9 @@ public class CollectionWorkflowTests
         {
             ConfigurationFilePath = collectionsFile
         });
+        var cache = new MemoryCache(new MemoryCacheOptions());
         var logger = new Mock<ILogger<CollectionLoader>>().Object;
-        var loader = new CollectionLoader(options, logger);
+        var loader = new CollectionLoader(options, cache, logger);
 
         // Act
         var collections = await loader.LoadCollectionsAsync();

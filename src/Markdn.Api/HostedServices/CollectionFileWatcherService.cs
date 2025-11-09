@@ -30,6 +30,12 @@ public class CollectionFileWatcherService : IHostedService, IDisposable
         _collectionLoader = collectionLoader;
         _options = options;
         _logger = logger;
+
+        // Subscribe to configuration changes
+        if (_collectionLoader is CollectionLoader loader)
+        {
+            loader.ConfigurationChanged += OnCollectionConfigurationChanged;
+        }
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -153,8 +159,52 @@ public class CollectionFileWatcherService : IHostedService, IDisposable
         _debounceTimers[debounceKey] = timer;
     }
 
+    private void OnCollectionConfigurationChanged(object? sender, string configPath)
+    {
+        _logger.LogInformation("Collections configuration changed at {ConfigPath}, invalidating all collection caches",
+            configPath);
+
+        // Invalidate all collection item caches
+        foreach (var collectionName in _watchers.Keys)
+        {
+            var cacheKey = $"collection_items_{collectionName}";
+            _memoryCache.Remove(cacheKey);
+            _logger.LogDebug("Invalidated cache for collection {CollectionName}", collectionName);
+        }
+
+        // Restart watchers with new configuration
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                // Stop existing watchers
+                foreach (var (name, watcher) in _watchers)
+                {
+                    watcher.EnableRaisingEvents = false;
+                    watcher.Dispose();
+                }
+                _watchers.Clear();
+
+                _logger.LogInformation("Restarting collection file watchers with new configuration");
+
+                // Restart with new configuration
+                await StartAsync(CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error restarting collection file watchers after configuration change");
+            }
+        });
+    }
+
     public void Dispose()
     {
+        // Unsubscribe from configuration changes
+        if (_collectionLoader is CollectionLoader loader)
+        {
+            loader.ConfigurationChanged -= OnCollectionConfigurationChanged;
+        }
+
         foreach (var watcher in _watchers.Values)
         {
             watcher.Dispose();

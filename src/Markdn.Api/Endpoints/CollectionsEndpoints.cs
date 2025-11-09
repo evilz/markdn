@@ -50,6 +50,12 @@ public static class CollectionsEndpoints
             .Produces<ContentItem>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
+        group.MapPost("/{name}/validate-all", ValidateCollectionAsync)
+            .WithName("ValidateCollection")
+            .WithSummary("Validate all items in a collection and generate a report")
+            .Produces<CollectionValidationReport>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
+
         return app;
     }
 
@@ -285,6 +291,40 @@ public static class CollectionsEndpoints
             logger.LogError(ex, "Error retrieving item {ItemId} from collection {CollectionName}", id, name);
             return TypedResults.Problem(
                 title: $"Error retrieving item {id} from collection {name}",
+                detail: ex.Message,
+                statusCode: StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    private static async Task<Results<Ok<CollectionValidationReport>, NotFound, ProblemHttpResult>> ValidateCollectionAsync(
+        string name,
+        ICollectionService collectionService,
+        ILogger<Program> logger,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            logger.LogInformation("Validating collection {CollectionName}", name);
+
+            var report = await collectionService.ValidateCollectionAsync(name, cancellationToken);
+
+            if (report.TotalItems == 0)
+            {
+                logger.LogWarning("Collection {CollectionName} not found or has no items", name);
+                return TypedResults.NotFound();
+            }
+
+            logger.LogInformation(
+                "Validation complete for collection {CollectionName}: {ValidItems}/{TotalItems} items valid",
+                name, report.ValidItems, report.TotalItems);
+
+            return TypedResults.Ok(report);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error validating collection {CollectionName}", name);
+            return TypedResults.Problem(
+                title: $"Error validating collection {name}",
                 detail: ex.Message,
                 statusCode: StatusCodes.Status500InternalServerError);
         }

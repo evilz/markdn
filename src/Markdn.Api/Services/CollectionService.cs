@@ -95,7 +95,8 @@ public class CollectionService : ICollectionService
         // Cache for 5 minutes
         var cacheOptions = new MemoryCacheEntryOptions
         {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5),
+            Size = items.Count // Each item counts as 1 unit
         };
         _cache.Set(cacheKey, items, cacheOptions);
 
@@ -155,7 +156,8 @@ public class CollectionService : ICollectionService
         // Cache for 10 minutes (longer than items since schemas change less frequently)
         var cacheOptions = new MemoryCacheEntryOptions
         {
-            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10),
+            Size = 1 // Collection metadata counts as 1 unit
         };
         _cache.Set(cacheKey, collections, cacheOptions);
 
@@ -411,5 +413,66 @@ public class CollectionService : ICollectionService
         var cacheKey = $"collection_items_{collectionName}";
         _cache.Remove(cacheKey);
         _logger.LogInformation("Invalidated cache for collection {CollectionName}", collectionName);
+    }
+
+    /// <inheritdoc/>
+    public async Task<CollectionValidationReport> ValidateCollectionAsync(
+        string collectionName,
+        CancellationToken cancellationToken = default)
+    {
+        using var activity = ActivitySource.StartActivity("ValidateCollection");
+        activity?.SetTag("collection.name", collectionName);
+
+        _logger.LogInformation("Validating collection {CollectionName}", collectionName);
+
+        var report = new CollectionValidationReport
+        {
+            CollectionName = collectionName,
+            ValidationTimestamp = DateTime.UtcNow
+        };
+
+        var collection = await _collectionLoader.LoadCollectionAsync(collectionName, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (collection == null)
+        {
+            _logger.LogWarning("Collection {CollectionName} not found for validation", collectionName);
+            return report;
+        }
+
+        var items = await LoadCollectionItemsAsync(collection, cancellationToken).ConfigureAwait(false);
+        report.TotalItems = items.Count;
+
+        foreach (var item in items)
+        {
+            if (item.IsValid)
+            {
+                report.ValidItems++;
+            }
+            else
+            {
+                report.InvalidItems++;
+
+                var itemError = new ItemValidationError
+                {
+                    FilePath = item.FilePath,
+                    Slug = item.Slug
+                };
+
+                if (item.ValidationResult != null && !item.ValidationResult.IsValid)
+                {
+                    itemError.ErrorMessages.AddRange(
+                        item.ValidationResult.Errors.Select(e => $"{e.FieldName}: {e.Message}"));
+                }
+
+                report.Errors.Add(itemError);
+            }
+        }
+
+        _logger.LogInformation(
+            "Validation complete for collection {CollectionName}: {ValidItems}/{TotalItems} items valid",
+            collectionName, report.ValidItems, report.TotalItems);
+
+        return report;
     }
 }
