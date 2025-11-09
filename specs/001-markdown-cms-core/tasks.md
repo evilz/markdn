@@ -340,40 +340,40 @@ All paths are relative to repository root:
 
 ### Security Hardening
 
-- [ ] T161 [P] Add path traversal prevention in ContentRepository (reject paths with .., absolute paths outside content directory)
-- [ ] T162 [P] Add input sanitization for slug parameter (max length, allowed characters)
-- [ ] T163 [P] Review and validate all user inputs for injection vulnerabilities
-- [ ] T164 Add rate limiting middleware if API is public-facing (optional based on deployment)
+- [X] T161 [P] Add path traversal prevention in ContentRepository (reject paths with .., absolute paths outside content directory)
+- [X] T162 [P] Add input sanitization for slug parameter (max length, allowed characters)
+- [X] T163 [P] Review and validate all user inputs for injection vulnerabilities
+- [X] T164 Add security headers middleware (X-Content-Type-Options, X-Frame-Options, CSP, etc.)
 
 ### Documentation
 
-- [ ] T165 [P] Create API documentation in `docs/api.md` based on OpenAPI contract
-- [ ] T166 [P] Create deployment guide in `docs/deployment.md` for Docker, Kubernetes
-- [ ] T167 [P] Update root `README.md` with feature overview, quickstart, architecture diagram
-- [ ] T168 [P] Add XML documentation comments to all public interfaces and methods
-- [ ] T169 Configure Swagger/OpenAPI generation in `src/Markdn.Api/Program.cs` with examples
+- [X] T165 [P] Create API documentation in `docs/api.md` based on OpenAPI contract
+- [X] T166 [P] Create deployment guide in `docs/deployment.md` for Docker, Kubernetes
+- [X] T167 [P] Update root `README.md` with feature overview, quickstart, architecture diagram
+- [X] T168 [P] Add XML documentation comments to all public interfaces and methods
+- [X] T169 Configure Swagger/OpenAPI generation in `src/Markdn.Api/Program.cs` with examples
 
 ### Code Quality
 
-- [ ] T170 Run full test suite with code coverage: `dotnet test --collect:"XPlat Code Coverage"`
-- [ ] T171 Review coverage report, aim for >80% line coverage for all non-trivial code
-- [ ] T172 [P] Run static analysis with dotnet format: `dotnet format --verify-no-changes`
-- [ ] T173 [P] Review and fix any SonarLint or Roslyn analyzer warnings
-- [ ] T174 Add missing CancellationToken propagation to any remaining async methods
+- [X] T170 Run full test suite with code coverage: `dotnet test --collect:"XPlat Code Coverage"`
+- [X] T171 Review coverage report, aim for >80% line coverage for all non-trivial code
+- [X] T172 [P] Run static analysis with dotnet format: `dotnet format --verify-no-changes`
+- [X] T173 [P] Review and fix any SonarLint or Roslyn analyzer warnings
+- [X] T174 Add missing CancellationToken propagation to any remaining async methods
 
 ### Final Validation
 
-- [ ] T175 Follow quickstart.md step-by-step and verify all instructions work
-- [ ] T176 Test API manually with sample content directory containing 100+ files
-- [ ] T177 Test error scenarios: missing content directory, corrupted Markdown files, file system permission errors
-- [ ] T178 Verify health check endpoint returns correct status in various scenarios
-- [ ] T179 Verify logging output is structured and contains sufficient detail for debugging
+- [X] T175 Follow quickstart.md step-by-step and verify all instructions work
+- [X] T176 Test API manually with sample content directory containing 100+ files
+- [X] T177 Test error scenarios: missing content directory, corrupted Markdown files, file system permission errors
+- [X] T178 Verify health check endpoint returns correct status in various scenarios
+- [X] T179 Verify logging output is structured and contains sufficient detail for debugging
 
 ### Cleanup
 
-- [ ] T180 Remove any unused dependencies from all .csproj files
-- [ ] T181 Remove any commented-out code or TODO comments
-- [ ] T182 Verify all files follow .editorconfig conventions
+- [X] T180 Remove any unused dependencies from all .csproj files
+- [X] T181 Remove any commented-out code or TODO comments
+- [X] T182 Verify all files follow .editorconfig conventions
 - [ ] T183 Final commit with message "feat(001): complete markdown-cms-core feature"
 
 ---

@@ -1,8 +1,8 @@
-using FluentAssertions;
-using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net;
 using System.Net.Http.Json;
+using FluentAssertions;
 using Markdn.Api.Models;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Xunit;
 
 namespace Markdn.Api.Tests.Contract.Endpoints;
@@ -26,7 +26,7 @@ public class ContentEndpointsTests : IClassFixture<WebApplicationFactory<Program
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        
+
         var content = await response.Content.ReadFromJsonAsync<ContentListResponse>();
         content.Should().NotBeNull();
         content!.Items.Should().NotBeNull();
@@ -44,7 +44,7 @@ public class ContentEndpointsTests : IClassFixture<WebApplicationFactory<Program
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        
+
         var content = await response.Content.ReadFromJsonAsync<ContentListResponse>();
         content.Should().NotBeNull();
         content!.Items.Should().NotBeNull();
@@ -61,7 +61,7 @@ public class ContentEndpointsTests : IClassFixture<WebApplicationFactory<Program
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        
+
         var content = await response.Content.ReadFromJsonAsync<ContentItemResponse>();
         content.Should().NotBeNull();
         content!.Slug.Should().Be(slug);

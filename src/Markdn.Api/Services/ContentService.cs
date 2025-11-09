@@ -51,8 +51,8 @@ public class ContentService
 
         if (!string.IsNullOrWhiteSpace(query.Category))
         {
-            items = items.Where(item => 
-                item.Category != null && 
+            items = items.Where(item =>
+                item.Category != null &&
                 item.Category.Equals(query.Category, StringComparison.OrdinalIgnoreCase));
         }
 
@@ -93,7 +93,7 @@ public class ContentService
 
         return sortBy.ToLowerInvariant() switch
         {
-            "date" => isDescending 
+            "date" => isDescending
                 ? items.OrderByDescending(i => i.Date ?? DateTime.MinValue)
                 : items.OrderBy(i => i.Date ?? DateTime.MinValue),
             "title" => isDescending

@@ -42,7 +42,7 @@ public class FileSystemContentRepository : IContentRepository
     public async Task<ContentCollection> GetAllAsync(CancellationToken cancellationToken)
     {
         var contentDirectory = GetSafeContentDirectory();
-        
+
         if (!Directory.Exists(contentDirectory))
         {
             return new ContentCollection
@@ -68,7 +68,7 @@ public class FileSystemContentRepository : IContentRepository
             try
             {
                 var fileInfo = new FileInfo(filePath);
-                
+
                 // Skip files larger than max size
                 if (fileInfo.Length > _options.MaxFileSizeBytes)
                 {
@@ -110,7 +110,7 @@ public class FileSystemContentRepository : IContentRepository
         }
 
         var contentDirectory = Path.GetFullPath(_options.ContentDirectory);
-        
+
         if (!Directory.Exists(contentDirectory))
         {
             return null;
@@ -123,7 +123,7 @@ public class FileSystemContentRepository : IContentRepository
             try
             {
                 var fileInfo = new FileInfo(filePath);
-                
+
                 // Skip files larger than max size
                 if (fileInfo.Length > _options.MaxFileSizeBytes)
                 {
@@ -132,7 +132,7 @@ public class FileSystemContentRepository : IContentRepository
 
                 var content = await File.ReadAllTextAsync(filePath, cancellationToken);
                 var item = await ParseContentItemAsync(filePath, content, fileInfo, cancellationToken);
-                
+
                 if (item.Slug.Equals(slug, StringComparison.OrdinalIgnoreCase))
                 {
                     return item;
@@ -148,9 +148,9 @@ public class FileSystemContentRepository : IContentRepository
     }
 
     private async Task<ContentItem> ParseContentItemAsync(
-        string filePath, 
-        string content, 
-        FileInfo fileInfo, 
+        string filePath,
+        string content,
+        FileInfo fileInfo,
         CancellationToken cancellationToken)
     {
         var warnings = new List<string>();
@@ -225,7 +225,7 @@ public class FileSystemContentRepository : IContentRepository
     private static string ExtractMarkdownContent(string fullContent)
     {
         var lines = fullContent.Split('\n');
-        
+
         if (lines.Length < 3 || !lines[0].Trim().Equals("---"))
         {
             return fullContent;
@@ -266,7 +266,7 @@ public class FileSystemContentRepository : IContentRepository
         {
             var fullFilePath = Path.GetFullPath(filePath);
             var fullContentDir = Path.GetFullPath(contentDirectory);
-            
+
             // Ensure the file path starts with the content directory path
             return fullFilePath.StartsWith(fullContentDir, StringComparison.OrdinalIgnoreCase);
         }

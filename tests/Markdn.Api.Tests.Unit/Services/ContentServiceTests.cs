@@ -42,13 +42,13 @@ public class ContentServiceTests
     {
         // Arrange
         var mockRepository = new Mock<IContentRepository>();
-        var expectedItem = new ContentItem 
-        { 
-            Slug = "test-slug", 
-            FilePath = "/path/test-slug.md", 
-            MarkdownContent = "# Test" 
+        var expectedItem = new ContentItem
+        {
+            Slug = "test-slug",
+            FilePath = "/path/test-slug.md",
+            MarkdownContent = "# Test"
         };
-        
+
         mockRepository.Setup(r => r.GetBySlugAsync("test-slug", It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedItem);
 
@@ -161,8 +161,8 @@ public class ContentServiceTests
             });
 
         var service = new ContentService(mockRepository.Object);
-        var query = new ContentQueryRequest 
-        { 
+        var query = new ContentQueryRequest
+        {
             DateFrom = new DateTime(2025, 6, 1),
             DateTo = new DateTime(2025, 12, 31)
         };
@@ -172,7 +172,7 @@ public class ContentServiceTests
 
         // Assert
         result.Items.Should().HaveCount(2);
-        result.Items.Should().AllSatisfy(item => 
+        result.Items.Should().AllSatisfy(item =>
         {
             item.Date.Should().NotBeNull();
             item.Date!.Value.Should().BeOnOrAfter(new DateTime(2025, 6, 1));
@@ -200,8 +200,8 @@ public class ContentServiceTests
             });
 
         var service = new ContentService(mockRepository.Object);
-        var query = new ContentQueryRequest 
-        { 
+        var query = new ContentQueryRequest
+        {
             Tag = "tutorial",
             Category = "blog"
         };
@@ -234,8 +234,8 @@ public class ContentServiceTests
             });
 
         var service = new ContentService(mockRepository.Object);
-        var query = new ContentQueryRequest 
-        { 
+        var query = new ContentQueryRequest
+        {
             SortBy = "date",
             SortOrder = "asc"
         };
@@ -270,8 +270,8 @@ public class ContentServiceTests
             });
 
         var service = new ContentService(mockRepository.Object);
-        var query = new ContentQueryRequest 
-        { 
+        var query = new ContentQueryRequest
+        {
             SortBy = "date",
             SortOrder = "desc"
         };
@@ -306,8 +306,8 @@ public class ContentServiceTests
             });
 
         var service = new ContentService(mockRepository.Object);
-        var query = new ContentQueryRequest 
-        { 
+        var query = new ContentQueryRequest
+        {
             SortBy = "title",
             SortOrder = "asc"
         };

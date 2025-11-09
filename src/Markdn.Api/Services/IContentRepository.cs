@@ -11,7 +11,7 @@ public interface IContentRepository
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Collection of all content items</returns>
     Task<Models.ContentCollection> GetAllAsync(CancellationToken cancellationToken);
-    
+
     /// <summary>
     /// Retrieves a single content item by its unique slug
     /// </summary>

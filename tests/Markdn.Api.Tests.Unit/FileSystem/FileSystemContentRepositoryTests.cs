@@ -1,8 +1,8 @@
 using FluentAssertions;
+using Markdn.Api.Configuration;
 using Markdn.Api.FileSystem;
 using Markdn.Api.Services;
 using Microsoft.Extensions.Options;
-using Markdn.Api.Configuration;
 using Xunit;
 
 namespace Markdn.Api.Tests.Unit.FileSystem;
@@ -14,7 +14,7 @@ public class FileSystemContentRepositoryTests
         // Use absolute path to content directory from solution root
         var solutionRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", ".."));
         var contentPath = Path.Combine(solutionRoot, "content");
-        
+
         var options = Options.Create(new MarkdnOptions
         {
             ContentDirectory = contentPath
@@ -22,7 +22,7 @@ public class FileSystemContentRepositoryTests
         var frontMatterParser = new FrontMatterParser();
         var markdownParser = new MarkdownParser();
         var slugGenerator = new SlugGenerator();
-        
+
         return new FileSystemContentRepository(options, frontMatterParser, markdownParser, slugGenerator);
     }
 
@@ -54,7 +54,7 @@ public class FileSystemContentRepositoryTests
         var repository = CreateRepository();
         // Use a flexible approach - try getting any content first
         var allContent = await repository.GetAllAsync(CancellationToken.None);
-        
+
         // Skip test if no content available
         if (allContent.Items.Count == 0)
         {

@@ -59,7 +59,7 @@ public class FrontMatterParser
         try
         {
             var data = _deserializer.Deserialize<Dictionary<string, object>>(yamlContent);
-            
+
             if (data == null)
             {
                 return Task.FromResult(frontMatter);
@@ -67,22 +67,34 @@ public class FrontMatterParser
 
             // Map standard fields
             if (data.TryGetValue("title", out var title))
+            {
                 frontMatter.Title = title?.ToString();
-            
+            }
+
             if (data.TryGetValue("date", out var date))
+            {
                 frontMatter.Date = date?.ToString();
-            
+            }
+
             if (data.TryGetValue("author", out var author))
+            {
                 frontMatter.Author = author?.ToString();
-            
+            }
+
             if (data.TryGetValue("category", out var category))
+            {
                 frontMatter.Category = category?.ToString();
-            
+            }
+
             if (data.TryGetValue("description", out var description))
+            {
                 frontMatter.Description = description?.ToString();
-            
+            }
+
             if (data.TryGetValue("slug", out var slug))
+            {
                 frontMatter.Slug = slug?.ToString();
+            }
 
             if (data.TryGetValue("tags", out var tagsObj) && tagsObj is List<object> tagsList)
             {

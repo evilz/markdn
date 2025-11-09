@@ -107,7 +107,7 @@ app.MapGet("/api/content", async Task<Results<Ok<ContentListResponse>, BadReques
     };
 
     var collection = await contentService.GetAllAsync(query, page, pageSize, cancellationToken);
-    
+
     var response = new ContentListResponse
     {
         Items = collection.Items.Select(item => new ContentItemSummary
@@ -142,7 +142,7 @@ app.MapGet("/api/content/{slug}", async Task<Results<Ok<ContentItemResponse>, No
     CancellationToken cancellationToken) =>
 {
     var item = await contentService.GetBySlugAsync(slug, cancellationToken);
-    
+
     if (item == null)
     {
         return TypedResults.NotFound();

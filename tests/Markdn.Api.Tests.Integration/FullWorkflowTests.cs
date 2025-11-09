@@ -1,10 +1,10 @@
-using FluentAssertions;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.Extensions.DependencyInjection;
-using Markdn.Api.Configuration;
 using System.Net;
 using System.Net.Http.Json;
+using FluentAssertions;
+using Markdn.Api.Configuration;
 using Markdn.Api.Models;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Markdn.Api.Tests.Integration;
@@ -67,11 +67,11 @@ public class FullWorkflowTests : IClassFixture<WebApplicationFactory<Program>>
 
         // Act
         var response = await client.GetAsync("/api/content");
-        
+
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var contentList = await response.Content.ReadFromJsonAsync<ContentListResponse>();
-        
+
         // Should still return items but with warnings
         contentList.Should().NotBeNull();
         // If there are items with malformed YAML, they should have warnings
@@ -104,11 +104,11 @@ public class FullWorkflowTests : IClassFixture<WebApplicationFactory<Program>>
 
         // Act
         var response = await client.GetAsync("/api/content");
-        
+
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var contentList = await response.Content.ReadFromJsonAsync<ContentListResponse>();
-        
+
         contentList.Should().NotBeNull();
         contentList!.Items.Should().AllSatisfy(item =>
         {
