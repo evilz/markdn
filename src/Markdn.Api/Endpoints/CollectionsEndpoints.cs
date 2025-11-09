@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Markdn.Api.Models;
+using Markdn.Api.Querying;
 using Markdn.Api.Services;
 using Markdn.Api.Validation;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -173,23 +174,59 @@ public static class CollectionsEndpoints
     private static async Task<Results<Ok<CollectionItemsResponse>, NotFound, ProblemHttpResult>> GetCollectionItemsAsync(
         string name,
         ICollectionService collectionService,
+        ICollectionLoader collectionLoader,
+        IQueryParser queryParser,
         ILogger<Program> logger,
-        CancellationToken cancellationToken)
+        string? filter = null,
+        string? orderby = null,
+        int? top = null,
+        int? skip = null,
+        string? select = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
             logger.LogInformation("Getting items from collection {CollectionName}", name);
             
-            var items = await collectionService.GetAllItemsAsync(name, cancellationToken);
+            // Check if query parameters are provided
+            var hasQuery = !string.IsNullOrWhiteSpace(filter) ||
+                          !string.IsNullOrWhiteSpace(orderby) ||
+                          top.HasValue ||
+                          skip.HasValue ||
+                          !string.IsNullOrWhiteSpace(select);
 
-            if (!items.Any())
+            IReadOnlyList<ContentItem> items;
+
+            if (hasQuery)
             {
-                // Check if collection exists
-                var collections = await collectionService.GetAllCollectionsAsync(cancellationToken);
-                if (!collections.ContainsKey(name))
+                // Load collection schema for query validation
+                var collection = await collectionLoader.LoadCollectionAsync(name, cancellationToken);
+                if (collection == null)
                 {
                     logger.LogWarning("Collection {CollectionName} not found", name);
                     return TypedResults.NotFound();
+                }
+
+                // Parse and validate query
+                var query = queryParser.Parse(filter, orderby, top, skip, select, collection.Schema);
+                
+                // Execute query
+                items = await collectionService.QueryAsync(name, query, cancellationToken);
+            }
+            else
+            {
+                // No query parameters - get all items
+                items = await collectionService.GetAllItemsAsync(name, cancellationToken);
+
+                if (!items.Any())
+                {
+                    // Check if collection exists
+                    var collections = await collectionService.GetAllCollectionsAsync(cancellationToken);
+                    if (!collections.ContainsKey(name))
+                    {
+                        logger.LogWarning("Collection {CollectionName} not found", name);
+                        return TypedResults.NotFound();
+                    }
                 }
             }
 
@@ -201,6 +238,15 @@ public static class CollectionsEndpoints
 
             logger.LogInformation("Retrieved {Count} items from collection {CollectionName}", items.Count, name);
             return TypedResults.Ok(response);
+        }
+        catch (ArgumentException ex)
+        {
+            // Query validation error
+            logger.LogWarning(ex, "Invalid query for collection {CollectionName}", name);
+            return TypedResults.Problem(
+                title: "Invalid query syntax",
+                detail: ex.Message,
+                statusCode: StatusCodes.Status400BadRequest);
         }
         catch (Exception ex)
         {

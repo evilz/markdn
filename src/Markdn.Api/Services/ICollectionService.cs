@@ -1,4 +1,5 @@
 using Markdn.Api.Models;
+using Markdn.Api.Querying;
 
 namespace Markdn.Api.Services;
 
@@ -29,6 +30,18 @@ public interface ICollectionService
     Task<ContentItem?> GetItemByIdAsync(
         string collectionName,
         string slug,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Queries a collection with advanced filtering, sorting, and pagination.
+    /// </summary>
+    /// <param name="collectionName">The name of the collection to query.</param>
+    /// <param name="query">The query expression with filters, sorting, and pagination.</param>
+    /// <param name="cancellationToken">Cancellation token for async operation.</param>
+    /// <returns>A list of content items matching the query.</returns>
+    Task<IReadOnlyList<ContentItem>> QueryAsync(
+        string collectionName,
+        QueryExpression query,
         CancellationToken cancellationToken = default);
 
     /// <summary>

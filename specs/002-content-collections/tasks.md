@@ -179,43 +179,43 @@ Single Web API project structure:
 
 ### Tests for User Story 4 (TDD - Write First!)
 
-- [ ] T080 [P] [US4] Unit test for QueryParser parsing $filter expressions in tests/Markdn.Api.Tests.Unit/Querying/QueryParserTests.cs
-- [ ] T081 [P] [US4] Unit test for QueryParser parsing $orderby expressions in tests/Markdn.Api.Tests.Unit/Querying/QueryParserTests.cs
-- [ ] T082 [P] [US4] Unit test for QueryParser parsing $top and $skip in tests/Markdn.Api.Tests.Unit/Querying/QueryParserTests.cs
-- [ ] T083 [P] [US4] Unit test for QueryParser parsing $select in tests/Markdn.Api.Tests.Unit/Querying/QueryParserTests.cs
-- [ ] T084 [P] [US4] Unit test for QueryParser handling invalid query syntax in tests/Markdn.Api.Tests.Unit/Querying/QueryParserTests.cs
-- [ ] T085 [P] [US4] Unit test for QueryExecutor applying filter expressions in tests/Markdn.Api.Tests.Unit/Querying/QueryExecutorTests.cs
-- [ ] T086 [P] [US4] Unit test for QueryExecutor applying sorting in tests/Markdn.Api.Tests.Unit/Querying/QueryExecutorTests.cs
-- [ ] T087 [P] [US4] Unit test for QueryExecutor applying pagination in tests/Markdn.Api.Tests.Unit/Querying/QueryExecutorTests.cs
-- [ ] T088 [P] [US4] Unit test for QueryExecutor applying field selection in tests/Markdn.Api.Tests.Unit/Querying/QueryExecutorTests.cs
-- [ ] T089 [P] [US4] Integration test for filtering by field values in tests/Markdn.Api.Tests.Integration/CollectionQueryTests.cs
-- [ ] T090 [P] [US4] Integration test for sorting and pagination in tests/Markdn.Api.Tests.Integration/CollectionQueryTests.cs
-- [ ] T091 [P] [US4] Integration test for combined filters with logical operators in tests/Markdn.Api.Tests.Integration/CollectionQueryTests.cs
+- [X] T080 [P] [US4] Unit test for QueryParser parsing $filter expressions in tests/Markdn.Api.Tests.Unit/Querying/QueryParserTests.cs
+- [X] T081 [P] [US4] Unit test for QueryParser parsing $orderby expressions in tests/Markdn.Api.Tests.Unit/Querying/QueryParserTests.cs
+- [X] T082 [P] [US4] Unit test for QueryParser parsing $top and $skip in tests/Markdn.Api.Tests.Unit/Querying/QueryParserTests.cs
+- [X] T083 [P] [US4] Unit test for QueryParser parsing $select in tests/Markdn.Api.Tests.Unit/Querying/QueryParserTests.cs
+- [X] T084 [P] [US4] Unit test for QueryParser handling invalid query syntax in tests/Markdn.Api.Tests.Unit/Querying/QueryParserTests.cs
+- [X] T085 [P] [US4] Unit test for QueryExecutor applying filter expressions in tests/Markdn.Api.Tests.Unit/Querying/QueryExecutorTests.cs
+- [X] T086 [P] [US4] Unit test for QueryExecutor applying sorting in tests/Markdn.Api.Tests.Unit/Querying/QueryExecutorTests.cs
+- [X] T087 [P] [US4] Unit test for QueryExecutor applying pagination in tests/Markdn.Api.Tests.Unit/Querying/QueryExecutorTests.cs
+- [X] T088 [P] [US4] Unit test for QueryExecutor applying field selection in tests/Markdn.Api.Tests.Unit/Querying/QueryExecutorTests.cs
+- [X] T089 [P] [US4] Integration test for filtering by field values in tests/Markdn.Api.Tests.Integration/CollectionQueryTests.cs
+- [X] T090 [P] [US4] Integration test for sorting and pagination in tests/Markdn.Api.Tests.Integration/CollectionQueryTests.cs
+- [X] T091 [P] [US4] Integration test for combined filters with logical operators in tests/Markdn.Api.Tests.Integration/CollectionQueryTests.cs
 
 ### Implementation for User Story 4
 
-- [ ] T092 [P] [US4] Create QueryExpression model in src/Markdn.Api/Querying/QueryExpression.cs
-- [ ] T093 [P] [US4] Create FilterExpression abstract base class in src/Markdn.Api/Querying/FilterExpression.cs
-- [ ] T094 [P] [US4] Create ComparisonExpression model in src/Markdn.Api/Querying/ComparisonExpression.cs
-- [ ] T095 [P] [US4] Create LogicalExpression model in src/Markdn.Api/Querying/LogicalExpression.cs
-- [ ] T096 [P] [US4] Create OrderByClause model in src/Markdn.Api/Querying/OrderByClause.cs
-- [ ] T097 [US4] Create IQueryParser interface in src/Markdn.Api/Querying/IQueryParser.cs
-- [ ] T098 [US4] Implement QueryParser for $filter parsing in src/Markdn.Api/Querying/QueryParser.cs
-- [ ] T099 [US4] Add $orderby parsing to QueryParser in src/Markdn.Api/Querying/QueryParser.cs
-- [ ] T100 [US4] Add $top, $skip, $select parsing to QueryParser in src/Markdn.Api/Querying/QueryParser.cs
-- [ ] T101 [US4] Add query syntax validation against schema in src/Markdn.Api/Querying/QueryParser.cs
-- [ ] T102 [US4] Implement QueryExecutor for applying filters in src/Markdn.Api/Querying/QueryExecutor.cs
-- [ ] T103 [US4] Add sorting logic to QueryExecutor in src/Markdn.Api/Querying/QueryExecutor.cs
-- [ ] T104 [US4] Add pagination logic to QueryExecutor in src/Markdn.Api/Querying/QueryExecutor.cs
-- [ ] T105 [US4] Add field selection logic to QueryExecutor in src/Markdn.Api/Querying/QueryExecutor.cs
-- [ ] T106 [US4] Add query result caching with cache key hashing in src/Markdn.Api/Services/CollectionService.cs
-- [ ] T107 [US4] Integrate QueryParser and QueryExecutor in CollectionService in src/Markdn.Api/Services/CollectionService.cs
-- [ ] T108 [US4] Add query parameter validation to GET /api/collections/{name}/items endpoint in src/Markdn.Api/Endpoints/CollectionsEndpoints.cs
-- [ ] T109 [US4] Register IQueryParser as scoped service in src/Markdn.Api/Program.cs
-- [ ] T110 [US4] Add structured logging for query parsing and execution in src/Markdn.Api/Querying/QueryParser.cs
-- [ ] T111 [US4] Add query performance metrics logging in src/Markdn.Api/Services/CollectionService.cs
-- [ ] T112 [US4] Add 400 error handling for invalid query syntax in src/Markdn.Api/Endpoints/CollectionsEndpoints.cs
-- [ ] T113 [US4] Verify all tests pass (T080-T091)
+- [X] T092 [P] [US4] Create QueryExpression model in src/Markdn.Api/Querying/QueryExpression.cs
+- [X] T093 [P] [US4] Create FilterExpression abstract base class in src/Markdn.Api/Querying/FilterExpression.cs
+- [X] T094 [P] [US4] Create ComparisonExpression model in src/Markdn.Api/Querying/ComparisonExpression.cs
+- [X] T095 [P] [US4] Create LogicalExpression model in src/Markdn.Api/Querying/LogicalExpression.cs
+- [X] T096 [P] [US4] Create OrderByClause model in src/Markdn.Api/Querying/OrderByClause.cs
+- [X] T097 [US4] Create IQueryParser interface in src/Markdn.Api/Querying/IQueryParser.cs
+- [X] T098 [US4] Implement QueryParser for $filter parsing in src/Markdn.Api/Querying/QueryParser.cs
+- [X] T099 [US4] Add $orderby parsing to QueryParser in src/Markdn.Api/Querying/QueryParser.cs
+- [X] T100 [US4] Add $top, $skip, $select parsing to QueryParser in src/Markdn.Api/Querying/QueryParser.cs
+- [X] T101 [US4] Add query syntax validation against schema in src/Markdn.Api/Querying/QueryParser.cs
+- [X] T102 [US4] Implement QueryExecutor for applying filters in src/Markdn.Api/Querying/QueryExecutor.cs
+- [X] T103 [US4] Add sorting logic to QueryExecutor in src/Markdn.Api/Querying/QueryExecutor.cs
+- [X] T104 [US4] Add pagination logic to QueryExecutor in src/Markdn.Api/Querying/QueryExecutor.cs
+- [X] T105 [US4] Add field selection logic to QueryExecutor in src/Markdn.Api/Querying/QueryExecutor.cs
+- [X] T106 [US4] Add query result caching with cache key hashing in src/Markdn.Api/Services/CollectionService.cs
+- [X] T107 [US4] Integrate QueryParser and QueryExecutor in CollectionService in src/Markdn.Api/Services/CollectionService.cs
+- [X] T108 [US4] Add query parameter validation to GET /api/collections/{name}/items endpoint in src/Markdn.Api/Endpoints/CollectionsEndpoints.cs
+- [X] T109 [US4] Register IQueryParser as scoped service in src/Markdn.Api/Program.cs
+- [X] T110 [US4] Add structured logging for query parsing and execution in src/Markdn.Api/Querying/QueryParser.cs
+- [X] T111 [US4] Add query performance metrics logging in src/Markdn.Api/Services/CollectionService.cs
+- [X] T112 [US4] Add 400 error handling for invalid query syntax in src/Markdn.Api/Endpoints/CollectionsEndpoints.cs
+- [X] T113 [US4] Verify all tests pass (T080-T091)
 
 **Checkpoint**: Advanced OData-like querying is fully functional
 

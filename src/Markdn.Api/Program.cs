@@ -3,6 +3,7 @@ using Markdn.Api.Endpoints;
 using Markdn.Api.FileSystem;
 using Markdn.Api.Middleware;
 using Markdn.Api.Models;
+using Markdn.Api.Querying;
 using Markdn.Api.Services;
 using Markdn.Api.Validation;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -53,6 +54,10 @@ builder.Services.AddSingleton<ICollectionLoader, CollectionLoader>();
 builder.Services.AddSingleton<ISchemaValidator, SchemaValidator>();
 builder.Services.AddScoped<ContentItemValidator>();
 builder.Services.AddScoped<ICollectionService, CollectionService>();
+
+// Register Query services
+builder.Services.AddScoped<IQueryParser, QueryParser>();
+builder.Services.AddScoped<QueryExecutor>();
 
 // Add health checks
 builder.Services.AddHealthChecks();

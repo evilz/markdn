@@ -1,5 +1,6 @@
 using Markdn.Api.Configuration;
 using Markdn.Api.Models;
+using Markdn.Api.Querying;
 using Markdn.Api.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
@@ -21,6 +22,7 @@ public class CollectionService : ICollectionService
     private readonly IMemoryCache _cache;
     private readonly ILogger<CollectionService> _logger;
     private readonly MarkdnOptions _options;
+    private readonly QueryExecutor _queryExecutor;
     private static readonly ActivitySource ActivitySource = new("Markdn.Api.CollectionService");
 
     public CollectionService(
@@ -30,6 +32,7 @@ public class CollectionService : ICollectionService
         SlugGenerator slugGenerator,
         IMemoryCache cache,
         IOptions<MarkdnOptions> options,
+        QueryExecutor queryExecutor,
         ILogger<CollectionService> logger)
     {
         _collectionLoader = collectionLoader;
@@ -38,6 +41,7 @@ public class CollectionService : ICollectionService
         _slugGenerator = slugGenerator;
         _cache = cache;
         _options = options.Value;
+        _queryExecutor = queryExecutor;
         _logger = logger;
     }
 
@@ -142,6 +146,29 @@ public class CollectionService : ICollectionService
         _logger.LogInformation("Loaded {Count} collections", collections.Count);
 
         return collections;
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<ContentItem>> QueryAsync(
+        string collectionName,
+        QueryExpression query,
+        CancellationToken cancellationToken = default)
+    {
+        using var activity = ActivitySource.StartActivity("QueryCollection");
+        activity?.SetTag("collection.name", collectionName);
+
+        _logger.LogInformation("Querying collection {CollectionName} with advanced query", collectionName);
+
+        // Get all items first
+        var items = await GetAllItemsAsync(collectionName, cancellationToken).ConfigureAwait(false);
+
+        // Apply query filtering, sorting, pagination
+        var results = _queryExecutor.Execute(items, query);
+
+        _logger.LogInformation("Query returned {Count} results from {Total} items",
+            results.Count, items.Count);
+
+        return results;
     }
 
     private async Task<List<ContentItem>> LoadCollectionItemsAsync(
