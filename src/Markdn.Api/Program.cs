@@ -52,6 +52,7 @@ builder.Services.AddScoped<ContentService>();
 builder.Services.AddSingleton<ICollectionLoader, CollectionLoader>();
 builder.Services.AddSingleton<ISchemaValidator, SchemaValidator>();
 builder.Services.AddScoped<ContentItemValidator>();
+builder.Services.AddScoped<ICollectionService, CollectionService>();
 
 // Add health checks
 builder.Services.AddHealthChecks();

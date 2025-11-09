@@ -37,6 +37,18 @@ public static class CollectionsEndpoints
             .Produces<ValidationResult>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
+        group.MapGet("/{name}/items", GetCollectionItemsAsync)
+            .WithName("GetCollectionItems")
+            .WithSummary("Get all items from a collection")
+            .Produces<CollectionItemsResponse>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
+
+        group.MapGet("/{name}/items/{id}", GetCollectionItemByIdAsync)
+            .WithName("GetCollectionItemById")
+            .WithSummary("Get a specific item from a collection by slug/ID")
+            .Produces<ContentItem>(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status404NotFound);
+
         return app;
     }
 
@@ -156,5 +168,88 @@ public static class CollectionsEndpoints
                 detail: ex.Message,
                 statusCode: StatusCodes.Status500InternalServerError);
         }
+    }
+
+    private static async Task<Results<Ok<CollectionItemsResponse>, NotFound, ProblemHttpResult>> GetCollectionItemsAsync(
+        string name,
+        ICollectionService collectionService,
+        ILogger<Program> logger,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            logger.LogInformation("Getting items from collection {CollectionName}", name);
+            
+            var items = await collectionService.GetAllItemsAsync(name, cancellationToken);
+
+            if (!items.Any())
+            {
+                // Check if collection exists
+                var collections = await collectionService.GetAllCollectionsAsync(cancellationToken);
+                if (!collections.ContainsKey(name))
+                {
+                    logger.LogWarning("Collection {CollectionName} not found", name);
+                    return TypedResults.NotFound();
+                }
+            }
+
+            var response = new CollectionItemsResponse
+            {
+                Items = items.ToList(),
+                TotalCount = items.Count
+            };
+
+            logger.LogInformation("Retrieved {Count} items from collection {CollectionName}", items.Count, name);
+            return TypedResults.Ok(response);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error retrieving items from collection {CollectionName}", name);
+            return TypedResults.Problem(
+                title: $"Error retrieving items from collection {name}",
+                detail: ex.Message,
+                statusCode: StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    private static async Task<Results<Ok<ContentItem>, NotFound, ProblemHttpResult>> GetCollectionItemByIdAsync(
+        string name,
+        string id,
+        ICollectionService collectionService,
+        ILogger<Program> logger,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            logger.LogInformation("Getting item {ItemId} from collection {CollectionName}", id, name);
+            
+            var item = await collectionService.GetItemByIdAsync(name, id, cancellationToken);
+
+            if (item == null)
+            {
+                logger.LogWarning("Item {ItemId} not found in collection {CollectionName}", id, name);
+                return TypedResults.NotFound();
+            }
+
+            logger.LogInformation("Retrieved item {ItemId} from collection {CollectionName}", id, name);
+            return TypedResults.Ok(item);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error retrieving item {ItemId} from collection {CollectionName}", id, name);
+            return TypedResults.Problem(
+                title: $"Error retrieving item {id} from collection {name}",
+                detail: ex.Message,
+                statusCode: StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    /// <summary>
+    /// Response model for collection items query.
+    /// </summary>
+    public class CollectionItemsResponse
+    {
+        public List<ContentItem> Items { get; set; } = new();
+        public int TotalCount { get; set; }
     }
 }

@@ -145,27 +145,27 @@ Single Web API project structure:
 
 ### Tests for User Story 3 (TDD - Write First!)
 
-- [ ] T062 [P] [US3] Unit test for CollectionService listing all items in tests/Markdn.Api.Tests.Unit/Services/CollectionServiceTests.cs
-- [ ] T063 [P] [US3] Unit test for CollectionService getting single item by slug in tests/Markdn.Api.Tests.Unit/Services/CollectionServiceTests.cs
-- [ ] T064 [P] [US3] Unit test for ContentIdentifier slug resolution logic in tests/Markdn.Api.Tests.Unit/Models/ContentIdentifierTests.cs
-- [ ] T065 [P] [US3] Contract test for GET /api/collections/{name}/items endpoint in tests/Markdn.Api.Tests.Contract/Endpoints/CollectionsEndpointsTests.cs
-- [ ] T066 [P] [US3] Contract test for GET /api/collections/{name}/items/{id} endpoint in tests/Markdn.Api.Tests.Contract/Endpoints/CollectionsEndpointsTests.cs
-- [ ] T067 [P] [US3] Integration test for querying collection with validated content in tests/Markdn.Api.Tests.Integration/CollectionQueryTests.cs
+- [X] T062 [P] [US3] Unit test for CollectionService listing all items in tests/Markdn.Api.Tests.Unit/Services/CollectionServiceTests.cs
+- [X] T063 [P] [US3] Unit test for CollectionService getting single item by slug in tests/Markdn.Api.Tests.Unit/Services/CollectionServiceTests.cs
+- [X] T064 [P] [US3] Unit test for ContentIdentifier slug resolution logic in tests/Markdn.Api.Tests.Unit/Models/ContentIdentifierTests.cs
+- [X] T065 [P] [US3] Contract test for GET /api/collections/{name}/items endpoint in tests/Markdn.Api.Tests.Contract/Endpoints/CollectionsEndpointsTests.cs
+- [X] T066 [P] [US3] Contract test for GET /api/collections/{name}/items/{id} endpoint in tests/Markdn.Api.Tests.Contract/Endpoints/CollectionsEndpointsTests.cs
+- [X] T067 [P] [US3] Integration test for querying collection with validated content in tests/Markdn.Api.Tests.Integration/CollectionQueryTests.cs
 
 ### Implementation for User Story 3
 
-- [ ] T068 [US3] Create ICollectionService interface in src/Markdn.Api/Services/ICollectionService.cs
-- [ ] T069 [US3] Implement CollectionService with GetAllItemsAsync method in src/Markdn.Api/Services/CollectionService.cs
-- [ ] T070 [US3] Implement CollectionService GetItemByIdAsync method in src/Markdn.Api/Services/CollectionService.cs
-- [ ] T071 [US3] Add content item caching with IMemoryCache in src/Markdn.Api/Services/CollectionService.cs
-- [ ] T072 [US3] Implement ContentIdentifier resolution (slug from front-matter or filename) in src/Markdn.Api/Services/CollectionService.cs
-- [ ] T073 [US3] Add slug uniqueness validation within collection in src/Markdn.Api/Services/CollectionService.cs
-- [ ] T074 [US3] Add GET /api/collections/{name}/items endpoint to CollectionsEndpoints in src/Markdn.Api/Endpoints/CollectionsEndpoints.cs
-- [ ] T075 [US3] Add GET /api/collections/{name}/items/{id} endpoint to CollectionsEndpoints in src/Markdn.Api/Endpoints/CollectionsEndpoints.cs
-- [ ] T076 [US3] Register ICollectionService as scoped service in src/Markdn.Api/Program.cs
-- [ ] T077 [US3] Add structured logging for query operations in src/Markdn.Api/Services/CollectionService.cs
-- [ ] T078 [US3] Add 404 error handling for missing collections and items in src/Markdn.Api/Endpoints/CollectionsEndpoints.cs
-- [ ] T079 [US3] Verify all tests pass (T062-T067)
+- [X] T068 [US3] Create ICollectionService interface in src/Markdn.Api/Services/ICollectionService.cs
+- [X] T069 [US3] Implement CollectionService with GetAllItemsAsync method in src/Markdn.Api/Services/CollectionService.cs
+- [X] T070 [US3] Implement CollectionService GetItemByIdAsync method in src/Markdn.Api/Services/CollectionService.cs
+- [X] T071 [US3] Add content item caching with IMemoryCache in src/Markdn.Api/Services/CollectionService.cs
+- [X] T072 [US3] Implement ContentIdentifier resolution (slug from front-matter or filename) in src/Markdn.Api/Services/CollectionService.cs
+- [X] T073 [US3] Add slug uniqueness validation within collection in src/Markdn.Api/Services/CollectionService.cs
+- [X] T074 [US3] Add GET /api/collections/{name}/items endpoint to CollectionsEndpoints in src/Markdn.Api/Endpoints/CollectionsEndpoints.cs
+- [X] T075 [US3] Add GET /api/collections/{name}/items/{id} endpoint to CollectionsEndpoints in src/Markdn.Api/Endpoints/CollectionsEndpoints.cs
+- [X] T076 [US3] Register ICollectionService as scoped service in src/Markdn.Api/Program.cs
+- [X] T077 [US3] Add structured logging for query operations in src/Markdn.Api/Services/CollectionService.cs
+- [X] T078 [US3] Add 404 error handling for missing collections and items in src/Markdn.Api/Endpoints/CollectionsEndpoints.cs
+- [X] T079 [US3] Verify all tests pass (T062-T067)
 
 **Checkpoint**: Collections can be queried with type-safe validated content
 
