@@ -9,6 +9,13 @@ namespace Markdn.Api.Tests.Unit.Services;
 
 public class ContentServiceTests
 {
+    private static ContentService CreateService(Mock<IContentRepository> mockRepository)
+    {
+        var mockCache = new Mock<IContentCache>();
+        var mockLogger = new Mock<ILogger<ContentService>>();
+        return new ContentService(mockRepository.Object, mockCache.Object, mockLogger.Object);
+    }
+
     [Fact]
     public async Task GetAllAsync_ShouldReturnContentCollection()
     {
@@ -27,9 +34,7 @@ public class ContentServiceTests
                 PageSize = 50
             });
 
-        var mockCache = new Mock<IContentCache>();
-        var mockLogger = new Mock<ILogger<ContentService>>();
-        var service = new ContentService(mockRepository.Object, mockCache.Object, mockLogger.Object);
+        var service = CreateService(mockRepository);
 
         // Act
         var result = await service.GetAllAsync(1, 50, CancellationToken.None);
@@ -55,9 +60,7 @@ public class ContentServiceTests
         mockRepository.Setup(r => r.GetBySlugAsync("test-slug", It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedItem);
 
-        var mockCache = new Mock<IContentCache>();
-        var mockLogger = new Mock<ILogger<ContentService>>();
-        var service = new ContentService(mockRepository.Object, mockCache.Object, mockLogger.Object);
+        var service = CreateService(mockRepository);
 
         // Act
         var result = await service.GetBySlugAsync("test-slug", CancellationToken.None);
@@ -75,9 +78,7 @@ public class ContentServiceTests
         mockRepository.Setup(r => r.GetBySlugAsync("non-existent", It.IsAny<CancellationToken>()))
             .ReturnsAsync((ContentItem?)null);
 
-        var mockCache = new Mock<IContentCache>();
-        var mockLogger = new Mock<ILogger<ContentService>>();
-        var service = new ContentService(mockRepository.Object, mockCache.Object, mockLogger.Object);
+        var service = CreateService(mockRepository);
 
         // Act
         var result = await service.GetBySlugAsync("non-existent", CancellationToken.None);
@@ -107,9 +108,7 @@ public class ContentServiceTests
                 PageSize = 50
             });
 
-        var mockCache = new Mock<IContentCache>();
-        var mockLogger = new Mock<ILogger<ContentService>>();
-        var service = new ContentService(mockRepository.Object, mockCache.Object, mockLogger.Object);
+        var service = CreateService(mockRepository);
         var query = new ContentQueryRequest { Tag = "tutorial" };
 
         // Act
@@ -139,9 +138,7 @@ public class ContentServiceTests
                 PageSize = 50
             });
 
-        var mockCache = new Mock<IContentCache>();
-        var mockLogger = new Mock<ILogger<ContentService>>();
-        var service = new ContentService(mockRepository.Object, mockCache.Object, mockLogger.Object);
+        var service = CreateService(mockRepository);
         var query = new ContentQueryRequest { Category = "blog" };
 
         // Act
@@ -171,9 +168,7 @@ public class ContentServiceTests
                 PageSize = 50
             });
 
-        var mockCache = new Mock<IContentCache>();
-        var mockLogger = new Mock<ILogger<ContentService>>();
-        var service = new ContentService(mockRepository.Object, mockCache.Object, mockLogger.Object);
+        var service = CreateService(mockRepository);
         var query = new ContentQueryRequest
         {
             DateFrom = new DateTime(2025, 6, 1),
@@ -212,9 +207,7 @@ public class ContentServiceTests
                 PageSize = 50
             });
 
-        var mockCache = new Mock<IContentCache>();
-        var mockLogger = new Mock<ILogger<ContentService>>();
-        var service = new ContentService(mockRepository.Object, mockCache.Object, mockLogger.Object);
+        var service = CreateService(mockRepository);
         var query = new ContentQueryRequest
         {
             Tag = "tutorial",
@@ -248,9 +241,7 @@ public class ContentServiceTests
                 PageSize = 50
             });
 
-        var mockCache = new Mock<IContentCache>();
-        var mockLogger = new Mock<ILogger<ContentService>>();
-        var service = new ContentService(mockRepository.Object, mockCache.Object, mockLogger.Object);
+        var service = CreateService(mockRepository);
         var query = new ContentQueryRequest
         {
             SortBy = "date",
@@ -286,9 +277,7 @@ public class ContentServiceTests
                 PageSize = 50
             });
 
-        var mockCache = new Mock<IContentCache>();
-        var mockLogger = new Mock<ILogger<ContentService>>();
-        var service = new ContentService(mockRepository.Object, mockCache.Object, mockLogger.Object);
+        var service = CreateService(mockRepository);
         var query = new ContentQueryRequest
         {
             SortBy = "date",
@@ -324,9 +313,7 @@ public class ContentServiceTests
                 PageSize = 50
             });
 
-        var mockCache = new Mock<IContentCache>();
-        var mockLogger = new Mock<ILogger<ContentService>>();
-        var service = new ContentService(mockRepository.Object, mockCache.Object, mockLogger.Object);
+        var service = CreateService(mockRepository);
         var query = new ContentQueryRequest
         {
             SortBy = "title",
@@ -361,9 +348,7 @@ public class ContentServiceTests
                 PageSize = 50
             });
 
-        var mockCache = new Mock<IContentCache>();
-        var mockLogger = new Mock<ILogger<ContentService>>();
-        var service = new ContentService(mockRepository.Object, mockCache.Object, mockLogger.Object);
+        var service = CreateService(mockRepository);
         var query = new ContentQueryRequest { Tag = "nonexistent" };
 
         // Act
@@ -381,7 +366,6 @@ public class ContentServiceTests
     {
         // Arrange
         var mockRepository = new Mock<IContentRepository>();
-        var mockCache = new Mock<IContentCache>();
         
         mockRepository.Setup(r => r.GetBySlugAsync("test-slug", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ContentItem
@@ -392,8 +376,7 @@ public class ContentServiceTests
                 HtmlContent = "<h1>Test Content</h1>"
             });
 
-        var mockLogger = new Mock<ILogger<ContentService>>();
-        var service = new ContentService(mockRepository.Object, mockCache.Object, mockLogger.Object);
+        var service = CreateService(mockRepository);
 
         // Act
         var result = await service.GetBySlugAsync("test-slug", FormatOption.Markdown, CancellationToken.None);
@@ -409,7 +392,6 @@ public class ContentServiceTests
     {
         // Arrange
         var mockRepository = new Mock<IContentRepository>();
-        var mockCache = new Mock<IContentCache>();
         
         mockRepository.Setup(r => r.GetBySlugAsync("test-slug", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ContentItem
@@ -420,8 +402,7 @@ public class ContentServiceTests
                 HtmlContent = "<h1>Test Content</h1>"
             });
 
-        var mockLogger = new Mock<ILogger<ContentService>>();
-        var service = new ContentService(mockRepository.Object, mockCache.Object, mockLogger.Object);
+        var service = CreateService(mockRepository);
 
         // Act
         var result = await service.GetBySlugAsync("test-slug", FormatOption.Html, CancellationToken.None);
@@ -437,7 +418,6 @@ public class ContentServiceTests
     {
         // Arrange
         var mockRepository = new Mock<IContentRepository>();
-        var mockCache = new Mock<IContentCache>();
         
         mockRepository.Setup(r => r.GetBySlugAsync("test-slug", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ContentItem
@@ -448,8 +428,7 @@ public class ContentServiceTests
                 HtmlContent = "<h1>Test Content</h1>"
             });
 
-        var mockLogger = new Mock<ILogger<ContentService>>();
-        var service = new ContentService(mockRepository.Object, mockCache.Object, mockLogger.Object);
+        var service = CreateService(mockRepository);
 
         // Act
         var result = await service.GetBySlugAsync("test-slug", FormatOption.Both, CancellationToken.None);
@@ -465,7 +444,6 @@ public class ContentServiceTests
     {
         // Arrange
         var mockRepository = new Mock<IContentRepository>();
-        var mockCache = new Mock<IContentCache>();
         
         // Return content WITHOUT HtmlContent to simulate lazy loading
         mockRepository.Setup(r => r.GetBySlugAsync("test-slug", It.IsAny<CancellationToken>()))
@@ -477,8 +455,7 @@ public class ContentServiceTests
                 HtmlContent = string.Empty // Not rendered yet
             });
 
-        var mockLogger = new Mock<ILogger<ContentService>>();
-        var service = new ContentService(mockRepository.Object, mockCache.Object, mockLogger.Object);
+        var service = CreateService(mockRepository);
 
         // Act
         var result = await service.GetBySlugAsync("test-slug", FormatOption.Markdown, CancellationToken.None);
