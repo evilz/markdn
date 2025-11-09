@@ -229,18 +229,18 @@ Single Web API project structure:
 
 ### Tests for User Story 5 (TDD - Write First!)
 
-- [ ] T114 [P] [US5] Unit test for CollectionService listing all collections in tests/Markdn.Api.Tests.Unit/Services/CollectionServiceTests.cs
-- [ ] T115 [P] [US5] Integration test for listing collections with empty configuration in tests/Markdn.Api.Tests.Integration/CollectionWorkflowTests.cs
-- [ ] T116 [P] [US5] Integration test for listing multiple collections in tests/Markdn.Api.Tests.Integration/CollectionWorkflowTests.cs
+- [X] T114 [P] [US5] Unit test for CollectionService listing all collections in tests/Markdn.Api.Tests.Unit/Services/CollectionServiceTests.cs
+- [X] T115 [P] [US5] Integration test for listing collections with empty configuration in tests/Markdn.Api.Tests.Integration/CollectionWorkflowTests.cs
+- [X] T116 [P] [US5] Integration test for listing multiple collections in tests/Markdn.Api.Tests.Integration/CollectionWorkflowTests.cs
 
 ### Implementation for User Story 5
 
-- [ ] T117 [US5] Add GetAllCollectionsAsync method to ICollectionService in src/Markdn.Api/Services/ICollectionService.cs
-- [ ] T118 [US5] Implement GetAllCollectionsAsync in CollectionService in src/Markdn.Api/Services/CollectionService.cs
-- [ ] T119 [US5] Add collection metadata caching in src/Markdn.Api/Services/CollectionService.cs
-- [ ] T120 [US5] Update GET /api/collections endpoint to use GetAllCollectionsAsync in src/Markdn.Api/Endpoints/CollectionsEndpoints.cs
-- [ ] T121 [US5] Add structured logging for collection discovery in src/Markdn.Api/Services/CollectionService.cs
-- [ ] T122 [US5] Verify all tests pass (T114-T116)
+- [X] T117 [US5] Add GetAllCollectionsAsync method to ICollectionService in src/Markdn.Api/Services/ICollectionService.cs
+- [X] T118 [US5] Implement GetAllCollectionsAsync in CollectionService in src/Markdn.Api/Services/CollectionService.cs
+- [X] T119 [US5] Add collection metadata caching in src/Markdn.Api/Services/CollectionService.cs
+- [X] T120 [US5] Update GET /api/collections endpoint to use GetAllCollectionsAsync in src/Markdn.Api/Endpoints/CollectionsEndpoints.cs
+- [X] T121 [US5] Add structured logging for collection discovery in src/Markdn.Api/Services/CollectionService.cs
+- [X] T122 [US5] Verify all tests pass (T114-T116)
 
 **Checkpoint**: All user stories are independently functional
 

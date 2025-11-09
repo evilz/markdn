@@ -140,10 +140,26 @@ public class CollectionService : ICollectionService
 
         _logger.LogInformation("Getting all collections");
 
+        const string cacheKey = "all_collections";
+
+        // Check cache first
+        if (_cache.TryGetValue<Dictionary<string, Collection>>(cacheKey, out var cachedCollections) && cachedCollections != null)
+        {
+            _logger.LogDebug("Returning {Count} cached collections", cachedCollections.Count);
+            return cachedCollections;
+        }
+
         var collections = await _collectionLoader.LoadCollectionsAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        _logger.LogInformation("Loaded {Count} collections", collections.Count);
+        // Cache for 10 minutes (longer than items since schemas change less frequently)
+        var cacheOptions = new MemoryCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+        };
+        _cache.Set(cacheKey, collections, cacheOptions);
+
+        _logger.LogInformation("Loaded and cached {Count} collections", collections.Count);
 
         return collections;
     }
