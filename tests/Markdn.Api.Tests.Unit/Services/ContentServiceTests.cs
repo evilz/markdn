@@ -26,7 +26,7 @@ public class ContentServiceTests
                 PageSize = 50
             });
 
-        var service = new ContentService(mockRepository.Object);
+        var mockCache = new Mock<IContentCache>(); var service = new ContentService(mockRepository.Object, mockCache.Object);
 
         // Act
         var result = await service.GetAllAsync(1, 50, CancellationToken.None);
@@ -52,7 +52,7 @@ public class ContentServiceTests
         mockRepository.Setup(r => r.GetBySlugAsync("test-slug", It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedItem);
 
-        var service = new ContentService(mockRepository.Object);
+        var mockCache = new Mock<IContentCache>(); var service = new ContentService(mockRepository.Object, mockCache.Object);
 
         // Act
         var result = await service.GetBySlugAsync("test-slug", CancellationToken.None);
@@ -70,7 +70,7 @@ public class ContentServiceTests
         mockRepository.Setup(r => r.GetBySlugAsync("non-existent", It.IsAny<CancellationToken>()))
             .ReturnsAsync((ContentItem?)null);
 
-        var service = new ContentService(mockRepository.Object);
+        var mockCache = new Mock<IContentCache>(); var service = new ContentService(mockRepository.Object, mockCache.Object);
 
         // Act
         var result = await service.GetBySlugAsync("non-existent", CancellationToken.None);
@@ -100,7 +100,7 @@ public class ContentServiceTests
                 PageSize = 50
             });
 
-        var service = new ContentService(mockRepository.Object);
+        var mockCache = new Mock<IContentCache>(); var service = new ContentService(mockRepository.Object, mockCache.Object);
         var query = new ContentQueryRequest { Tag = "tutorial" };
 
         // Act
@@ -130,7 +130,7 @@ public class ContentServiceTests
                 PageSize = 50
             });
 
-        var service = new ContentService(mockRepository.Object);
+        var mockCache = new Mock<IContentCache>(); var service = new ContentService(mockRepository.Object, mockCache.Object);
         var query = new ContentQueryRequest { Category = "blog" };
 
         // Act
@@ -160,7 +160,7 @@ public class ContentServiceTests
                 PageSize = 50
             });
 
-        var service = new ContentService(mockRepository.Object);
+        var mockCache = new Mock<IContentCache>(); var service = new ContentService(mockRepository.Object, mockCache.Object);
         var query = new ContentQueryRequest
         {
             DateFrom = new DateTime(2025, 6, 1),
@@ -199,7 +199,7 @@ public class ContentServiceTests
                 PageSize = 50
             });
 
-        var service = new ContentService(mockRepository.Object);
+        var mockCache = new Mock<IContentCache>(); var service = new ContentService(mockRepository.Object, mockCache.Object);
         var query = new ContentQueryRequest
         {
             Tag = "tutorial",
@@ -233,7 +233,7 @@ public class ContentServiceTests
                 PageSize = 50
             });
 
-        var service = new ContentService(mockRepository.Object);
+        var mockCache = new Mock<IContentCache>(); var service = new ContentService(mockRepository.Object, mockCache.Object);
         var query = new ContentQueryRequest
         {
             SortBy = "date",
@@ -269,7 +269,7 @@ public class ContentServiceTests
                 PageSize = 50
             });
 
-        var service = new ContentService(mockRepository.Object);
+        var mockCache = new Mock<IContentCache>(); var service = new ContentService(mockRepository.Object, mockCache.Object);
         var query = new ContentQueryRequest
         {
             SortBy = "date",
@@ -305,7 +305,7 @@ public class ContentServiceTests
                 PageSize = 50
             });
 
-        var service = new ContentService(mockRepository.Object);
+        var mockCache = new Mock<IContentCache>(); var service = new ContentService(mockRepository.Object, mockCache.Object);
         var query = new ContentQueryRequest
         {
             SortBy = "title",
@@ -340,7 +340,7 @@ public class ContentServiceTests
                 PageSize = 50
             });
 
-        var service = new ContentService(mockRepository.Object);
+        var mockCache = new Mock<IContentCache>(); var service = new ContentService(mockRepository.Object, mockCache.Object);
         var query = new ContentQueryRequest { Tag = "nonexistent" };
 
         // Act

@@ -8,14 +8,17 @@ namespace Markdn.Api.Services;
 public class ContentService
 {
     private readonly IContentRepository _repository;
+    private readonly IContentCache _cache;
 
     /// <summary>
     /// Initializes a new instance of the ContentService
     /// </summary>
     /// <param name="repository">Content repository implementation</param>
-    public ContentService(IContentRepository repository)
+    /// <param name="cache">Content cache implementation</param>
+    public ContentService(IContentRepository repository, IContentCache cache)
     {
         _repository = repository;
+        _cache = cache;
     }
 
     /// <summary>
@@ -112,8 +115,22 @@ public class ContentService
     /// <param name="slug">Unique slug identifier</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>Content item if found, null otherwise</returns>
-    public Task<ContentItem?> GetBySlugAsync(string slug, CancellationToken cancellationToken)
+    public async Task<ContentItem?> GetBySlugAsync(string slug, CancellationToken cancellationToken)
     {
-        return _repository.GetBySlugAsync(slug, cancellationToken);
+        // Cache-aside pattern: check cache first
+        var cachedItem = _cache.Get(slug);
+        if (cachedItem != null)
+        {
+            return cachedItem;
+        }
+
+        // Not in cache, fetch from repository
+        var item = await _repository.GetBySlugAsync(slug, cancellationToken);
+        if (item != null)
+        {
+            _cache.Set(slug, item);
+        }
+
+        return item;
     }
 }

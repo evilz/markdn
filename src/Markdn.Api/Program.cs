@@ -11,11 +11,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<MarkdnOptions>(
     builder.Configuration.GetSection("Markdn"));
 
+// Add memory cache
+builder.Services.AddMemoryCache(options =>
+{
+    options.SizeLimit = 100; // Limit to 100 items
+});
+
 // Register services
 builder.Services.AddSingleton<FrontMatterParser>();
 builder.Services.AddSingleton<MarkdownParser>();
 builder.Services.AddSingleton<SlugGenerator>();
 builder.Services.AddSingleton<IContentRepository, FileSystemContentRepository>();
+builder.Services.AddSingleton<IContentCache, ContentCache>();
+builder.Services.AddSingleton<IFileWatcherService, FileWatcherService>();
+builder.Services.AddHostedService<FileWatcherHostedService>();
 builder.Services.AddScoped<ContentService>();
 
 // Add health checks
