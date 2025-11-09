@@ -285,4 +285,106 @@ public class ContentEndpointsTests : IClassFixture<ContractTestApplicationFactor
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
+
+    [Fact]
+    public async Task GetAllContent_WithPageLessThanOne_ShouldReturn400BadRequest()
+    {
+        // Act
+        var response = await _client.GetAsync("/api/content?page=0");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task GetAllContent_WithPageSizeLessThanOne_ShouldReturn400BadRequest()
+    {
+        // Act
+        var response = await _client.GetAsync("/api/content?pageSize=0");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task GetAllContent_WithPageSizeGreaterThan100_ShouldReturn400BadRequest()
+    {
+        // Act
+        var response = await _client.GetAsync("/api/content?pageSize=101");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task GetAllContent_WithTagLengthGreaterThan100_ShouldReturn400BadRequest()
+    {
+        // Arrange
+        var longTag = new string('a', 101);
+
+        // Act
+        var response = await _client.GetAsync($"/api/content?tag={longTag}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task GetAllContent_WithTagContainingNullByte_ShouldReturn400BadRequest()
+    {
+        // Arrange
+        var tagWithNullByte = "test\0tag";
+
+        // Act
+        var response = await _client.GetAsync($"/api/content?tag={Uri.EscapeDataString(tagWithNullByte)}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task GetAllContent_WithCategoryLengthGreaterThan100_ShouldReturn400BadRequest()
+    {
+        // Arrange
+        var longCategory = new string('a', 101);
+
+        // Act
+        var response = await _client.GetAsync($"/api/content?category={longCategory}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task GetAllContent_WithCategoryContainingNullByte_ShouldReturn400BadRequest()
+    {
+        // Arrange
+        var categoryWithNullByte = "test\0category";
+
+        // Act
+        var response = await _client.GetAsync($"/api/content?category={Uri.EscapeDataString(categoryWithNullByte)}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task GetAllContent_WithInvalidSortBy_ShouldReturn400BadRequest()
+    {
+        // Act
+        var response = await _client.GetAsync("/api/content?sortBy=invalid");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task GetAllContent_WithInvalidSortOrder_ShouldReturn400BadRequest()
+    {
+        // Act
+        var response = await _client.GetAsync("/api/content?sortOrder=invalid");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
 }
