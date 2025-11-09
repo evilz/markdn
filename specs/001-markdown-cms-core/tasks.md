@@ -374,7 +374,7 @@ All paths are relative to repository root:
 - [X] T180 Remove any unused dependencies from all .csproj files
 - [X] T181 Remove any commented-out code or TODO comments
 - [X] T182 Verify all files follow .editorconfig conventions
-- [ ] T183 Final commit with message "feat(001): complete markdown-cms-core feature"
+- [X] T183 Final commit with message "feat(001): complete markdown-cms-core feature"
 
 ---
 
