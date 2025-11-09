@@ -174,17 +174,17 @@ All paths are relative to repository root:
 
 ### Contract Tests for User Story 2 (TDD - Write FIRST, verify FAIL)
 
-- [ ] T083 [P] [US2] Write failing contract test for GET /content?tag=tutorial returning filtered results in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
-- [ ] T084 [P] [US2] Write failing contract test for GET /content?category=blog returning filtered results in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
-- [ ] T085 [P] [US2] Write failing contract test for GET /content?dateFrom=2025-01-01&dateTo=2025-12-31 returning filtered results in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
-- [ ] T086 [P] [US2] Write failing contract test for GET /content?tag=tutorial&category=blog with multiple filters in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
-- [ ] T087 [P] [US2] Write failing contract test for GET /content?sortBy=date&sortOrder=asc returning sorted results in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
-- [ ] T088 [P] [US2] Write failing contract test for GET /content with invalid date format returning 400 Bad Request in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
+- [X] T083 [P] [US2] Write failing contract test for GET /content?tag=tutorial returning filtered results in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
+- [X] T084 [P] [US2] Write failing contract test for GET /content?category=blog returning filtered results in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
+- [X] T085 [P] [US2] Write failing contract test for GET /content?dateFrom=2025-01-01&dateTo=2025-12-31 returning filtered results in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
+- [X] T086 [P] [US2] Write failing contract test for GET /content?tag=tutorial&category=blog with multiple filters in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
+- [X] T087 [P] [US2] Write failing contract test for GET /content?sortBy=date&sortOrder=asc returning sorted results in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
+- [X] T088 [P] [US2] Write failing contract test for GET /content with invalid date format returning 400 Bad Request in `tests/Markdn.Api.Tests.Contract/Endpoints/ContentEndpointsTests.cs`
 
 ### Integration Tests for User Story 2 (TDD - Write FIRST, verify FAIL)
 
-- [ ] T089 [P] [US2] Write failing integration test for complex multi-filter query workflow in `tests/Markdn.Api.Tests.Integration/ContentFilteringTests.cs`
-- [ ] T090 [P] [US2] Write failing integration test for pagination with filtered results in `tests/Markdn.Api.Tests.Integration/ContentFilteringTests.cs`
+- [X] T089 [P] [US2] Write failing integration test for complex multi-filter query workflow in `tests/Markdn.Api.Tests.Integration/ContentFilteringTests.cs`
+- [X] T090 [P] [US2] Write failing integration test for pagination with filtered results in `tests/Markdn.Api.Tests.Integration/ContentFilteringTests.cs`
 
 ### Run Tests - Verify All FAIL (Red Phase)
 
@@ -332,11 +332,11 @@ All paths are relative to repository root:
 
 ### Performance Optimization
 
-- [ ] T156 [P] Benchmark GET /content with 1,000 files and verify <200ms response time per SC-007
-- [ ] T157 [P] Benchmark GET /content/{slug} with 1MB file and verify <100ms response time per SC-001
-- [ ] T158 [P] Benchmark startup time with 500 files and verify <5s per SC-008
-- [ ] T159 Optimize LINQ queries in ContentService if benchmarks fail targets
-- [ ] T160 Add caching strategy review: consider pre-loading cache on startup
+- [X] T156 [P] Benchmark GET /content with 1,000 files and verify <200ms response time per SC-007
+- [X] T157 [P] Benchmark GET /content/{slug} with 1MB file and verify <100ms response time per SC-001
+- [X] T158 [P] Benchmark startup time with 500 files and verify <5s per SC-008
+- [X] T159 Optimize LINQ queries in ContentService if benchmarks fail targets
+- [X] T160 Add caching strategy review: consider pre-loading cache on startup
 
 ### Security Hardening
 

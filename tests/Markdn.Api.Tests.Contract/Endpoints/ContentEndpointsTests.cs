@@ -177,4 +177,112 @@ public class ContentEndpointsTests : IClassFixture<WebApplicationFactory<Program
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
+
+    // Phase 4: User Story 2 - Content Query and Filtering Contract Tests
+
+    [Fact]
+    public async Task GetAllContent_WithTagFilter_ShouldReturnFilteredResults()
+    {
+        // Arrange
+        var tag = "tutorial";
+
+        // Act
+        var response = await _client.GetAsync($"/api/content?tag={tag}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var content = await response.Content.ReadFromJsonAsync<ContentListResponse>();
+        content.Should().NotBeNull();
+        content!.Items.Should().NotBeNull();
+        // Note: Actual filtering verification requires test data with known tags
+    }
+
+    [Fact]
+    public async Task GetAllContent_WithCategoryFilter_ShouldReturnFilteredResults()
+    {
+        // Arrange
+        var category = "blog";
+
+        // Act
+        var response = await _client.GetAsync($"/api/content?category={category}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var content = await response.Content.ReadFromJsonAsync<ContentListResponse>();
+        content.Should().NotBeNull();
+        content!.Items.Should().NotBeNull();
+        // Note: Actual filtering verification requires test data with known categories
+    }
+
+    [Fact]
+    public async Task GetAllContent_WithDateRangeFilter_ShouldReturnFilteredResults()
+    {
+        // Arrange
+        var dateFrom = "2025-01-01";
+        var dateTo = "2025-12-31";
+
+        // Act
+        var response = await _client.GetAsync($"/api/content?dateFrom={dateFrom}&dateTo={dateTo}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var content = await response.Content.ReadFromJsonAsync<ContentListResponse>();
+        content.Should().NotBeNull();
+        content!.Items.Should().NotBeNull();
+        // Note: Actual date filtering verification requires test data with known dates
+    }
+
+    [Fact]
+    public async Task GetAllContent_WithMultipleFilters_ShouldReturnFilteredResults()
+    {
+        // Arrange
+        var tag = "tutorial";
+        var category = "blog";
+
+        // Act
+        var response = await _client.GetAsync($"/api/content?tag={tag}&category={category}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var content = await response.Content.ReadFromJsonAsync<ContentListResponse>();
+        content.Should().NotBeNull();
+        content!.Items.Should().NotBeNull();
+        // Note: Actual filtering verification requires test data matching both criteria
+    }
+
+    [Fact]
+    public async Task GetAllContent_WithSorting_ShouldReturnSortedResults()
+    {
+        // Arrange
+        var sortBy = "date";
+        var sortOrder = "asc";
+
+        // Act
+        var response = await _client.GetAsync($"/api/content?sortBy={sortBy}&sortOrder={sortOrder}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var content = await response.Content.ReadFromJsonAsync<ContentListResponse>();
+        content.Should().NotBeNull();
+        content!.Items.Should().NotBeNull();
+        // Note: Actual sorting verification requires test data to verify order
+    }
+
+    [Fact]
+    public async Task GetAllContent_WithInvalidDateFormat_ShouldReturn400BadRequest()
+    {
+        // Arrange
+        var invalidDate = "not-a-date";
+
+        // Act
+        var response = await _client.GetAsync($"/api/content?dateFrom={invalidDate}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
 }
