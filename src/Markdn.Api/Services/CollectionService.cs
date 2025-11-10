@@ -6,6 +6,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 
 namespace Markdn.Api.Services;
 
@@ -23,7 +24,9 @@ public class CollectionService : ICollectionService
     private readonly ILogger<CollectionService> _logger;
     private readonly MarkdnOptions _options;
     private readonly QueryExecutor _queryExecutor;
-    private static readonly ActivitySource ActivitySource = new("Markdn.Api.CollectionService");
+    private readonly ActivitySource _activitySource;
+    private readonly Counter<long> _cacheHitCounter;
+    private readonly Counter<long> _cacheMissCounter;
 
     public CollectionService(
         ICollectionLoader collectionLoader,
@@ -33,6 +36,8 @@ public class CollectionService : ICollectionService
         IMemoryCache cache,
         IOptions<MarkdnOptions> options,
         QueryExecutor queryExecutor,
+        ActivitySource activitySource,
+        IMeterFactory meterFactory,
         ILogger<CollectionService> logger)
     {
         _collectionLoader = collectionLoader;
@@ -42,7 +47,15 @@ public class CollectionService : ICollectionService
         _cache = cache;
         _options = options.Value;
         _queryExecutor = queryExecutor;
+        _activitySource = activitySource;
         _logger = logger;
+        
+        // Create metrics
+        var meter = meterFactory.Create("Markdn.Api.CollectionService");
+        _cacheHitCounter = meter.CreateCounter<long>("markdn.collection.cache.hits", 
+            description: "Number of collection cache hits");
+        _cacheMissCounter = meter.CreateCounter<long>("markdn.collection.cache.misses", 
+            description: "Number of collection cache misses");
     }
 
     /// <inheritdoc/>
@@ -50,7 +63,7 @@ public class CollectionService : ICollectionService
         string collectionName,
         CancellationToken cancellationToken = default)
     {
-        using var activity = ActivitySource.StartActivity("GetAllItems");
+        using var activity = _activitySource.StartActivity("GetAllItems");
         activity?.SetTag("collection.name", collectionName);
 
         _logger.LogInformation("Getting all items from collection {CollectionName}", collectionName);
@@ -59,10 +72,13 @@ public class CollectionService : ICollectionService
         
         if (_cache.TryGetValue<List<ContentItem>>(cacheKey, out var cachedItems) && cachedItems != null)
         {
+            _cacheHitCounter.Add(1, new KeyValuePair<string, object?>("collection.name", collectionName));
             _logger.LogDebug("Returning {Count} cached items for collection {CollectionName}", 
                 cachedItems.Count, collectionName);
             return cachedItems;
         }
+
+        _cacheMissCounter.Add(1, new KeyValuePair<string, object?>("collection.name", collectionName));
 
         var collection = await _collectionLoader.LoadCollectionAsync(collectionName, cancellationToken)
             .ConfigureAwait(false);
@@ -112,7 +128,7 @@ public class CollectionService : ICollectionService
         string slug,
         CancellationToken cancellationToken = default)
     {
-        using var activity = ActivitySource.StartActivity("GetItemById");
+        using var activity = _activitySource.StartActivity("GetItemById");
         activity?.SetTag("collection.name", collectionName);
         activity?.SetTag("item.slug", slug);
 
@@ -137,7 +153,7 @@ public class CollectionService : ICollectionService
     public async Task<IReadOnlyDictionary<string, Collection>> GetAllCollectionsAsync(
         CancellationToken cancellationToken = default)
     {
-        using var activity = ActivitySource.StartActivity("GetAllCollections");
+        using var activity = _activitySource.StartActivity("GetAllCollections");
 
         _logger.LogInformation("Getting all collections");
 
@@ -146,9 +162,12 @@ public class CollectionService : ICollectionService
         // Check cache first
         if (_cache.TryGetValue<Dictionary<string, Collection>>(cacheKey, out var cachedCollections) && cachedCollections != null)
         {
+            _cacheHitCounter.Add(1, new KeyValuePair<string, object?>("cache.key", "all_collections"));
             _logger.LogDebug("Returning {Count} cached collections", cachedCollections.Count);
             return cachedCollections;
         }
+
+        _cacheMissCounter.Add(1, new KeyValuePair<string, object?>("cache.key", "all_collections"));
 
         var collections = await _collectionLoader.LoadCollectionsAsync(cancellationToken)
             .ConfigureAwait(false);
@@ -172,7 +191,7 @@ public class CollectionService : ICollectionService
         QueryExpression query,
         CancellationToken cancellationToken = default)
     {
-        using var activity = ActivitySource.StartActivity("QueryCollection");
+        using var activity = _activitySource.StartActivity("QueryCollection");
         activity?.SetTag("collection.name", collectionName);
 
         _logger.LogInformation("Querying collection {CollectionName} with advanced query", collectionName);
@@ -420,7 +439,7 @@ public class CollectionService : ICollectionService
         string collectionName,
         CancellationToken cancellationToken = default)
     {
-        using var activity = ActivitySource.StartActivity("ValidateCollection");
+        using var activity = _activitySource.StartActivity("ValidateCollection");
         activity?.SetTag("collection.name", collectionName);
 
         _logger.LogInformation("Validating collection {CollectionName}", collectionName);

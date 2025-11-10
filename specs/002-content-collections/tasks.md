@@ -250,15 +250,15 @@ Single Web API project structure:
 
 **Purpose**: FileSystemWatcher integration for detecting content changes at runtime
 
-- [ ] T123 Create FileSystemWatcher configuration in src/Markdn.Api/HostedServices/CollectionValidationService.cs
-- [ ] T124 Add file change event handlers (Created, Changed, Deleted) in src/Markdn.Api/HostedServices/CollectionValidationService.cs
-- [ ] T125 Implement 300ms debouncing for file change events in src/Markdn.Api/HostedServices/CollectionValidationService.cs
-- [ ] T126 Add cache invalidation on file changes in src/Markdn.Api/Services/CollectionService.cs
-- [ ] T127 Add background revalidation for changed files in src/Markdn.Api/HostedServices/CollectionValidationService.cs
-- [ ] T128 Add file watcher error handling with retry logic in src/Markdn.Api/HostedServices/CollectionValidationService.cs
-- [ ] T129 Add structured logging for file change events in src/Markdn.Api/HostedServices/CollectionValidationService.cs
-- [ ] T130 Integration test for file change detection in tests/Markdn.Api.Tests.Integration/FileWatchingTests.cs
-- [ ] T131 Verify file watching works end-to-end
+- [X] T123 Create FileSystemWatcher configuration in src/Markdn.Api/HostedServices/CollectionValidationService.cs
+- [X] T124 Add file change event handlers (Created, Changed, Deleted) in src/Markdn.Api/HostedServices/CollectionValidationService.cs
+- [X] T125 Implement 300ms debouncing for file change events in src/Markdn.Api/HostedServices/CollectionValidationService.cs
+- [X] T126 Add cache invalidation on file changes in src/Markdn.Api/Services/CollectionService.cs
+- [X] T127 Add background revalidation for changed files in src/Markdn.Api/HostedServices/CollectionValidationService.cs
+- [X] T128 Add file watcher error handling with retry logic in src/Markdn.Api/HostedServices/CollectionValidationService.cs
+- [X] T129 Add structured logging for file change events in src/Markdn.Api/HostedServices/CollectionValidationService.cs
+- [X] T130 Integration test for file change detection in tests/Markdn.Api.Tests.Integration/FileWatchingTests.cs
+- [X] T131 Verify file watching works end-to-end
 
 **Checkpoint**: Content changes are detected and revalidated at runtime
 
@@ -268,14 +268,14 @@ Single Web API project structure:
 
 **Purpose**: Background revalidation when collection schemas are modified
 
-- [ ] T132 Add FileSystemWatcher for collections.json in src/Markdn.Api/Services/CollectionLoader.cs
-- [ ] T133 Implement schema reload on configuration change in src/Markdn.Api/Services/CollectionLoader.cs
-- [ ] T134 Trigger background revalidation on schema change in src/Markdn.Api/HostedServices/CollectionValidationService.cs
-- [ ] T135 Add comprehensive validation report generation in src/Markdn.Api/HostedServices/CollectionValidationService.cs
-- [ ] T136 Add POST /api/collections/{name}/validate endpoint for manual validation trigger in src/Markdn.Api/Endpoints/CollectionsEndpoints.cs
-- [ ] T137 Add validation job tracking and status reporting in src/Markdn.Api/Services/CollectionService.cs
-- [ ] T138 Integration test for schema change revalidation in tests/Markdn.Api.Tests.Integration/FullWorkflowTests.cs
-- [ ] T139 Verify schema changes trigger revalidation correctly
+- [X] T132 Add FileSystemWatcher for collections.json in src/Markdn.Api/Services/CollectionLoader.cs
+- [X] T133 Implement schema reload on configuration change in src/Markdn.Api/Services/CollectionLoader.cs
+- [X] T134 Trigger background revalidation on schema change in src/Markdn.Api/HostedServices/CollectionValidationService.cs
+- [X] T135 Add comprehensive validation report generation in src/Markdn.Api/HostedServices/CollectionValidationService.cs
+- [X] T136 Add POST /api/collections/{name}/validate endpoint for manual validation trigger in src/Markdn.Api/Endpoints/CollectionsEndpoints.cs
+- [X] T137 Add validation job tracking and status reporting in src/Markdn.Api/Services/CollectionService.cs
+- [X] T138 Integration test for schema change revalidation in tests/Markdn.Api.Tests.Integration/FullWorkflowTests.cs
+- [X] T139 Verify schema changes trigger revalidation correctly
 
 **Checkpoint**: Schema changes trigger automatic revalidation
 
@@ -285,18 +285,18 @@ Single Web API project structure:
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T140 [P] Add Activity Source for distributed tracing in src/Markdn.Api/Program.cs
-- [ ] T141 [P] Add custom metrics for cache hit rates in src/Markdn.Api/Services/CollectionService.cs
-- [ ] T142 [P] Add health check endpoint for validation status in src/Markdn.Api/Program.cs
-- [ ] T143 [P] Performance profiling with BenchmarkDotNet for query operations in tests/benchmarks/
-- [ ] T144 [P] Optimize query performance if profiling shows issues in src/Markdn.Api/Querying/QueryExecutor.cs
-- [ ] T145 [P] Consider object pooling for ValidationResult if profiling shows benefit in src/Markdn.Api/Services/SchemaValidator.cs
-- [ ] T146 [P] Update README.md with Collections feature documentation
-- [ ] T147 [P] Add XML documentation comments to public APIs in src/Markdn.Api/
-- [ ] T148 Code review and refactoring pass across all components
-- [ ] T149 Security audit for input validation and injection risks
-- [ ] T150 Run quickstart.md validation end-to-end
-- [ ] T151 Final integration testing of all user stories together in tests/Markdn.Api.Tests.Integration/FullWorkflowTests.cs
+- [X] T140 [P] Add Activity Source for distributed tracing in src/Markdn.Api/Program.cs
+- [X] T141 [P] Add custom metrics for cache hit rates in src/Markdn.Api/Services/CollectionService.cs
+- [X] T142 [P] Add health check endpoint for validation status in src/Markdn.Api/Program.cs
+- [X] T143 [P] Performance profiling with BenchmarkDotNet for query operations in tests/benchmarks/
+- [X] T144 [P] Optimize query performance if profiling shows issues in src/Markdn.Api/Querying/QueryExecutor.cs
+- [X] T145 [P] Consider object pooling for ValidationResult if profiling shows benefit in src/Markdn.Api/Services/SchemaValidator.cs
+- [X] T146 [P] Update README.md with Collections feature documentation
+- [X] T147 [P] Add XML documentation comments to public APIs in src/Markdn.Api/
+- [X] T148 Code review and refactoring pass across all components
+- [X] T149 Security audit for input validation and injection risks
+- [X] T150 Run quickstart.md validation end-to-end
+- [X] T151 Final integration testing of all user stories together in tests/Markdn.Api.Tests.Integration/FullWorkflowTests.cs
 
 ---
 

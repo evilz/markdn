@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using Markdn.Api.Configuration;
 using Markdn.Api.Endpoints;
 using Markdn.Api.FileSystem;
+using Markdn.Api.HealthChecks;
 using Markdn.Api.HostedServices;
 using Markdn.Api.Middleware;
 using Markdn.Api.Models;
@@ -8,6 +10,9 @@ using Markdn.Api.Querying;
 using Markdn.Api.Services;
 using Markdn.Api.Validation;
 using Microsoft.AspNetCore.Http.HttpResults;
+
+// Create ActivitySource for distributed tracing
+var activitySource = new ActivitySource("Markdn.Api", "1.0.0");
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,6 +45,9 @@ builder.Services.AddMemoryCache(options =>
     options.SizeLimit = 100; // Limit to 100 items
 });
 
+// Register ActivitySource for distributed tracing
+builder.Services.AddSingleton(activitySource);
+
 // Register services
 builder.Services.AddSingleton<FrontMatterParser>();
 builder.Services.AddSingleton<MarkdownParser>();
@@ -62,7 +70,8 @@ builder.Services.AddScoped<IQueryParser, QueryParser>();
 builder.Services.AddScoped<QueryExecutor>();
 
 // Add health checks
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddCheck<CollectionHealthCheck>("collections", tags: new[] { "ready", "collections" });
 
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
