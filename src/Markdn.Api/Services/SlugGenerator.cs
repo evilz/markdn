@@ -1,9 +1,12 @@
+using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Markdn.Api.Services;
 
 /// <summary>
-/// Service for generating URL-safe slugs from filenames and front-matter with precedence logic
+/// Service for generating URL-safe slugs from filenames and front-matter with precedence logic.
+/// Handles international characters by removing diacritics (café → cafe, São Paulo → sao-paulo).
 /// </summary>
 public partial class SlugGenerator
 {
@@ -42,19 +45,33 @@ public partial class SlugGenerator
 
     private static string Sanitize(string input)
     {
-        // Convert to lowercase
-        var slug = input.ToLowerInvariant();
+        // Step 1: Normalize to FormD (decomposed form) to separate base chars from diacritics
+        var normalized = input.Normalize(NormalizationForm.FormD);
 
-        // Replace spaces and underscores with hyphens
+        // Step 2: Remove diacritical marks (café → cafe, München → munchen)
+        var sb = new StringBuilder();
+        foreach (var c in normalized)
+        {
+            var category = CharUnicodeInfo.GetUnicodeCategory(c);
+            if (category != UnicodeCategory.NonSpacingMark)
+            {
+                sb.Append(c);
+            }
+        }
+
+        // Step 3: Convert to lowercase
+        var slug = sb.ToString().ToLowerInvariant();
+
+        // Step 4: Replace spaces and underscores with hyphens
         slug = slug.Replace(' ', '-').Replace('_', '-');
 
-        // Remove all non-alphanumeric characters except hyphens
+        // Step 5: Remove all non-alphanumeric characters except hyphens
         slug = NonSlugCharsPattern().Replace(slug, string.Empty);
 
-        // Remove multiple consecutive hyphens
+        // Step 6: Remove multiple consecutive hyphens
         slug = Regex.Replace(slug, "-+", "-");
 
-        // Trim hyphens from start and end
+        // Step 7: Trim hyphens from start and end
         slug = slug.Trim('-');
 
         return slug;
