@@ -1,11 +1,14 @@
 using FluentAssertions;
 using Markdn.Api.Configuration;
 using Markdn.Api.Models;
+using Markdn.Api.Querying;
 using Markdn.Api.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
 
 namespace Markdn.Api.Tests.Unit.Services;
 
@@ -21,6 +24,9 @@ public class CollectionServiceTests
     private readonly Mock<SlugGenerator> _mockSlugGenerator;
     private readonly Mock<IMemoryCache> _mockCache;
     private readonly Mock<IOptions<MarkdnOptions>> _mockOptions;
+    private readonly Mock<QueryExecutor> _mockQueryExecutor;
+    private readonly ActivitySource _activitySource;
+    private readonly Mock<IMeterFactory> _mockMeterFactory;
     private readonly Mock<ILogger<CollectionService>> _mockLogger;
     private readonly CollectionService _sut;
 
@@ -32,6 +38,9 @@ public class CollectionServiceTests
         _mockSlugGenerator = new Mock<SlugGenerator>();
         _mockCache = new Mock<IMemoryCache>();
         _mockOptions = new Mock<IOptions<MarkdnOptions>>();
+        _mockQueryExecutor = new Mock<QueryExecutor>();
+        _activitySource = new ActivitySource("Markdn.Api.Tests");
+        _mockMeterFactory = new Mock<IMeterFactory>();
         _mockLogger = new Mock<ILogger<CollectionService>>();
 
         _mockOptions.Setup(x => x.Value).Returns(new MarkdnOptions
@@ -40,6 +49,10 @@ public class CollectionServiceTests
             MaxFileSizeBytes = 1048576
         });
 
+        // Setup meter factory to return a test meter
+        var testMeter = new Meter("Markdn.Api.Tests");
+        _mockMeterFactory.Setup(f => f.Create(It.IsAny<MeterOptions>())).Returns(testMeter);
+
         _sut = new CollectionService(
             _mockCollectionLoader.Object,
             _mockFrontMatterParser.Object,
@@ -47,6 +60,9 @@ public class CollectionServiceTests
             _mockSlugGenerator.Object,
             _mockCache.Object,
             _mockOptions.Object,
+            _mockQueryExecutor.Object,
+            _activitySource,
+            _mockMeterFactory.Object,
             _mockLogger.Object);
     }
 
