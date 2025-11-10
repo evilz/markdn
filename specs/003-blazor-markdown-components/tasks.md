@@ -26,11 +26,11 @@ Per plan.md, this feature creates two new projects:
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create source generator project at src/Markdn.SourceGenerators/Markdn.SourceGenerators.csproj with netstandard2.0 target
-- [ ] T002 Add Microsoft.CodeAnalysis.CSharp package (4.8.0) to Markdn.SourceGenerators project
-- [ ] T003 [P] Create test Blazor Server app at src/Markdn.Blazor.App/Markdn.Blazor.App.csproj with net8.0 target
-- [ ] T004 [P] Add project reference from Markdn.Blazor.App to Markdn.SourceGenerators with OutputItemType="Analyzer" and ReferenceOutputAssembly="false"
-- [ ] T005 [P] Create test content directory structure in src/Markdn.Blazor.App/Pages/ and src/Markdn.Blazor.App/Components/
+- [x] T001 Create source generator project at src/Markdn.SourceGenerators/Markdn.SourceGenerators.csproj with netstandard2.0 target
+- [x] T002 Add Microsoft.CodeAnalysis.CSharp package (4.8.0) to Markdn.SourceGenerators project
+- [x] T003 [P] Create test Blazor Server app at src/Markdn.Blazor.App/Markdn.Blazor.App.csproj with net8.0 target
+- [x] T004 [P] Add project reference from Markdn.Blazor.App to Markdn.SourceGenerators with OutputItemType="Analyzer" and ReferenceOutputAssembly="false"
+- [x] T005 [P] Create test content directory structure in src/Markdn.Blazor.App/Pages/ and src/Markdn.Blazor.App/Components/
 
 ---
 
@@ -40,26 +40,26 @@ Per plan.md, this feature creates two new projects:
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T006 Create MarkdownComponentModel entity in src/Markdn.SourceGenerators/Models/MarkdownComponentModel.cs
-- [ ] T007 [P] Create ComponentMetadata entity in src/Markdn.SourceGenerators/Models/ComponentMetadata.cs
-- [ ] T008 [P] Create ParameterDefinition entity in src/Markdn.SourceGenerators/Models/ParameterDefinition.cs
-- [ ] T009 [P] Create MarkdownContent entity in src/Markdn.SourceGenerators/Models/MarkdownContent.cs
-- [ ] T010 [P] Create HtmlSegment entity with SegmentType enum in src/Markdn.SourceGenerators/Models/HtmlSegment.cs
-- [ ] T011 [P] Create ComponentReference entity in src/Markdn.SourceGenerators/Models/ComponentReference.cs
-- [ ] T012 [P] Create ComponentParameter entity in src/Markdn.SourceGenerators/Models/ComponentParameter.cs
-- [ ] T013 [P] Create CodeBlock entity in src/Markdn.SourceGenerators/Models/CodeBlock.cs
-- [ ] T014 [P] Create SourceLocation entity in src/Markdn.SourceGenerators/Models/SourceLocation.cs
+- [x] T006 Create MarkdownComponentModel entity in src/Markdn.SourceGenerators/Models/MarkdownComponentModel.cs
+- [x] T007 [P] Create ComponentMetadata entity in src/Markdn.SourceGenerators/Models/ComponentMetadata.cs
+- [x] T008 [P] Create ParameterDefinition entity in src/Markdn.SourceGenerators/Models/ParameterDefinition.cs
+- [x] T009 [P] Create MarkdownContent entity in src/Markdn.SourceGenerators/Models/MarkdownContent.cs
+- [x] T010 [P] Create HtmlSegment entity with SegmentType enum in src/Markdn.SourceGenerators/Models/HtmlSegment.cs
+- [x] T011 [P] Create ComponentReference entity in src/Markdn.SourceGenerators/Models/ComponentReference.cs
+- [x] T012 [P] Create ComponentParameter entity in src/Markdn.SourceGenerators/Models/ComponentParameter.cs
+- [x] T013 [P] Create CodeBlock entity in src/Markdn.SourceGenerators/Models/CodeBlock.cs
+- [x] T014 [P] Create SourceLocation entity in src/Markdn.SourceGenerators/Models/SourceLocation.cs
 - [ ] T015 Create YamlFrontMatterParser in src/Markdn.SourceGenerators/Parsers/YamlFrontMatterParser.cs with YamlDotNet integration
 - [ ] T016 [P] Create MarkdigPipelineBuilder in src/Markdn.SourceGenerators/Parsers/MarkdigPipelineBuilder.cs for custom Markdig pipeline configuration
 - [ ] T017 Create RazorSyntaxPreserver implementing IInlineParser in src/Markdn.SourceGenerators/Parsers/RazorSyntaxPreserver.cs for preserving @ expressions and @code blocks
 - [ ] T018 [P] Create ComponentTagParser implementing IInlineParser in src/Markdn.SourceGenerators/Parsers/ComponentTagParser.cs for preserving <Component /> tags
 - [ ] T019 Create MarkdownComponentParser orchestrator in src/Markdn.SourceGenerators/Parsers/MarkdownComponentParser.cs that combines YAML, Markdig, and Razor parsing
-- [ ] T020 Create ComponentNameGenerator in src/Markdn.SourceGenerators/Generators/ComponentNameGenerator.cs for filename to class name conversion
-- [ ] T021 [P] Create NamespaceGenerator in src/Markdn.SourceGenerators/Generators/NamespaceGenerator.cs for directory structure to namespace mapping
-- [ ] T022 Create DiagnosticDescriptors in src/Markdn.SourceGenerators/Diagnostics/DiagnosticDescriptors.cs with codes MD001-MD008
+- [x] T020 Create ComponentNameGenerator in src/Markdn.SourceGenerators/Generators/ComponentNameGenerator.cs for filename to class name conversion
+- [x] T021 [P] Create NamespaceGenerator in src/Markdn.SourceGenerators/Generators/NamespaceGenerator.cs for directory structure to namespace mapping
+- [x] T022 Create DiagnosticDescriptors in src/Markdn.SourceGenerators/Diagnostics/DiagnosticDescriptors.cs with codes MD001-MD008
 - [ ] T023 [P] Create ComponentCodeEmitter in src/Markdn.SourceGenerators/CodeGeneration/ComponentCodeEmitter.cs for generating C# source code structure
 - [ ] T024 Create RenderTreeBuilder code generation in src/Markdn.SourceGenerators/CodeGeneration/RenderTreeBuilderEmitter.cs for BuildRenderTree method
-- [ ] T025 [P] Create MarkdownComponentGenerator implementing IIncrementalGenerator in src/Markdn.SourceGenerators/MarkdownComponentGenerator.cs with generator registration and pipeline
+- [x] T025 [P] Create MarkdownComponentGenerator implementing IIncrementalGenerator in src/Markdn.SourceGenerators/MarkdownComponentGenerator.cs with generator registration and pipeline
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -73,14 +73,14 @@ Per plan.md, this feature creates two new projects:
 
 ### Implementation for User Story 1
 
-- [ ] T026 [US1] Implement AdditionalTextsProvider filtering for .md files in MarkdownComponentGenerator.Initialize method
-- [ ] T027 [US1] Implement TransformToModel pipeline step in MarkdownComponentGenerator that invokes MarkdownComponentParser
-- [ ] T028 [US1] Implement basic Markdig to HTML conversion in MarkdigPipelineBuilder (CommonMark extensions only, no Razor preservation yet)
-- [ ] T029 [US1] Implement ComponentCodeEmitter to generate basic component class structure (namespace, class name, inheritance from ComponentBase)
-- [ ] T030 [US1] Implement RenderTreeBuilderEmitter to generate BuildRenderTree method with AddMarkupContent calls for static HTML
-- [ ] T031 [US1] Implement RegisterSourceOutput in MarkdownComponentGenerator to emit .md.g.cs files with auto-generated comment header
-- [ ] T032 [US1] Create test file src/Markdn.Blazor.App/Pages/Greeting.md with standard Markdown formatting (headings, lists, bold, italic, links)
-- [ ] T033 [US1] Verify generated src/Markdn.Blazor.App/obj/.../Greeting.md.g.cs contains correct BuildRenderTree with HTML
+- [x] T026 [US1] Implement AdditionalTextsProvider filtering for .md files in MarkdownComponentGenerator.Initialize method
+- [x] T027 [US1] Implement TransformToModel pipeline step in MarkdownComponentGenerator that invokes MarkdownComponentParser
+- [x] T028 [US1] Implement basic Markdig to HTML conversion in MarkdigPipelineBuilder (CommonMark extensions only, no Razor preservation yet)
+- [x] T029 [US1] Implement ComponentCodeEmitter to generate basic component class structure (namespace, class name, inheritance from ComponentBase)
+- [x] T030 [US1] Implement RenderTreeBuilderEmitter to generate BuildRenderTree method with AddMarkupContent calls for static HTML
+- [x] T031 [US1] Implement RegisterSourceOutput in MarkdownComponentGenerator to emit .md.g.cs files with auto-generated comment header
+- [x] T032 [US1] Create test file src/Markdn.Blazor.App/Pages/Greeting.md with standard Markdown formatting (headings, lists, bold, italic, links)
+- [x] T033 [US1] Verify generated src/Markdn.Blazor.App/obj/.../Greeting.md.g.cs contains correct BuildRenderTree with HTML
 - [ ] T034 [US1] Reference <Greeting /> in src/Markdn.Blazor.App/Pages/Index.razor and verify rendering in browser
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - simple Markdown files generate usable components

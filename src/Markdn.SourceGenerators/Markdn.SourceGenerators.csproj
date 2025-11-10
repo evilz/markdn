@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <IsRoslynComponent>true</IsRoslynComponent>
+    <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    
+    <!-- Source Generator Metadata -->
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    
+    <!-- Documentation -->
+    <Title>Markdn Source Generators</Title>
+    <Description>C# source generator that converts Markdown files to Blazor Razor components</Description>
+    <Authors>Markdn</Authors>
+    <PackageTags>blazor;markdown;source-generator;razor;mdx</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Roslyn Source Generator Dependencies -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>
