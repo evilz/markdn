@@ -481,18 +481,22 @@ Coming soon...
 
 ```json
 {
-  "blog": {
-    "folder": "blog",
-    "schema": {
-      "properties": {
-        "title": { "type": "string" },
-        "category": {
-          "type": "string",
-          "enum": ["tutorial", "news", "release"]
+  "contentRootPath": "content",
+  "collections": {
+    "blog": {
+      "folder": "blog",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "category": {
+            "type": "string",
+            "enum": ["tutorial", "news", "release"]
+          },
+          "publishDate": { "type": "string", "format": "date" }
         },
-        "publishDate": { "type": "string", "format": "date" }
-      },
-      "required": ["title", "category", "publishDate"]
+        "required": ["title", "category", "publishDate"]
+      }
     }
   }
 }
@@ -506,15 +510,19 @@ Coming soon...
 
 ```json
 {
-  "docs": {
-    "folder": "docs",
-    "schema": {
-      "properties": {
-        "title": { "type": "string" },
-        "order": { "type": "number" },
-        "section": { "type": "string" }
-      },
-      "required": ["title", "order"]
+  "contentRootPath": "content",
+  "collections": {
+    "docs": {
+      "folder": "docs",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "order": { "type": "number" },
+          "section": { "type": "string" }
+        },
+        "required": ["title", "order"]
+      }
     }
   }
 }
@@ -528,16 +536,20 @@ Coming soon...
 
 ```json
 {
-  "products": {
-    "folder": "products",
-    "schema": {
-      "properties": {
-        "name": { "type": "string" },
-        "price": { "type": "number", "minimum": 0 },
-        "sku": { "type": "string", "pattern": "^[A-Z]{3}-[0-9]{4}$" },
-        "inStock": { "type": "boolean" }
-      },
-      "required": ["name", "price", "sku"]
+  "contentRootPath": "content",
+  "collections": {
+    "products": {
+      "folder": "products",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "price": { "type": "number", "minimum": 0 },
+          "sku": { "type": "string", "pattern": "^[A-Z]{3}-[0-9]{4}$" },
+          "inStock": { "type": "boolean" }
+        },
+        "required": ["name", "price", "sku"]
+      }
     }
   }
 }

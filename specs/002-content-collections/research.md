@@ -88,9 +88,10 @@ $select=title,author,publishDate
 - Example JSON structure:
 ```json
 {
+  "contentRootPath": "content",
   "collections": {
     "blog": {
-      "folder": "content/blog",
+      "folder": "blog",
       "schema": {
         "type": "object",
         "properties": {
