@@ -12,7 +12,7 @@ Content Collections provides a structured, type-safe way to manage and query con
 ## Technical Context
 
 **Language/Version**: C# / .NET 8.0 (net8.0)  
-**Primary Dependencies**: ASP.NET Core 8.0, Markdig (Markdown parsing), YamlDotNet (front-matter parsing), NEEDS CLARIFICATION: JSON schema validation library  
+**Primary Dependencies**: ASP.NET Core 8.0, Markdig (Markdown parsing), YamlDotNet (front-matter parsing), NJsonSchema 11.x (JSON schema validation)  
 **Storage**: File system (existing Markdown/JSON files in collection folders)  
 **Testing**: xUnit with ASP.NET Core TestHost (contract/integration tests), xUnit for unit tests  
 **Target Platform**: Cross-platform (Linux, Windows, macOS) - containerized deployment  
@@ -21,12 +21,12 @@ Content Collections provides a structured, type-safe way to manage and query con
 **Constraints**: Eager validation at startup must complete in under 5 seconds for 1000 items, async-first for all I/O operations  
 **Scale/Scope**: Support 10+ collections with 1000+ items each, OData-like query syntax with filtering, sorting, and pagination
 
-**Key Technical Decisions Requiring Research**:
-- NEEDS CLARIFICATION: JSON schema validation library for .NET (System.Text.Json.Schema, NJsonSchema, or Json.NET Schema)
-- NEEDS CLARIFICATION: OData query parsing approach (build custom parser, use Microsoft.AspNetCore.OData, or lightweight alternative)
-- NEEDS CLARIFICATION: Configuration file format (JSON, YAML, or both)
-- NEEDS CLARIFICATION: In-memory caching strategy for validated content and query results
-- NEEDS CLARIFICATION: File watcher integration for detecting content changes at runtime
+**Key Technical Decisions** (resolved in research.md):
+- **JSON Schema Validation**: NJsonSchema 11.x - mature library with System.Text.Json integration and good performance
+- **OData Query Parsing**: Custom lightweight parser supporting $filter, $orderby, $top, $skip subset (avoids Microsoft.AspNetCore.OData overhead)
+- **Configuration Format**: JSON primary (collections.json) with optional YAML support if requested
+- **Caching Strategy**: IMemoryCache with sliding expiration (5min for content, 1min for queries) and file change invalidation
+- **File Watching**: FileSystemWatcher with 300ms debouncing and error resilience for runtime content change detection
 
 ## Constitution Check
 
