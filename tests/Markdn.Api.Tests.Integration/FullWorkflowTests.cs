@@ -211,7 +211,7 @@ title: Test Post
             var initialResponse = await client.GetAsync("/api/collections/blog/items");
             initialResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-            var initialItemsResponse = await initialResponse.Content.ReadFromJsonAsync<CollectionsEndpoints.CollectionItemsResponse>();
+            var initialItemsResponse = await initialResponse.Content.ReadFromJsonAsync<CollectionItemsResponse>();
             initialItemsResponse.Should().NotBeNull();
             initialItemsResponse!.Items.Should().HaveCount(1);
             initialItemsResponse.Items[0].IsValid.Should().BeTrue();
@@ -242,7 +242,7 @@ title: Test Post
             var updatedResponse = await client.GetAsync("/api/collections/blog/items");
             updatedResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-            var updatedItemsResponse = await updatedResponse.Content.ReadFromJsonAsync<CollectionsEndpoints.CollectionItemsResponse>();
+            var updatedItemsResponse = await updatedResponse.Content.ReadFromJsonAsync<CollectionItemsResponse>();
             updatedItemsResponse.Should().NotBeNull();
             updatedItemsResponse!.Items.Should().HaveCount(1);
             updatedItemsResponse.Items[0].IsValid.Should().BeFalse("post is missing required 'author' field after schema change");

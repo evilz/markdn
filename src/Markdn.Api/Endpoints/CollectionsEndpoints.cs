@@ -329,13 +329,4 @@ public static class CollectionsEndpoints
                 statusCode: StatusCodes.Status500InternalServerError);
         }
     }
-
-    /// <summary>
-    /// Response model for collection items query.
-    /// </summary>
-    public class CollectionItemsResponse
-    {
-        public List<ContentItem> Items { get; set; } = new();
-        public int TotalCount { get; set; }
-    }
 }
