@@ -33,7 +33,7 @@ Counter value: @(counter * 2)
 
 ## Mixed Content
 
-You can mix **Markdown** with @expressions seamlessly.
+You can mix **Markdown** with Razor expressions seamlessly.
 
 - List item with @message
 - Another item with @DateTime.Now.ToString()

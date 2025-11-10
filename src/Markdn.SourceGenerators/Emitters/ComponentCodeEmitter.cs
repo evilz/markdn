@@ -35,6 +35,11 @@ public static class ComponentCodeEmitter
         sb.AppendLine("#nullable enable");
         sb.AppendLine();
 
+        // Standard using directives for component references
+        sb.AppendLine("using Markdn.Blazor.App.Components.Pages;");
+        sb.AppendLine("using Markdn.Blazor.App.Components.Shared;");
+        sb.AppendLine();
+
         // Using directives (from metadata)
         if (metadata.Using != null && metadata.Using.Count > 0)
         {

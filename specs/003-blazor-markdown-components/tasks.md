@@ -156,21 +156,21 @@ Per plan.md, this feature creates two new projects:
 - [x] T054 [US5] Implement @code {} block detection and extraction in RazorSyntaxPreserver
 - [x] T055 [US5] Store extracted @code blocks in CodeBlock entities with content and source location
 - [x] T056 [US5] Implement ComponentTagParser to detect and preserve <ComponentName /> and <ComponentName>...</ComponentName> syntax
-- [ ] T057 [US5] Parse component parameters (attribute="value" and attribute="@expression") in ComponentTagParser
-- [ ] T058 [US5] Register RazorSyntaxPreserver and ComponentTagParser in MarkdigPipelineBuilder custom pipeline
+- [x] T057 [US5] Parse component parameters (attribute="value" and attribute="@expression") in ComponentTagParser
+- [ ] T058 [US5] Register RazorSyntaxPreserver and ComponentTagParser in MarkdigPipelineBuilder custom pipeline (N/A - using BasicMarkdownParser)
 - [x] T059 [US5] Implement code block emission in ComponentCodeEmitter after BuildRenderTree method
-- [ ] T060 [US5] Implement inline expression handling in RenderTreeBuilderEmitter (detect @expression in content, emit AddContent instead of AddMarkupContent)
-- [ ] T061 [US5] Implement component reference handling in RenderTreeBuilderEmitter (emit OpenComponent, AddAttribute, CloseComponent)
-- [ ] T062 [US5] Handle component child content with RenderFragment emission in RenderTreeBuilderEmitter
+- [x] T060 [US5] Implement inline expression handling in RenderTreeBuilderEmitter (detect @expression in content, emit AddContent instead of AddMarkupContent)
+- [x] T061 [US5] Implement component reference handling in RenderTreeBuilderEmitter (emit OpenComponent, AddAttribute, CloseComponent)
+- [x] T062 [US5] Handle component child content with RenderFragment emission in RenderTreeBuilderEmitter
 - [x] T063 [US5] Create test file src/Markdn.Blazor.App/Pages/Dynamic.md with @code block and inline expressions
-- [ ] T064 [US5] Verify generated Dynamic.md.g.cs contains code block members and AddContent calls for expressions
+- [x] T064 [US5] Verify generated Dynamic.md.g.cs contains code block members and AddContent calls for expressions
 - [x] T065 [US5] Create test file src/Markdn.Blazor.App/Pages/WithComponents.md referencing <Counter /> (built-in Blazor template component)
-- [ ] T066 [US5] Verify generated WithComponents.md.g.cs contains OpenComponent<Counter> and proper RenderTree calls
-- [ ] T067 [US5] Test component with parameters: create Alert component and reference it as `<Alert Severity="Warning">Message</Alert>`
-- [ ] T068 [US5] Verify parameter passing and child content rendering work correctly
-- [ ] T069 [US5] Add validation for invalid C# syntax in @code blocks (Roslyn will naturally report compilation errors)
+- [x] T066 [US5] Verify generated WithComponents.md.g.cs contains OpenComponent<Counter> and proper RenderTree calls
+- [x] T067 [US5] Test component with parameters: create Alert component and reference it as `<Alert Severity="Warning">Message</Alert>`
+- [x] T068 [US5] Verify parameter passing and child content rendering work correctly
+- [x] T069 [US5] Add validation for invalid C# syntax in @code blocks (Roslyn will naturally report compilation errors)
 
-**Checkpoint**: Markdown files can now include dynamic C# code and reusable component references
+**Checkpoint**: ✅ Markdown files can now include dynamic C# code and reusable component references
 
 ---
 
