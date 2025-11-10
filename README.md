@@ -87,18 +87,25 @@ Collections are defined in a `collections.json` file at the root of your content
 
 ```json
 {
-  "collection-name": {
-    "type": "content",
-    "schema": {
-      "type": "object",
-      "properties": {
-        "field-name": {
-          "type": "string|number|integer|boolean|array|object",
-          "format": "date|date-time|email|uri|...",
-          "description": "Field description"
-        }
-      },
-      "required": ["field1", "field2"]
+  "contentRootPath": "content",
+  "collections": {
+    "collection-name": {
+      "folder": "collection-folder",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "field-name": {
+            "type": "string",
+            "format": "date",
+            "description": "Field description"
+          },
+          "multi-type-field": {
+            "type": ["string", "number"],
+            "description": "Field that accepts multiple types"
+          }
+        },
+        "required": ["field-name"]
+      }
     }
   }
 }
@@ -111,6 +118,7 @@ Collections are defined in a `collections.json` file at the root of your content
 - `boolean` - True/false values
 - `array` - Lists of items
 - `object` - Nested structures
+- `["type1", "type2"]` - Multiple types (JSON Schema array syntax)
 
 ### Validation
 
