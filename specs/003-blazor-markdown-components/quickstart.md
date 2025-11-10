@@ -337,6 +337,35 @@ $namespace: MyApp.CustomPages
 
 ---
 
+## Troubleshooting: component resolution (MD006) and explicit namespaces
+
+If a component referenced in Markdown (for example `<Counter />` or `<Alert />`) cannot be resolved by the source generator at compile time, you may see a warning diagnostic MD006: "Unresolvable component reference." This happens when the generator cannot determine the component's namespace reliably (for example because the component is compiled by another generator or build ordering prevents it from being visible during generation).
+
+Remediation options:
+
+- Add explicit using directives in YAML front matter using the `$using` key. Example:
+
+```yaml
+---
+$using: [MyApp.Components, MyApp.Shared]
+---
+```
+
+- Or use the explicit `componentNamespaces` metadata key (supported by the generator as a fallback) to list namespaces where components live. Example:
+
+```yaml
+---
+componentNamespaces:
+  - MyApp.Components
+  - MyApp.Shared
+---
+```
+
+When `componentNamespaces` (or `$using`) is provided the generator will emit `using` directives for those namespaces in the generated `.md.g.cs` file and prefer unqualified component type names (e.g., `OpenComponent<Counter>`). If a component still cannot be resolved, the generator will emit MD006 with a hint recommending adding `componentNamespaces` or a `$using` entry.
+
+Examples and more details are available in `specs/003-blazor-markdown-components/quickstart-addenda.md`.
+
+
 ## Debugging Generated Code
 
 ### View Generated Source
