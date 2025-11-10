@@ -1,8 +1,3 @@
----
-url: /greeting
-title: Greeting Page
----
-
 # Hello, World!
 
 Welcome to your first **Markdown component** with _proper_ parsing.

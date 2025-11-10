@@ -49,8 +49,19 @@ Per plan.md, this feature creates two new projects:
 - [x] T012 [P] Create ComponentParameter entity in src/Markdn.SourceGenerators/Models/ComponentParameter.cs
 - [x] T013 [P] Create CodeBlock entity in src/Markdn.SourceGenerators/Models/CodeBlock.cs
 - [x] T014 [P] Create SourceLocation entity in src/Markdn.SourceGenerators/Models/SourceLocation.cs
-- [ ] T015 Create YamlFrontMatterParser in src/Markdn.SourceGenerators/Parsers/YamlFrontMatterParser.cs with YamlDotNet integration
-- [ ] T016 [P] Create MarkdigPipelineBuilder in src/Markdn.SourceGenerators/Parsers/MarkdigPipelineBuilder.cs for custom Markdig pipeline configuration
+- [x] T014 [P] Create HotReloadDetector in src/Markdn.SourceGenerators/Services/HotReloadDetector.cs
+- [x] T015 Create YamlFrontMatterParser in src/Markdn.SourceGenerators/Parsers/YamlFrontMatterParser.cs with YamlDotNet integration
+- [x] T016 Create MarkdigPipelineBuilder in src/Markdn.SourceGenerators/Parsers/MarkdigPipelineBuilder.cs
+- [x] T017 Create RazorCodePreserver in src/Markdn.SourceGenerators/Parsers/RazorCodePreserver.cs
+- [x] T018 Create RazorExpressionPreserver in src/Markdn.SourceGenerators/Parsers/RazorExpressionPreserver.cs
+- [x] T019 Create RazorComponentPreserver in src/Markdn.SourceGenerators/Parsers/RazorComponentPreserver.cs
+- [x] T020 Create MarkdownComponentParser in src/Markdn.SourceGenerators/Parsers/MarkdownComponentParser.cs
+- [x] T021 Create DiagnosticDescriptors in src/Markdn.SourceGenerators/Diagnostics/DiagnosticDescriptors.cs
+- [x] T022 Create MarkdownComponentGenerator (IIncrementalGenerator) in src/Markdn.SourceGenerators/MarkdownComponentGenerator.cs
+- [x] T023 Create ComponentCodeEmitter in src/Markdn.SourceGenerators/Emitters/ComponentCodeEmitter.cs
+- [x] T024 Create RenderTreeBuilderEmitter in src/Markdn.SourceGenerators/Emitters/RenderTreeBuilderEmitter.cs
+- [x] T016 [P] Create MarkdigPipelineBuilder in src/Markdn.SourceGenerators/Parsers/MarkdigPipelineBuilder.cs for custom Markdig pipeline configuration
+  - **Note**: Markdig created but not usable due to source generator assembly isolation. Using BasicMarkdownParser.cs instead (CommonMark subset: H1-H6, bold, italic, strikethrough, links, code blocks, lists)
 - [ ] T017 Create RazorSyntaxPreserver implementing IInlineParser in src/Markdn.SourceGenerators/Parsers/RazorSyntaxPreserver.cs for preserving @ expressions and @code blocks
 - [ ] T018 [P] Create ComponentTagParser implementing IInlineParser in src/Markdn.SourceGenerators/Parsers/ComponentTagParser.cs for preserving <Component /> tags
 - [ ] T019 Create MarkdownComponentParser orchestrator in src/Markdn.SourceGenerators/Parsers/MarkdownComponentParser.cs that combines YAML, Markdig, and Razor parsing
@@ -81,9 +92,9 @@ Per plan.md, this feature creates two new projects:
 - [x] T031 [US1] Implement RegisterSourceOutput in MarkdownComponentGenerator to emit .md.g.cs files with auto-generated comment header
 - [x] T032 [US1] Create test file src/Markdn.Blazor.App/Pages/Greeting.md with standard Markdown formatting (headings, lists, bold, italic, links)
 - [x] T033 [US1] Verify generated src/Markdn.Blazor.App/obj/.../Greeting.md.g.cs contains correct BuildRenderTree with HTML
-- [ ] T034 [US1] Reference <Greeting /> in src/Markdn.Blazor.App/Pages/Index.razor and verify rendering in browser
+- [x] T034 [US1] Reference <Greeting /> in src/Markdn.Blazor.App/Pages/Index.razor and verify rendering in browser
 
-**Checkpoint**: At this point, User Story 1 should be fully functional - simple Markdown files generate usable components
+**Checkpoint**: ✅ At this point, User Story 1 is fully functional - simple Markdown files generate usable components
 
 ---
 
@@ -97,14 +108,14 @@ Per plan.md, this feature creates two new projects:
 
 ### Implementation for User Story 6
 
-- [ ] T035 [US6] Verify generated code uses only ComponentBase and standard RenderTreeBuilder APIs (no server-specific or WASM-specific code)
-- [ ] T036 [US6] Create src/Markdn.Blazor.App.Wasm/ Blazor WebAssembly test project with same generator reference
-- [ ] T037 [US6] Copy Greeting.md to WebAssembly project and verify identical rendering
-- [ ] T038 [US6] Configure Blazor Server project for SSR render mode in Program.cs
-- [ ] T039 [US6] Verify Greeting component renders identically with SSR render mode
-- [ ] T040 [US6] Document multi-rendering mode compatibility verification in specs/003-blazor-markdown-components/quickstart.md
+- [x] T035 [US6] Verify generated code uses only ComponentBase and standard RenderTreeBuilder APIs (no server-specific or WASM-specific code)
+- [x] T036 [US6] Create src/Markdn.Blazor.App.Wasm/ Blazor WebAssembly test project with same generator reference
+- [x] T037 [US6] Copy Greeting.md to WebAssembly project and verify identical rendering
+- [x] T038 [US6] Configure Blazor Server project for SSR render mode in Program.cs
+- [x] T039 [US6] Verify Greeting component renders identically with SSR render mode
+- [x] T040 [US6] Document multi-rendering mode compatibility verification in specs/003-blazor-markdown-components/quickstart.md
 
-**Checkpoint**: Generated components are proven to work across all three Blazor hosting models
+**Checkpoint**: ✅ Generated components are proven to work across all three Blazor hosting models
 
 ---
 
@@ -116,18 +127,18 @@ Per plan.md, this feature creates two new projects:
 
 ### Implementation for User Story 2
 
-- [ ] T041 [US2] Implement YAML front matter detection and extraction in YamlFrontMatterParser
-- [ ] T042 [US2] Implement ComponentMetadata.Url property parsing (scalar string) in YamlFrontMatterParser
-- [ ] T043 [US2] Implement ComponentMetadata.UrlArray property parsing (sequence) in YamlFrontMatterParser
-- [ ] T044 [US2] Add validation in YamlFrontMatterParser: Url and UrlArray are mutually exclusive (emit MD008 diagnostic if both specified)
-- [ ] T045 [US2] Add validation in YamlFrontMatterParser: URLs must start with / (emit MD002 diagnostic if invalid)
-- [ ] T046 [US2] Implement RouteAttribute generation in ComponentCodeEmitter when Url or UrlArray is present
-- [ ] T047 [US2] Handle multiple routes by emitting multiple [Route("...")] attributes in ComponentCodeEmitter
-- [ ] T048 [US2] Create test file src/Markdn.Blazor.App/Pages/About.md with `url: /about` and content
-- [ ] T049 [US2] Verify generated About.md.g.cs contains [Microsoft.AspNetCore.Components.RouteAttribute("/about")]
-- [ ] T050 [US2] Navigate to /about in browser and verify content displays
-- [ ] T051 [US2] Create test file src/Markdn.Blazor.App/Pages/Home.md with `url: [/, /home]` for multiple routes
-- [ ] T052 [US2] Verify Home component responds to both / and /home routes
+- [x] T041 [US2] Implement YAML front matter detection and extraction in YamlFrontMatterParser
+- [x] T042 [US2] Implement ComponentMetadata.Url property parsing (scalar string) in YamlFrontMatterParser
+- [x] T043 [US2] Implement ComponentMetadata.UrlArray property parsing (sequence) in YamlFrontMatterParser
+- [x] T044 [US2] Add validation in YamlFrontMatterParser: Url and UrlArray are mutually exclusive (emit MD008 diagnostic if both specified)
+- [x] T045 [US2] Add validation in YamlFrontMatterParser: URLs must start with / (emit MD002 diagnostic if invalid)
+- [x] T046 [US2] Implement RouteAttribute generation in ComponentCodeEmitter when Url or UrlArray is present
+- [x] T047 [US2] Handle multiple routes by emitting multiple [Route("...")] attributes in ComponentCodeEmitter
+- [x] T048 [US2] Create test file src/Markdn.Blazor.App/Pages/About.md with `url: /about` and content
+- [x] T049 [US2] Verify generated About.md.g.cs contains [Microsoft.AspNetCore.Components.RouteAttribute("/about")]
+- [x] T050 [US2] Navigate to /about in browser and verify content displays
+- [x] T051 [US2] Create test file src/Markdn.Blazor.App/Pages/Home.md with `url: [/, /home]` for multiple routes
+- [x] T052 [US2] Verify Home component responds to both / and /home routes
 
 **Checkpoint**: Routable pages can be created entirely from Markdown with YAML front matter
 

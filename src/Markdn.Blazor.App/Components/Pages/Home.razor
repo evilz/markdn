@@ -1,7 +1,7 @@
-﻿@page "/"
-@using Markdn.Blazor.App.Pages
+﻿@* HomeRoute.md now handles /, /home, and /index routes *@
+@* This page kept for reference but not routable *@
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Home (Non-Routed)</PageTitle>
 
 <h1>Hello, world!</h1>
 
@@ -9,4 +9,10 @@ Welcome to your new app.
 
 <h2>Markdown Component Demo</h2>
 
-<Greeting />
+<p>Navigate to:</p>
+<ul>
+    <li><a href="/greeting">Greeting Page</a></li>
+    <li><a href="/about-legacy">About (Legacy)</a></li>
+    <li><a href="/about">About (New Routing)</a></li>
+    <li><a href="/features">Features</a></li>
+</ul>

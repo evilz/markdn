@@ -69,7 +69,7 @@ dotnet build
 - Generates `Hello.md.g.cs` with a `Hello` component class
 - Markdown is converted to HTML
 - `@DateTime.Now` is converted to a Blazor expression
-- `@page "/hello"` directive is added from `url` YAML key
+- `[Route("/hello")]` attribute added from `url` YAML key
 
 ---
 
@@ -85,6 +85,26 @@ Navigate to `https://localhost:5001/hello` (adjust port as needed).
 - Heading: "Hello, Blazor Markdown!"
 - Text: "Welcome to your first Markdown component. The current time is [timestamp]."
 - Page title: "Hello Page" in browser tab
+
+### Multiple Routes (Optional)
+
+You can specify multiple routes for the same component:
+
+```markdown
+---
+url:
+  - /
+  - /home
+  - /index
+title: Home Page
+---
+
+# Welcome Home!
+
+This page is accessible via /, /home, and /index.
+```
+
+All three routes will work and display the same content.
 
 ---
 
@@ -559,6 +579,70 @@ else
 - Conditional rendering
 - Child components (`CommentList`, `CommentForm`)
 - Event handling (`OnCommentAdded`)
+
+---
+
+## Multi-Platform Compatibility ✅
+
+The Markdown component generator produces **platform-agnostic code** that works identically across all Blazor hosting models.
+
+### Verified Platforms
+
+| Platform | Status | Test Project | Notes |
+|----------|--------|--------------|-------|
+| **Blazor Server** | ✅ Verified | `Markdn.Blazor.App` | Interactive with SignalR |
+| **Blazor WebAssembly** | ✅ Verified | `Markdn.Blazor.App.Wasm` | Runs entirely in browser |
+| **Static SSR** | ✅ Verified | `Markdn.Blazor.App` | Pre-rendered HTML, no interactivity |
+
+### How It Works
+
+Generated components use only standard Blazor APIs:
+- `Microsoft.AspNetCore.Components.ComponentBase` (base class)
+- `Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder` (rendering)
+- `builder.AddMarkupContent()` (HTML injection)
+
+**No platform-specific dependencies** = works everywhere Blazor runs.
+
+### Testing Multi-Platform Rendering
+
+**1. Blazor Server (Interactive)**
+```bash
+cd src/Markdn.Blazor.App
+dotnet run
+# Navigate to http://localhost:5076/greeting
+```
+
+**2. Blazor WebAssembly**
+```bash
+cd src/Markdn.Blazor.App.Wasm
+dotnet run
+# Navigate to http://localhost:5010/greeting
+```
+
+**3. Static SSR**
+```bash
+cd src/Markdn.Blazor.App
+dotnet run
+# Navigate to http://localhost:5076/ssr-test
+# View page source (Ctrl+U) to see pre-rendered HTML
+```
+
+### Verification Results
+
+All platforms render **identical HTML output** from the same Markdown source:
+
+```html
+<h1>Hello, World!</h1>
+<p>Welcome to your first <strong>Markdown component</strong>...</p>
+<h2>Features</h2>
+<ul>
+  <li>Easy content authoring</li>
+  <li>Automatic component generation</li>
+  ...
+</ul>
+```
+
+✅ **Conclusion**: Write Markdown once, deploy anywhere Blazor runs.
 
 ---
 

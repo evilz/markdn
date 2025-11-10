@@ -1,0 +1,11 @@
+@page "/ssr-test"
+
+<PageTitle>SSR Test</PageTitle>
+
+<div style="border: 2px solid blue; padding: 1rem; margin-bottom: 1rem; background-color: #e3f2fd;">
+    <h3>🔍 Render Mode: Static SSR</h3>
+    <p><strong>How to verify:</strong> View page source (Ctrl+U) - you'll see the full HTML content pre-rendered.</p>
+    <p><strong>Render timestamp:</strong> @DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss") UTC</p>
+</div>
+
+<DynamicComponent Type="typeof(Markdn.Blazor.App.Pages.SsrTest)" />

@@ -1,0 +1,19 @@
+﻿@page "/"
+
+<PageTitle>Home</PageTitle>
+
+<h1>Blazor WebAssembly - Markdown Components Test</h1>
+
+<p>Testing Markdown component generation in WebAssembly mode.</p>
+
+<h2>Embedded Greeting Component</h2>
+
+<DynamicComponent Type="typeof(Markdn.Blazor.App.Wasm.Pages.Greeting)" />
+
+<hr />
+
+<h3>Additional Test Routes</h3>
+<ul>
+    <li><a href="/greeting">/greeting</a> - Dedicated Greeting page</li>
+    <li><a href="/about">/about</a> - About page</li>
+</ul>
