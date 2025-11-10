@@ -51,4 +51,37 @@ public class SlugGeneratorTests
         result.Should().NotContain("!");
         result.Should().NotContain("@");
     }
+
+    [Theory]
+    [InlineData("café", "cafe")]
+    [InlineData("naïve", "naive")]
+    [InlineData("München", "munchen")]
+    [InlineData("São Paulo", "sao-paulo")]
+    [InlineData("Zürich", "zurich")]
+    [InlineData("exposé", "expose")]
+    public void GenerateSlug_WithInternationalCharacters_ShouldRemoveDiacritics(string input, string expected)
+    {
+        // Arrange
+        var generator = new SlugGenerator();
+
+        // Act
+        var result = generator.GenerateSlug(input, "fallback.md");
+
+        // Assert
+        result.Should().Be(expected);
+    }
+
+    [Fact]
+    public void GenerateSlug_WithMixedInternationalAndSpecialChars_ShouldNormalizeCorrectly()
+    {
+        // Arrange
+        var generator = new SlugGenerator();
+        var input = "Café & Restaurant: Crème Brûlée!";
+
+        // Act
+        var result = generator.GenerateSlug(input, "fallback.md");
+
+        // Assert
+        result.Should().Be("cafe-restaurant-creme-brulee");
+    }
 }

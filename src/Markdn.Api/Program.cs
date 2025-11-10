@@ -1,9 +1,18 @@
+using System.Diagnostics;
 using Markdn.Api.Configuration;
+using Markdn.Api.Endpoints;
 using Markdn.Api.FileSystem;
+using Markdn.Api.HealthChecks;
+using Markdn.Api.HostedServices;
 using Markdn.Api.Middleware;
 using Markdn.Api.Models;
+using Markdn.Api.Querying;
 using Markdn.Api.Services;
+using Markdn.Api.Validation;
 using Microsoft.AspNetCore.Http.HttpResults;
+
+// Create ActivitySource for distributed tracing
+var activitySource = new ActivitySource("Markdn.Api", "1.0.0");
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,11 +36,17 @@ if (builder.Environment.IsDevelopment())
 builder.Services.Configure<MarkdnOptions>(
     builder.Configuration.GetSection("Markdn"));
 
+builder.Services.Configure<CollectionsOptions>(
+    builder.Configuration.GetSection(CollectionsOptions.SectionName));
+
 // Add memory cache
 builder.Services.AddMemoryCache(options =>
 {
     options.SizeLimit = 100; // Limit to 100 items
 });
+
+// Register ActivitySource for distributed tracing
+builder.Services.AddSingleton(activitySource);
 
 // Register services
 builder.Services.AddSingleton<FrontMatterParser>();
@@ -43,8 +58,20 @@ builder.Services.AddSingleton<IFileWatcherService, FileWatcherService>();
 builder.Services.AddHostedService<FileWatcherHostedService>();
 builder.Services.AddScoped<ContentService>();
 
+// Register Collection services
+builder.Services.AddSingleton<ICollectionLoader, CollectionLoader>();
+builder.Services.AddSingleton<ISchemaValidator, SchemaValidator>();
+builder.Services.AddScoped<ContentItemValidator>();
+builder.Services.AddScoped<ICollectionService, CollectionService>();
+builder.Services.AddHostedService<CollectionFileWatcherService>();
+
+// Register Query services
+builder.Services.AddScoped<IQueryParser, QueryParser>();
+builder.Services.AddScoped<QueryExecutor>();
+
 // Add health checks
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddCheck<CollectionHealthCheck>("collections", tags: new[] { "ready", "collections" });
 
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
@@ -204,6 +231,9 @@ app.MapGet("/api/content/{slug}", async Task<Results<Ok<ContentItemResponse>, No
 })
 .WithName("GetContentBySlug")
 .WithOpenApi();
+
+// Map Collections endpoints
+app.MapCollectionsEndpoints();
 
 // Map health check endpoint
 app.MapHealthChecks("/api/health");

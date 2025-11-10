@@ -1,0 +1,528 @@
+openapi: 3.0.3
+info:
+  title: Markdn Collections API
+  description: Content Collections API for structured, type-safe content management
+  version: 1.0.0
+  contact:
+    name: Markdn API
+    
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+
+paths:
+  /api/collections:
+    get:
+      summary: List all available collections
+      description: Returns metadata for all defined collections including their schemas
+      operationId: listCollections
+      tags:
+        - Collections
+      responses:
+        '200':
+          description: List of collections
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  collections:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CollectionMetadata'
+              example:
+                collections:
+                  - name: blog
+                    folder: content/blog
+                    itemCount: 42
+                    schema:
+                      type: object
+                      properties:
+                        title:
+                          type: string
+                        author:
+                          type: string
+                        publishDate:
+                          type: string
+                          format: date
+                      required:
+                        - title
+                        - publishDate
+
+  /api/collections/{collectionName}:
+    get:
+      summary: Get collection metadata
+      description: Returns metadata and schema for a specific collection
+      operationId: getCollection
+      tags:
+        - Collections
+      parameters:
+        - name: collectionName
+          in: path
+          required: true
+          schema:
+            type: string
+          example: blog
+      responses:
+        '200':
+          description: Collection metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionMetadata'
+        '404':
+          description: Collection not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/collections/{collectionName}/items:
+    get:
+      summary: Query collection items
+      description: |
+        Query and filter content items in a collection using OData-like syntax.
+        Supports filtering, sorting, and pagination.
+      operationId: queryCollectionItems
+      tags:
+        - Content Items
+      parameters:
+        - name: collectionName
+          in: path
+          required: true
+          schema:
+            type: string
+          example: blog
+        - name: $filter
+          in: query
+          required: false
+          description: |
+            OData-like filter expression.
+            Examples:
+            - author eq 'John'
+            - publishDate gt '2025-01-01'
+            - publishDate gt '2025-01-01' and category eq 'tech'
+            - contains(title,'tutorial')
+          schema:
+            type: string
+          example: "author eq 'John' and publishDate gt '2025-01-01'"
+        - name: $orderby
+          in: query
+          required: false
+          description: |
+            Sort order. Multiple fields separated by comma.
+            Examples:
+            - publishDate desc
+            - publishDate desc,title asc
+          schema:
+            type: string
+          example: "publishDate desc"
+        - name: $top
+          in: query
+          required: false
+          description: Maximum number of items to return (page size)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          example: 10
+        - name: $skip
+          in: query
+          required: false
+          description: Number of items to skip (offset for pagination)
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          example: 0
+      responses:
+        '200':
+          description: Query results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ContentItem'
+                  count:
+                    type: integer
+                    description: Number of items in this response
+                  total:
+                    type: integer
+                    description: Total items matching filter (before pagination)
+              example:
+                items:
+                  - id: my-first-post
+                    collectionName: blog
+                    slug: my-first-post
+                    frontMatter:
+                      title: My First Post
+                      author: John Doe
+                      publishDate: '2025-11-01'
+                      tags:
+                        - tutorial
+                        - getting-started
+                    content: "# My First Post\n\nWelcome to my blog..."
+                    lastModified: '2025-11-01T10:30:00Z'
+                count: 1
+                total: 42
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: Invalid filter expression
+                message: "Field 'invalidField' does not exist in schema"
+        '404':
+          description: Collection not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/collections/{collectionName}/items/{itemId}:
+    get:
+      summary: Get a single content item
+      description: Retrieves a specific content item by its identifier (slug)
+      operationId: getContentItem
+      tags:
+        - Content Items
+      parameters:
+        - name: collectionName
+          in: path
+          required: true
+          schema:
+            type: string
+          example: blog
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Content item identifier (slug or filename)
+          example: my-first-post
+      responses:
+        '200':
+          description: Content item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentItem'
+        '404':
+          description: Content item not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/collections/{collectionName}/validate-all:
+    post:
+      summary: Validate all items in collection
+      description: |
+        Validates all items in a collection against its schema and returns
+        a comprehensive validation report synchronously.
+        
+        This endpoint processes all files in the collection and returns:
+        - Total item count
+        - Valid vs invalid item counts  
+        - Detailed error information for each invalid item
+        
+        Use this endpoint to manually trigger validation or get a full
+        validation status report for monitoring/debugging.
+      operationId: validateCollection
+      tags:
+        - Validation
+      parameters:
+        - name: collectionName
+          in: path
+          required: true
+          schema:
+            type: string
+          example: blog
+      responses:
+        '200':
+          description: Validation complete - returns full validation report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionValidationReport'
+        '404':
+          description: Collection not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    CollectionMetadata:
+      type: object
+      required:
+        - name
+        - folder
+        - itemCount
+        - schema
+      properties:
+        name:
+          type: string
+          description: Unique collection identifier
+          example: blog
+        folder:
+          type: string
+          description: Relative path to collection folder
+          example: content/blog
+        itemCount:
+          type: integer
+          description: Number of valid items in collection
+          example: 42
+        schema:
+          type: object
+          description: JSON Schema definition for collection
+          additionalProperties: true
+
+    ContentItem:
+      type: object
+      required:
+        - id
+        - collectionName
+        - slug
+        - frontMatter
+        - lastModified
+      properties:
+        id:
+          type: string
+          description: Unique identifier (slug or filename)
+          example: my-first-post
+        collectionName:
+          type: string
+          description: Parent collection name
+          example: blog
+        slug:
+          type: string
+          description: URL-friendly identifier
+          example: my-first-post
+        frontMatter:
+          type: object
+          description: Parsed front-matter data conforming to schema
+          additionalProperties: true
+        content:
+          type: string
+          description: Raw content body (for Markdown files)
+          nullable: true
+          example: "# My First Post\n\nWelcome..."
+        lastModified:
+          type: string
+          format: date-time
+          description: File last modified timestamp
+          example: '2025-11-01T10:30:00Z'
+
+    ValidationStatus:
+      type: object
+      description: Deprecated - use CollectionValidationReport
+      deprecated: true
+      required:
+        - collectionName
+        - totalItems
+        - validItems
+        - invalidItems
+        - lastValidatedAt
+      properties:
+        collectionName:
+          type: string
+          example: blog
+        totalItems:
+          type: integer
+          description: Total content files found
+          example: 50
+        validItems:
+          type: integer
+          description: Items passing validation
+          example: 48
+        invalidItems:
+          type: integer
+          description: Items failing validation
+          example: 2
+        errors:
+          type: array
+          description: Validation errors for invalid items
+          items:
+            $ref: '#/components/schemas/ContentValidationError'
+        warnings:
+          type: array
+          description: Non-blocking warnings
+          items:
+            $ref: '#/components/schemas/ValidationWarning'
+        lastValidatedAt:
+          type: string
+          format: date-time
+          example: '2025-11-09T10:00:00Z'
+
+    CollectionValidationReport:
+      type: object
+      description: Comprehensive validation report for a collection
+      required:
+        - collectionName
+        - totalItems
+        - validItems
+        - invalidItems
+        - validationTimestamp
+      properties:
+        collectionName:
+          type: string
+          description: Name of the collection
+          example: blog
+        totalItems:
+          type: integer
+          description: Total number of content items in the collection
+          example: 50
+        validItems:
+          type: integer
+          description: Number of items that passed validation
+          example: 48
+        invalidItems:
+          type: integer
+          description: Number of items that failed validation
+          example: 2
+        validationTimestamp:
+          type: string
+          format: date-time
+          description: When the validation was performed
+          example: '2025-11-09T10:00:00Z'
+        errors:
+          type: array
+          description: Validation errors for invalid items
+          items:
+            $ref: '#/components/schemas/ItemValidationError'
+        isValid:
+          type: boolean
+          description: Whether all items passed validation
+          example: false
+
+    ItemValidationError:
+      type: object
+      description: Validation error for a specific content item
+      required:
+        - filePath
+        - slug
+        - errorMessages
+      properties:
+        filePath:
+          type: string
+          description: File path of the item with errors
+          example: content/blog/broken-post.md
+        slug:
+          type: string
+          description: Slug of the item
+          example: broken-post
+        errorMessages:
+          type: array
+          description: List of validation error messages
+          items:
+            type: string
+          example:
+            - "Required property 'title' not found"
+            - "Property 'publishDate' must be a valid date"
+
+    ContentValidationError:
+      type: object
+      description: Deprecated - use ItemValidationError
+      deprecated: true
+      required:
+        - itemId
+        - fieldName
+        - errorType
+        - message
+      properties:
+        itemId:
+          type: string
+          description: Content item identifier
+          example: broken-post
+        fieldName:
+          type: string
+          description: Field that failed validation
+          example: publishDate
+        errorType:
+          type: string
+          enum:
+            - RequiredFieldMissing
+            - TypeMismatch
+            - PatternMismatch
+            - OutOfRange
+            - InvalidFormat
+            - InvalidEnum
+          example: RequiredFieldMissing
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Required field 'publishDate' is missing"
+        expectedType:
+          type: string
+          description: Expected data type
+          nullable: true
+          example: string
+        actualValue:
+          description: Actual value that failed
+          nullable: true
+
+    ValidationWarning:
+      type: object
+      required:
+        - itemId
+        - warningType
+        - message
+      properties:
+        itemId:
+          type: string
+          example: my-post
+        fieldName:
+          type: string
+          nullable: true
+          example: extraField
+        warningType:
+          type: string
+          enum:
+            - ExtraField
+            - DeprecatedField
+            - MissingOptional
+          example: ExtraField
+        message:
+          type: string
+          example: "Field 'extraField' is not defined in schema but will be preserved"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type or code
+          example: CollectionNotFound
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Collection 'blog' does not exist"
+        details:
+          type: object
+          description: Additional error details
+          nullable: true
+          additionalProperties: true
+
+tags:
+  - name: Collections
+    description: Collection metadata and discovery
+  - name: Content Items
+    description: Query and retrieve content items
+  - name: Validation
+    description: Content validation operations
