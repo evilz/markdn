@@ -1,6 +1,10 @@
 ---
 url: /with-components
 title: Component Embedding
+componentNamespaces:
+	- Markdn.Blazor.App.Components
+	- Markdn.Blazor.App.Components.Shared
+	- Markdn.Blazor.App.Components.Pages
 ---
 
 # Component Embedding Example

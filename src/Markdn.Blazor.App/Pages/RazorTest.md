@@ -1,13 +1,17 @@
 ---
 title: Razor Syntax Test
 namespace: Markdn.Blazor.App.Pages
+componentNamespaces:
+    - Markdn.Blazor.App.Components
+    - Markdn.Blazor.App.Components.Shared
+    - Markdn.Blazor.App.Components.Pages
 ---
 
 # Razor Syntax Preservation Test
 
 This page demonstrates Razor syntax preservation through Markdown processing.
 
-## @code Block Test
+## Code Block Test
 
 @code {
     private int counter = 0;

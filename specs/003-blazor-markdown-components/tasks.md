@@ -210,9 +210,9 @@ Per plan.md, this feature creates two new projects:
 - [x] T082 [P] [US3] Implement ComponentMetadata.Inherit parsing in YamlFrontMatterParser with validation
 - [x] T083 [P] [US3] Implement ComponentMetadata.Attribute array parsing in YamlFrontMatterParser
 - [x] T084 [P] [US3] Implement ComponentMetadata.Parameters array parsing with ParameterDefinition (Name, Type) in YamlFrontMatterParser
-- [ ] T085 [US3] Add parameter name validation (valid C# identifier, emit MD003 diagnostic if invalid)
-- [ ] T086 [US3] Add parameter type validation (valid C# type syntax, emit MD004 diagnostic if invalid)
-- [ ] T087 [US3] Add duplicate parameter name detection (emit MD005 diagnostic)
+- [x] T085 [US3] Add parameter name validation (valid C# identifier, emit MD003 diagnostic if invalid)
+- [x] T086 [US3] Add parameter type validation (valid C# type syntax, emit MD004 diagnostic if invalid)
+- [x] T087 [US3] Add duplicate parameter name detection (emit MD005 diagnostic)
 - [x] T088 [US3] Implement <PageTitle> component generation in RenderTreeBuilderEmitter when Title is specified
 - [x] T089 [US3] Implement namespace override in ComponentCodeEmitter when $namespace is specified
 - [x] T090 [US3] Implement using directive generation in ComponentCodeEmitter when $using is specified
@@ -221,12 +221,12 @@ Per plan.md, this feature creates two new projects:
 - [x] T093 [US3] Implement attribute generation in ComponentCodeEmitter when $attribute is specified
 - [x] T094 [US3] Implement parameter property generation in ComponentCodeEmitter when $parameters is specified
 - [x] T095 [US3] Decorate parameter properties with [Parameter] attribute in ComponentCodeEmitter
-- [ ] T096 [US3] Handle nullable reference types for parameter properties (value types not nullable, reference types with = default!)
+- [x] T096 [US3] Handle nullable reference types for parameter properties (value types not nullable, reference types with = default!)
 - [x] T097 [US3] Create comprehensive test file src/Markdn.Blazor.App/Pages/FullMetadata.md with all YAML keys
 - [x] T098 [US3] Verify generated FullMetadata.md.g.cs contains all directives, attributes, parameters, and correct structure
-- [ ] T099 [US3] Create parameterized component test: src/Markdn.Blazor.App/Components/Greeting.md with $parameters
-- [ ] T100 [US3] Use parameterized Greeting component as `<Greeting Name="Alice" />` and verify parameter binding works
-- [ ] T101 [US3] Verify parameters declared in YAML are accessible in @code blocks and inline expressions
+- [x] T099 [US3] Create parameterized component test: src/Markdn.Blazor.App/Components/Greeting.md with $parameters
+- [x] T100 [US3] Use parameterized Greeting component as `<Greeting Name="Alice" />` and verify parameter binding works
+- [x] T101 [US3] Verify parameters declared in YAML are accessible in @code blocks and inline expressions
 
 **Checkpoint**: Full YAML front matter support enables advanced component configuration
 
@@ -237,6 +237,7 @@ Per plan.md, this feature creates two new projects:
 **Purpose**: Improvements that affect multiple user stories
 
 - [ ] T102 [P] Implement diagnostic reporting for invalid YAML syntax (MD001) in YamlFrontMatterParser
+- [x] T102 [P] Implement diagnostic reporting for invalid YAML syntax (MD001) in YamlFrontMatterParser
 - [ ] T103 [P] Implement diagnostic reporting for malformed Razor syntax (MD007) in RazorSyntaxPreserver
 - [ ] T104 [P] Add warning diagnostic for unresolvable component references (MD006) in ComponentTagParser
 - [ ] T105 [P] Add auto-generated file header with generator version and "do not edit" warning in ComponentCodeEmitter

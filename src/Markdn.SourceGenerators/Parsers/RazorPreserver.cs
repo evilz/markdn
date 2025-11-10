@@ -26,10 +26,13 @@ public sealed class RazorPreserver
         // 1. Preserve @code blocks first (highest priority)
         result = PreserveCodeBlocks(result);
 
-        // 2. Preserve component tags (e.g., <Counter />, <WeatherForecast>...)
+        // 2. Preserve Razor control flow statements (@if, @foreach, @for, @while, @switch)
+        result = PreserveControlFlowStatements(result);
+
+        // 3. Preserve component tags (e.g., <Counter />, <WeatherForecast>...)
         result = PreserveComponentTags(result);
 
-        // 3. Preserve @expressions (e.g., @DateTime.Now, @(expression))
+        // 4. Preserve @expressions (e.g., @DateTime.Now, @(expression))
         result = PreserveExpressions(result);
 
         return result;
@@ -104,6 +107,88 @@ public sealed class RazorPreserver
     }
 
     /// <summary>
+    /// Preserve Razor control flow statements (@if, @foreach, @for, @while, @switch).
+    /// Pattern: @keyword (condition) { ... } with proper brace matching
+    /// </summary>
+    private string PreserveControlFlowStatements(string content)
+    {
+        // Match @if, @foreach, @for, @while, @switch followed by condition/header and block
+        var keywords = new[] { "if", "foreach", "for", "while", "switch" };
+        
+        foreach (var keyword in keywords)
+        {
+            // Pattern: @keyword with optional whitespace and parentheses
+            // Match @if (condition) or @foreach (item in items), then find the opening brace
+            var pattern = $@"@{keyword}\s*\(";
+            
+            var matches = Regex.Matches(content, pattern, RegexOptions.Multiline);
+
+            // Process matches in reverse to maintain indices
+            for (int i = matches.Count - 1; i >= 0; i--)
+            {
+                var match = matches[i];
+                var startIndex = match.Index;
+                
+                // Find the closing parenthesis
+                var parenLevel = 1;
+                var searchIndex = match.Index + match.Length;
+                var closingParenIndex = -1;
+                
+                while (searchIndex < content.Length && parenLevel > 0)
+                {
+                    if (content[searchIndex] == '(') parenLevel++;
+                    else if (content[searchIndex] == ')') parenLevel--;
+                    
+                    if (parenLevel == 0)
+                    {
+                        closingParenIndex = searchIndex;
+                        break;
+                    }
+                    searchIndex++;
+                }
+                
+                if (closingParenIndex == -1) continue;
+                
+                // Find the opening brace after the closing parenthesis
+                var braceSearchIndex = closingParenIndex + 1;
+                var openBraceIndex = -1;
+                
+                while (braceSearchIndex < content.Length)
+                {
+                    var ch = content[braceSearchIndex];
+                    if (ch == '{')
+                    {
+                        openBraceIndex = braceSearchIndex;
+                        break;
+                    }
+                    else if (!char.IsWhiteSpace(ch))
+                    {
+                        // Non-whitespace character before brace - invalid syntax
+                        break;
+                    }
+                    braceSearchIndex++;
+                }
+                
+                if (openBraceIndex == -1) continue;
+
+                // Find matching closing brace
+                var closeBraceIndex = FindMatchingBrace(content, openBraceIndex);
+                
+                if (closeBraceIndex == -1) continue;
+
+                // Extract the entire control flow block
+                var controlFlowBlock = content.Substring(startIndex, closeBraceIndex - startIndex + 1);
+                var placeholder = CreatePlaceholder();
+                
+                _preservedBlocks[placeholder] = controlFlowBlock;
+                content = content.Remove(startIndex, controlFlowBlock.Length).Insert(startIndex, placeholder);
+            }
+        }
+
+        return content;
+    }
+
+    /// <summary>
     /// Preserve Razor component tags (e.g., <Counter />, <WeatherForecast>...</WeatherForecast>).
     /// </summary>
     private string PreserveComponentTags(string content)
@@ -139,7 +224,10 @@ public sealed class RazorPreserver
         });
 
         // Pattern 2: @identifier or @identifier.property.chain
-        var identifierPattern = @"@([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)";
+        // Use negative lookahead to exclude Razor keywords (if, foreach, for, while, switch, code, etc.)
+        // These keywords are handled separately by control flow or code block preservation
+        var identifierPattern = @"@(?!(if|foreach|for|while|switch|code|else|elseif|using|try|catch|finally)\b)([a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*)";
+        
         content = Regex.Replace(content, identifierPattern, match =>
         {
             // Skip if already a placeholder (HTML comment)

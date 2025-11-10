@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Markdn.SourceGenerators.Models;
@@ -10,6 +11,37 @@ namespace Markdn.SourceGenerators.Emitters;
 /// </summary>
 public static class ComponentCodeEmitter
 {
+    /// <summary>
+    /// Determine if a type is a reference type (needs = default! initialization)
+    /// </summary>
+    private static bool IsReferenceType(string typeName)
+    {
+        // Common value types that don't need = default!
+        var valueTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "bool", "byte", "sbyte", "char", "decimal", "double", "float", "int", "uint",
+            "long", "ulong", "short", "ushort", "nint", "nuint",
+            "System.Boolean", "System.Byte", "System.SByte", "System.Char", "System.Decimal",
+            "System.Double", "System.Single", "System.Int32", "System.UInt32", "System.Int64",
+            "System.UInt64", "System.Int16", "System.UInt16", "System.IntPtr", "System.UIntPtr"
+        };
+
+        // If it's a known value type, it's not a reference type
+        if (valueTypes.Contains(typeName))
+        {
+            return false;
+        }
+
+        // If it ends with ?, it's a nullable value type, still not a reference type
+        if (typeName.EndsWith("?"))
+        {
+            return false;
+        }
+
+        // Everything else is assumed to be a reference type
+        // This includes string, custom classes, interfaces, etc.
+        return true;
+    }
     /// <summary>
     /// Generate complete component source code.
     /// </summary>
@@ -24,7 +56,9 @@ public static class ComponentCodeEmitter
         string namespaceValue,
         string htmlContent,
         ComponentMetadata metadata,
-        List<CodeBlock>? codeBlocks = null)
+        List<CodeBlock>? codeBlocks = null,
+        Dictionary<string, string>? componentTypeMap = null,
+        IEnumerable<string>? availableNamespaces = null)
     {
         var sb = new StringBuilder();
         
@@ -35,10 +69,25 @@ public static class ComponentCodeEmitter
         sb.AppendLine("#nullable enable");
         sb.AppendLine();
 
-        // Standard using directives for component references
-        sb.AppendLine("using Markdn.Blazor.App.Components.Pages;");
-        sb.AppendLine("using Markdn.Blazor.App.Components.Shared;");
-        sb.AppendLine();
+    // NOTE: we may emit lightweight using directives for namespaces that are
+    // known to exist in the current compilation (availableNamespaces). This
+    // keeps generated files readable and avoids hard-coding a single
+    // project-specific namespace while still enabling simple type lookup when
+    // available.
+    sb.AppendLine();
+
+        // Using directives (from generator-discovered available namespaces)
+        if (availableNamespaces != null)
+        {
+            foreach (var ns in availableNamespaces)
+            {
+                if (!string.IsNullOrWhiteSpace(ns))
+                {
+                    sb.AppendLine($"using {ns};");
+                }
+            }
+            sb.AppendLine();
+        }
 
         // Using directives (from metadata)
         if (metadata.Using != null && metadata.Using.Count > 0)
@@ -93,13 +142,14 @@ public static class ComponentCodeEmitter
             foreach (var parameter in metadata.Parameters)
             {
                 sb.AppendLine("        [Microsoft.AspNetCore.Components.Parameter]");
-                sb.AppendLine($"        public {parameter.Type} {parameter.Name} {{ get; set; }}");
+                var defaultValue = IsReferenceType(parameter.Type) ? " = default!;" : "";
+                sb.AppendLine($"        public {parameter.Type} {parameter.Name} {{ get; set; }}{defaultValue}");
                 sb.AppendLine();
             }
         }
 
-        // BuildRenderTree method (using RenderTreeBuilderEmitter)
-        sb.Append(RenderTreeBuilderEmitter.EmitBuildRenderTree(htmlContent, metadata, indentLevel: 2));
+    // BuildRenderTree method (using RenderTreeBuilderEmitter)
+    sb.Append(RenderTreeBuilderEmitter.EmitBuildRenderTree(htmlContent, metadata, componentTypeMap, namespaceValue, availableNamespaces, indentLevel: 2));
 
         // T059: Emit @code blocks after BuildRenderTree method
         if (codeBlocks != null && codeBlocks.Count > 0)
@@ -133,6 +183,6 @@ public static class ComponentCodeEmitter
         string namespaceValue,
         string htmlContent)
     {
-        return Emit(componentName, namespaceValue, htmlContent, ComponentMetadata.Empty);
+        return Emit(componentName, namespaceValue, htmlContent, ComponentMetadata.Empty, null, null);
     }
 }

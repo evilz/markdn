@@ -19,12 +19,12 @@ public static class YamlFrontMatterParser
     /// Parse YAML front matter and return metadata + remaining Markdown content.
     /// </summary>
     /// <param name="content">Full Markdown file content</param>
-    /// <returns>Tuple of (ComponentMetadata, remaining Markdown content)</returns>
-    public static (ComponentMetadata Metadata, string MarkdownContent) Parse(string content)
+    /// <returns>Tuple of (ComponentMetadata, remaining Markdown content, parsing errors)</returns>
+    public static (ComponentMetadata Metadata, string MarkdownContent, List<string> Errors) Parse(string content)
     {
         if (string.IsNullOrWhiteSpace(content))
         {
-            return (ComponentMetadata.Empty, content ?? string.Empty);
+            return (ComponentMetadata.Empty, content ?? string.Empty, new List<string>());
         }
 
         // Check if content starts with YAML front matter delimiter
@@ -33,7 +33,7 @@ public static class YamlFrontMatterParser
         if (lines.Length < 3 || lines[0].Trim() != Delimiter)
         {
             // No YAML front matter found
-            return (ComponentMetadata.Empty, content);
+            return (ComponentMetadata.Empty, content, new List<string>());
         }
 
         // Find closing delimiter
@@ -50,7 +50,7 @@ public static class YamlFrontMatterParser
         if (closingDelimiterIndex == -1)
         {
             // No closing delimiter found - treat as regular content
-            return (ComponentMetadata.Empty, content);
+            return (ComponentMetadata.Empty, content, new List<string>());
         }
 
         // Extract YAML content (between delimiters)
@@ -62,20 +62,22 @@ public static class YamlFrontMatterParser
         var markdownContent = string.Join("\n", markdownLines);
 
         // Parse YAML into ComponentMetadata
-        var metadata = ParseYaml(yamlContent);
+        var (metadata, errors) = ParseYaml(yamlContent);
 
-        return (metadata, markdownContent);
+        return (metadata, markdownContent, errors);
     }
 
     /// <summary>
     /// Parse YAML content into ComponentMetadata.
     /// Supports basic key-value pairs and arrays.
     /// </summary>
-    private static ComponentMetadata ParseYaml(string yaml)
+    private static (ComponentMetadata, List<string>) ParseYaml(string yaml)
     {
+        var errors = new List<string>();
+        
         if (string.IsNullOrWhiteSpace(yaml))
         {
-            return ComponentMetadata.Empty;
+            return (ComponentMetadata.Empty, errors);
         }
 
         var properties = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
@@ -95,11 +97,20 @@ public static class YamlFrontMatterParser
             var colonIndex = line.IndexOf(':');
             if (colonIndex == -1)
             {
-                continue; // Invalid line, skip
+                // Invalid YAML line - no colon found
+                errors.Add($"Invalid YAML syntax: missing ':' in line '{line.Trim()}'");
+                continue;
             }
 
             var key = line.Substring(0, colonIndex).Trim();
             var valueText = line.Substring(colonIndex + 1).Trim();
+
+            // Validate key is not empty
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                errors.Add($"Invalid YAML syntax: empty key in line '{line.Trim()}'");
+                continue;
+            }
 
             // Check if this is an array (value is empty and next lines are indented with -)
             if (string.IsNullOrEmpty(valueText) && i + 1 < lines.Length)
@@ -190,18 +201,21 @@ public static class YamlFrontMatterParser
         // Validation: URLs must start with / (will be reported as MD002 by generator)
         // This validation will be performed in the generator where diagnostics can be emitted
         
-        return new ComponentMetadata
+            var metadata = new ComponentMetadata
         {
             Url = url,
             UrlArray = urlArray,
             Title = GetStringValue(properties, "title"),
             Namespace = GetStringValue(properties, "namespace", "$namespace"),
             Using = GetArrayValue(properties, "using", "$using")?.ToArray(),
+                ComponentNamespaces = GetArrayValue(properties, "componentNamespaces", "$componentNamespaces")?.ToArray(),
             Layout = GetStringValue(properties, "layout", "$layout"),
             Inherit = GetStringValue(properties, "inherit", "$inherit"),
             Attribute = GetArrayValue(properties, "attribute", "$attribute")?.ToArray(),
             Parameters = ParseParameters(properties)
         };
+        
+        return (metadata, errors);
     }
 
     /// <summary>

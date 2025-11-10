@@ -1,6 +1,10 @@
 ---
 url: /component-params
 title: Component Parameters Test
+componentNamespaces:
+	- Markdn.Blazor.App.Components
+	- Markdn.Blazor.App.Components.Shared
+	- Markdn.Blazor.App.Components.Pages
 ---
 
 # Component Parameters Test

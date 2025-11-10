@@ -33,6 +33,13 @@ public sealed class ComponentMetadata
     public IReadOnlyList<string>? Using { get; init; }
 
     /// <summary>
+    /// Explicit component namespaces to consider when resolving component references
+    /// (e.g., ["MyApp.Components", "MyApp.Components.Shared"]). If provided, the
+    /// generator will prefer these namespaces and emit using directives for them.
+    /// </summary>
+    public IReadOnlyList<string>? ComponentNamespaces { get; init; }
+
+    /// <summary>
     /// Layout component name (e.g., "MainLayout")
     /// </summary>
     public string? Layout { get; init; }

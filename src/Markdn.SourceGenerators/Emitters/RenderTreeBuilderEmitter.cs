@@ -19,7 +19,9 @@ public static class RenderTreeBuilderEmitter
     /// <param name="metadata">Component metadata (for PageTitle generation)</param>
     /// <param name="indentLevel">Indentation level (default: 2 for inside class)</param>
     /// <returns>Complete BuildRenderTree method code</returns>
-    public static string EmitBuildRenderTree(string htmlContent, ComponentMetadata? metadata = null, int indentLevel = 2)
+    // componentTypeMap: optional map of component simple name -> fully-qualified namespace (from compilation)
+    // componentNamespace: the namespace of the generated component (used as a fallback)
+    public static string EmitBuildRenderTree(string htmlContent, ComponentMetadata? metadata = null, Dictionary<string, string>? componentTypeMap = null, string componentNamespace = "", IEnumerable<string>? availableNamespaces = null, int indentLevel = 2)
     {
         var indent = new string(' ', indentLevel * 4);
         var innerIndent = new string(' ', (indentLevel + 1) * 4);
@@ -42,8 +44,8 @@ public static class RenderTreeBuilderEmitter
             sb.AppendLine();
         }
         
-        // T060-T062: Parse content and emit appropriate builder calls
-        var statements = ParseContentAndEmitStatements(htmlContent, innerIndent, ref sequence);
+    // T060-T062: Parse content and emit appropriate builder calls
+    var statements = ParseContentAndEmitStatements(htmlContent, innerIndent, ref sequence, componentTypeMap, componentNamespace, availableNamespaces);
         sb.Append(statements);
         
         sb.AppendLine($"{indent}}}");
@@ -56,7 +58,7 @@ public static class RenderTreeBuilderEmitter
     /// T060: Handle inline expressions (@name, @DateTime.Now)
     /// T061: Handle component tags (<Counter />, <Alert>...</Alert>)
     /// </summary>
-    private static string ParseContentAndEmitStatements(string content, string indent, ref int sequence)
+    private static string ParseContentAndEmitStatements(string content, string indent, ref int sequence, Dictionary<string, string>? componentTypeMap = null, string componentNamespace = "", IEnumerable<string>? availableNamespaces = null)
     {
         var sb = new StringBuilder();
         
@@ -80,9 +82,10 @@ public static class RenderTreeBuilderEmitter
                     sb.AppendLine($"{indent}builder.AddContent({sequence++}, {segment.Content});");
                     break;
                     
-                case SegmentType.Component:
-                    // T061: Component reference like <Counter />
-                    EmitComponentCall(sb, segment, ref sequence, indent);
+                    case SegmentType.Component:
+                        // T061: Component reference like <Counter />
+                        EmitComponentCall(sb, segment, ref sequence, indent, componentTypeMap, componentNamespace, availableNamespaces);
+                        break;
                     break;
             }
         }
@@ -414,10 +417,31 @@ public static class RenderTreeBuilderEmitter
     /// T061: OpenComponent, AddAttribute, CloseComponent
     /// T062: ChildContent with RenderFragment
     /// </summary>
-    private static void EmitComponentCall(StringBuilder sb, ContentSegment segment, ref int sequence, string indent)
+    private static void EmitComponentCall(StringBuilder sb, ContentSegment segment, ref int sequence, string indent, Dictionary<string, string>? componentTypeMap = null, string componentNamespace = "", IEnumerable<string>? availableNamespaces = null)
     {
-        // OpenComponent
-        sb.AppendLine($"{indent}builder.OpenComponent<{segment.ComponentName}>({sequence++});");
+        // Determine fully-qualified component type using provided map or fallback to componentNamespace
+        string qualifiedType;
+        if (availableNamespaces != null)
+        {
+            // If the generator emitted using directives for candidate namespaces, prefer
+            // leaving the type unqualified so the using directives can resolve it.
+            qualifiedType = segment.ComponentName;
+        }
+        else if (componentTypeMap != null && componentTypeMap.TryGetValue(segment.ComponentName, out var resolvedNamespace) && !string.IsNullOrEmpty(resolvedNamespace))
+        {
+            // If we resolved to a specific namespace for this component, use fully-qualified name
+            qualifiedType = $"global::{resolvedNamespace}.{segment.ComponentName}";
+        }
+        else if (!string.IsNullOrEmpty(componentNamespace))
+        {
+            // Fallback to the generated component's namespace
+            qualifiedType = $"global::{componentNamespace}.{segment.ComponentName}";
+        }
+        else
+        {
+            qualifiedType = segment.ComponentName; // best-effort fallback (may fail to compile)
+        }
+        sb.AppendLine($"{indent}builder.OpenComponent({sequence++}, typeof({qualifiedType}));");
         
         // Add attributes/parameters
         if (segment.Parameters != null)
