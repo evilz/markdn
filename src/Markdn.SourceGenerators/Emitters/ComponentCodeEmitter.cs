@@ -67,6 +67,12 @@ public static class ComponentCodeEmitter
             }
         }
 
+        // T091: Layout attribute (from metadata)
+        if (!string.IsNullOrEmpty(metadata.Layout))
+        {
+            sb.AppendLine($"    [Microsoft.AspNetCore.Components.LayoutAttribute(typeof({metadata.Layout}))]");
+        }
+
         // Class attributes (from metadata)
         if (metadata.Attribute != null && metadata.Attribute.Count > 0)
         {
@@ -93,7 +99,7 @@ public static class ComponentCodeEmitter
         }
 
         // BuildRenderTree method (using RenderTreeBuilderEmitter)
-        sb.Append(RenderTreeBuilderEmitter.EmitBuildRenderTree(htmlContent, indentLevel: 2));
+        sb.Append(RenderTreeBuilderEmitter.EmitBuildRenderTree(htmlContent, metadata, indentLevel: 2));
 
         // T059: Emit @code blocks after BuildRenderTree method
         if (codeBlocks != null && codeBlocks.Count > 0)

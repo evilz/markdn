@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using Markdn.SourceGenerators.Models;
 
 namespace Markdn.SourceGenerators.Emitters;
 
@@ -12,12 +13,13 @@ namespace Markdn.SourceGenerators.Emitters;
 public static class RenderTreeBuilderEmitter
 {
     /// <summary>
-    /// Generate BuildRenderTree method body with proper handling of expressions and components.
+    /// Generate BuildRenderTree method body with proper handling of expressions, components, and PageTitle.
     /// </summary>
     /// <param name="htmlContent">HTML content with Razor syntax (@expressions, components)</param>
+    /// <param name="metadata">Component metadata (for PageTitle generation)</param>
     /// <param name="indentLevel">Indentation level (default: 2 for inside class)</param>
     /// <returns>Complete BuildRenderTree method code</returns>
-    public static string EmitBuildRenderTree(string htmlContent, int indentLevel = 2)
+    public static string EmitBuildRenderTree(string htmlContent, ComponentMetadata? metadata = null, int indentLevel = 2)
     {
         var indent = new string(' ', indentLevel * 4);
         var innerIndent = new string(' ', (indentLevel + 1) * 4);
@@ -27,8 +29,21 @@ public static class RenderTreeBuilderEmitter
         sb.AppendLine($"{innerIndent}Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder builder)");
         sb.AppendLine($"{indent}{{");
         
+        int sequence = 0;
+        
+        // T088: Emit PageTitle component if Title is specified
+        if (metadata?.Title != null)
+        {
+            sb.AppendLine($"{innerIndent}builder.OpenComponent<Microsoft.AspNetCore.Components.Web.PageTitle>({sequence++});");
+            sb.AppendLine($"{innerIndent}builder.AddAttribute({sequence++}, \"ChildContent\", (Microsoft.AspNetCore.Components.RenderFragment)((builder2) => {{");
+            sb.AppendLine($"{innerIndent}    builder2.AddContent(0, @\"{EscapeForVerbatimString(metadata.Title)}\");");
+            sb.AppendLine($"{innerIndent}}}));");
+            sb.AppendLine($"{innerIndent}builder.CloseComponent();");
+            sb.AppendLine();
+        }
+        
         // T060-T062: Parse content and emit appropriate builder calls
-        var statements = ParseContentAndEmitStatements(htmlContent, innerIndent);
+        var statements = ParseContentAndEmitStatements(htmlContent, innerIndent, ref sequence);
         sb.Append(statements);
         
         sb.AppendLine($"{indent}}}");
@@ -41,10 +56,9 @@ public static class RenderTreeBuilderEmitter
     /// T060: Handle inline expressions (@name, @DateTime.Now)
     /// T061: Handle component tags (<Counter />, <Alert>...</Alert>)
     /// </summary>
-    private static string ParseContentAndEmitStatements(string content, string indent)
+    private static string ParseContentAndEmitStatements(string content, string indent, ref int sequence)
     {
         var sb = new StringBuilder();
-        int sequence = 0;
         
         // Parse content into segments (HTML, expressions, components)
         var segments = ParseContentSegments(content);

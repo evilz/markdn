@@ -104,45 +104,60 @@ public static class YamlFrontMatterParser
             // Check if this is an array (value is empty and next lines are indented with -)
             if (string.IsNullOrEmpty(valueText) && i + 1 < lines.Length)
             {
-                var arrayValues = new List<string>();
-                int j = i + 1;
-                
-                while (j < lines.Length)
+                // Special handling for parameters which are array of objects
+                if (key.Equals("parameters", StringComparison.OrdinalIgnoreCase) || 
+                    key.Equals("$parameters", StringComparison.OrdinalIgnoreCase))
                 {
-                    var nextLine = lines[j];
-                    if (string.IsNullOrWhiteSpace(nextLine))
+                    var (parametersList, nextIndex) = ParseParameterArray(lines, i + 1);
+                    if (parametersList.Count > 0)
                     {
-                        j++;
-                        continue;
-                    }
-
-                    var trimmedNextLine = nextLine.TrimStart();
-                    if (trimmedNextLine.StartsWith("-"))
-                    {
-                        // Array item
-                        var itemValue = trimmedNextLine.Substring(1).Trim();
-                        
-                        // Remove quotes if present
-                        if ((itemValue.StartsWith("\"") && itemValue.EndsWith("\"")) ||
-                            (itemValue.StartsWith("'") && itemValue.EndsWith("'")))
-                        {
-                            itemValue = itemValue.Substring(1, itemValue.Length - 2);
-                        }
-                        
-                        arrayValues.Add(itemValue);
-                        j++;
-                    }
-                    else
-                    {
-                        // Next property or end of array
-                        break;
+                        properties[key] = parametersList;
+                        i = nextIndex - 1;
                     }
                 }
-                
-                if (arrayValues.Count > 0)
+                else
                 {
-                    properties[key] = arrayValues;
-                    i = j - 1; // Skip processed lines
+                    // Regular array of strings
+                    var arrayValues = new List<string>();
+                    int j = i + 1;
+                    
+                    while (j < lines.Length)
+                    {
+                        var nextLine = lines[j];
+                        if (string.IsNullOrWhiteSpace(nextLine))
+                        {
+                            j++;
+                            continue;
+                        }
+
+                        var trimmedNextLine = nextLine.TrimStart();
+                        if (trimmedNextLine.StartsWith("-"))
+                        {
+                            // Array item
+                            var itemValue = trimmedNextLine.Substring(1).Trim();
+                            
+                            // Remove quotes if present
+                            if ((itemValue.StartsWith("\"") && itemValue.EndsWith("\"")) ||
+                                (itemValue.StartsWith("'") && itemValue.EndsWith("'")))
+                            {
+                                itemValue = itemValue.Substring(1, itemValue.Length - 2);
+                            }
+                            
+                            arrayValues.Add(itemValue);
+                            j++;
+                        }
+                        else
+                        {
+                            // Next property or end of array
+                            break;
+                        }
+                    }
+                    
+                    if (arrayValues.Count > 0)
+                    {
+                        properties[key] = arrayValues;
+                        i = j - 1; // Skip processed lines
+                    }
                 }
             }
             else
@@ -180,11 +195,11 @@ public static class YamlFrontMatterParser
             Url = url,
             UrlArray = urlArray,
             Title = GetStringValue(properties, "title"),
-            Namespace = GetStringValue(properties, "namespace"),
-            Using = GetArrayValue(properties, "using")?.ToArray(),
-            Layout = GetStringValue(properties, "layout"),
-            Inherit = GetStringValue(properties, "inherit"),
-            Attribute = GetArrayValue(properties, "attribute")?.ToArray(),
+            Namespace = GetStringValue(properties, "namespace", "$namespace"),
+            Using = GetArrayValue(properties, "using", "$using")?.ToArray(),
+            Layout = GetStringValue(properties, "layout", "$layout"),
+            Inherit = GetStringValue(properties, "inherit", "$inherit"),
+            Attribute = GetArrayValue(properties, "attribute", "$attribute")?.ToArray(),
             Parameters = ParseParameters(properties)
         };
     }
@@ -192,14 +207,17 @@ public static class YamlFrontMatterParser
     /// <summary>
     /// Get string value from properties dictionary.
     /// </summary>
-    private static string? GetStringValue(Dictionary<string, object> properties, string key)
+    private static string? GetStringValue(Dictionary<string, object> properties, params string[] keys)
     {
-        if (properties.TryGetValue(key, out var value))
+        foreach (var key in keys)
         {
-            // If it's a string, return it
-            if (value is string stringValue && !string.IsNullOrWhiteSpace(stringValue))
+            if (properties.TryGetValue(key, out var value))
             {
-                return stringValue;
+                // If it's a string, return it
+                if (value is string stringValue && !string.IsNullOrWhiteSpace(stringValue))
+                {
+                    return stringValue;
+                }
             }
         }
         
@@ -209,20 +227,23 @@ public static class YamlFrontMatterParser
     /// <summary>
     /// Get array value from properties dictionary.
     /// </summary>
-    private static List<string>? GetArrayValue(Dictionary<string, object> properties, string key)
+    private static List<string>? GetArrayValue(Dictionary<string, object> properties, params string[] keys)
     {
-        if (properties.TryGetValue(key, out var value))
+        foreach (var key in keys)
         {
-            // If it's already a list, return it
-            if (value is List<string> listValue && listValue.Count > 0)
+            if (properties.TryGetValue(key, out var value))
             {
-                return listValue;
-            }
-            
-            // If it's a single string value, wrap it in a list
-            if (value is string stringValue && !string.IsNullOrWhiteSpace(stringValue))
-            {
-                return new List<string> { stringValue };
+                // If it's already a list, return it
+                if (value is List<string> listValue && listValue.Count > 0)
+                {
+                    return listValue;
+                }
+                
+                // If it's a single string value, wrap it in a list
+                if (value is string stringValue && !string.IsNullOrWhiteSpace(stringValue))
+                {
+                    return new List<string> { stringValue };
+                }
             }
         }
         
@@ -232,7 +253,7 @@ public static class YamlFrontMatterParser
     /// <summary>
     /// Parse parameters array from properties dictionary.
     /// Expected format:
-    /// parameters:
+    /// $parameters:
     ///   - name: Title
     ///     type: string
     ///   - name: Count
@@ -240,8 +261,104 @@ public static class YamlFrontMatterParser
     /// </summary>
     private static List<ParameterDefinition>? ParseParameters(Dictionary<string, object> properties)
     {
-        // Parameters parsing would require more complex YAML parsing
-        // For now, return null - will be implemented in later tasks (T084)
-        return null;
+        // Try both "parameters" and "$parameters" keys
+        if (!properties.TryGetValue("parameters", out var value) && 
+            !properties.TryGetValue("$parameters", out value))
+        {
+            return null;
+        }
+
+        // Parameters should be a list
+        if (value is not List<ParameterDefinition> paramList || paramList.Count == 0)
+        {
+            return null;
+        }
+
+        return paramList;
+    }
+
+    /// <summary>
+    /// Parse array of parameter objects (YAML nested structure).
+    /// Format:
+    ///   - name: Title
+    ///     type: string
+    ///   - name: Count
+    ///     type: int
+    /// </summary>
+    private static (List<ParameterDefinition> Parameters, int NextIndex) ParseParameterArray(string[] lines, int startIndex)
+    {
+        var parameters = new List<ParameterDefinition>();
+        int i = startIndex;
+        
+        string? currentName = null;
+        string? currentType = null;
+        
+        while (i < lines.Length)
+        {
+            var line = lines[i];
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                i++;
+                continue;
+            }
+
+            var trimmed = line.TrimStart();
+            
+            // Check if this is the start of a new parameter object (-)
+            if (trimmed.StartsWith("-"))
+            {
+                // Save previous parameter if complete
+                if (currentName != null && currentType != null)
+                {
+                    parameters.Add(new ParameterDefinition 
+                    { 
+                        Name = currentName, 
+                        Type = currentType 
+                    });
+                    currentName = null;
+                    currentType = null;
+                }
+                
+                // Check if name is on the same line: "- name: Title"
+                var afterDash = trimmed.Substring(1).Trim();
+                if (afterDash.StartsWith("name:"))
+                {
+                    currentName = afterDash.Substring(5).Trim();
+                }
+                
+                i++;
+            }
+            else if (trimmed.StartsWith("name:"))
+            {
+                currentName = trimmed.Substring(5).Trim();
+                i++;
+            }
+            else if (trimmed.StartsWith("type:"))
+            {
+                currentType = trimmed.Substring(5).Trim();
+                i++;
+            }
+            else if (!trimmed.StartsWith(" ") && trimmed.Contains(":"))
+            {
+                // Different property, end of parameters array
+                break;
+            }
+            else
+            {
+                i++;
+            }
+        }
+        
+        // Add the last parameter if complete
+        if (currentName != null && currentType != null)
+        {
+            parameters.Add(new ParameterDefinition 
+            { 
+                Name = currentName, 
+                Type = currentType 
+            });
+        }
+        
+        return (parameters, i);
     }
 }

@@ -203,27 +203,27 @@ Per plan.md, this feature creates two new projects:
 
 ### Implementation for User Story 3
 
-- [ ] T078 [US3] Implement ComponentMetadata.Title parsing in YamlFrontMatterParser
-- [ ] T079 [P] [US3] Implement ComponentMetadata.Namespace parsing in YamlFrontMatterParser with validation (valid C# namespace identifier)
-- [ ] T080 [P] [US3] Implement ComponentMetadata.Using array parsing in YamlFrontMatterParser with validation
-- [ ] T081 [P] [US3] Implement ComponentMetadata.Layout parsing in YamlFrontMatterParser with validation (valid C# type identifier)
-- [ ] T082 [P] [US3] Implement ComponentMetadata.Inherit parsing in YamlFrontMatterParser with validation
-- [ ] T083 [P] [US3] Implement ComponentMetadata.Attribute array parsing in YamlFrontMatterParser
-- [ ] T084 [P] [US3] Implement ComponentMetadata.Parameters array parsing with ParameterDefinition (Name, Type) in YamlFrontMatterParser
+- [x] T078 [US3] Implement ComponentMetadata.Title parsing in YamlFrontMatterParser
+- [x] T079 [P] [US3] Implement ComponentMetadata.Namespace parsing in YamlFrontMatterParser with validation (valid C# namespace identifier)
+- [x] T080 [P] [US3] Implement ComponentMetadata.Using array parsing in YamlFrontMatterParser with validation
+- [x] T081 [P] [US3] Implement ComponentMetadata.Layout parsing in YamlFrontMatterParser with validation (valid C# type identifier)
+- [x] T082 [P] [US3] Implement ComponentMetadata.Inherit parsing in YamlFrontMatterParser with validation
+- [x] T083 [P] [US3] Implement ComponentMetadata.Attribute array parsing in YamlFrontMatterParser
+- [x] T084 [P] [US3] Implement ComponentMetadata.Parameters array parsing with ParameterDefinition (Name, Type) in YamlFrontMatterParser
 - [ ] T085 [US3] Add parameter name validation (valid C# identifier, emit MD003 diagnostic if invalid)
 - [ ] T086 [US3] Add parameter type validation (valid C# type syntax, emit MD004 diagnostic if invalid)
 - [ ] T087 [US3] Add duplicate parameter name detection (emit MD005 diagnostic)
-- [ ] T088 [US3] Implement <PageTitle> component generation in RenderTreeBuilderEmitter when Title is specified
-- [ ] T089 [US3] Implement namespace override in ComponentCodeEmitter when $namespace is specified
-- [ ] T090 [US3] Implement using directive generation in ComponentCodeEmitter when $using is specified
-- [ ] T091 [US3] Implement LayoutAttribute generation in ComponentCodeEmitter when $layout is specified
-- [ ] T092 [US3] Implement base class override in ComponentCodeEmitter when $inherit is specified (replace ComponentBase)
-- [ ] T093 [US3] Implement attribute generation in ComponentCodeEmitter when $attribute is specified
-- [ ] T094 [US3] Implement parameter property generation in ComponentCodeEmitter when $parameters is specified
-- [ ] T095 [US3] Decorate parameter properties with [Parameter] attribute in ComponentCodeEmitter
+- [x] T088 [US3] Implement <PageTitle> component generation in RenderTreeBuilderEmitter when Title is specified
+- [x] T089 [US3] Implement namespace override in ComponentCodeEmitter when $namespace is specified
+- [x] T090 [US3] Implement using directive generation in ComponentCodeEmitter when $using is specified
+- [x] T091 [US3] Implement LayoutAttribute generation in ComponentCodeEmitter when $layout is specified
+- [x] T092 [US3] Implement base class override in ComponentCodeEmitter when $inherit is specified (replace ComponentBase)
+- [x] T093 [US3] Implement attribute generation in ComponentCodeEmitter when $attribute is specified
+- [x] T094 [US3] Implement parameter property generation in ComponentCodeEmitter when $parameters is specified
+- [x] T095 [US3] Decorate parameter properties with [Parameter] attribute in ComponentCodeEmitter
 - [ ] T096 [US3] Handle nullable reference types for parameter properties (value types not nullable, reference types with = default!)
-- [ ] T097 [US3] Create comprehensive test file src/Markdn.Blazor.App/Pages/FullMetadata.md with all YAML keys
-- [ ] T098 [US3] Verify generated FullMetadata.md.g.cs contains all directives, attributes, parameters, and correct structure
+- [x] T097 [US3] Create comprehensive test file src/Markdn.Blazor.App/Pages/FullMetadata.md with all YAML keys
+- [x] T098 [US3] Verify generated FullMetadata.md.g.cs contains all directives, attributes, parameters, and correct structure
 - [ ] T099 [US3] Create parameterized component test: src/Markdn.Blazor.App/Components/Greeting.md with $parameters
 - [ ] T100 [US3] Use parameterized Greeting component as `<Greeting Name="Alice" />` and verify parameter binding works
 - [ ] T101 [US3] Verify parameters declared in YAML are accessible in @code blocks and inline expressions
