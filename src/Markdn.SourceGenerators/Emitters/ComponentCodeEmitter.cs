@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text;
 using Markdn.SourceGenerators.Models;
 
@@ -16,12 +17,14 @@ public static class ComponentCodeEmitter
     /// <param name="namespaceValue">Namespace for the component</param>
     /// <param name="htmlContent">Rendered HTML content</param>
     /// <param name="metadata">Component metadata from YAML front matter</param>
+    /// <param name="codeBlocks">Extracted @code blocks</param>
     /// <returns>Complete C# source code</returns>
     public static string Emit(
         string componentName,
         string namespaceValue,
         string htmlContent,
-        ComponentMetadata metadata)
+        ComponentMetadata metadata,
+        List<CodeBlock>? codeBlocks = null)
     {
         var sb = new StringBuilder();
         
@@ -86,6 +89,23 @@ public static class ComponentCodeEmitter
 
         // BuildRenderTree method (using RenderTreeBuilderEmitter)
         sb.Append(RenderTreeBuilderEmitter.EmitBuildRenderTree(htmlContent, indentLevel: 2));
+
+        // T059: Emit @code blocks after BuildRenderTree method
+        if (codeBlocks != null && codeBlocks.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("        // Code blocks from Markdown");
+            
+            foreach (var codeBlock in codeBlocks)
+            {
+                // Indent each line of the code block
+                var lines = codeBlock.Content.Split(new[] { "\r\n", "\r", "\n" }, System.StringSplitOptions.None);
+                foreach (var line in lines)
+                {
+                    sb.AppendLine($"        {line}");
+                }
+            }
+        }
 
         // Close class and namespace
         sb.AppendLine("    }");

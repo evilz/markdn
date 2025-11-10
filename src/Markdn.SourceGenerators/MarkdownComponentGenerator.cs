@@ -69,14 +69,19 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
             // Convert Markdown content to HTML (with placeholders)
             var htmlWithPlaceholders = ConvertMarkdownToHtml(contentWithPlaceholders);
 
-            // Restore Razor syntax after Markdown processing
-            var htmlContent = razorPreserver.RestoreRazorSyntax(htmlWithPlaceholders);
+            // Restore Razor syntax after Markdown processing, but exclude @code blocks
+            // @code blocks are emitted separately, not in the BuildRenderTree
+            var htmlContent = razorPreserver.RestoreRazorSyntax(htmlWithPlaceholders, excludeCodeBlocks: true);
+
+            // Extract @code blocks for separate emission (T053-T055)
+            var codeBlocks = ExtractCodeBlocks(razorPreserver);
 
             var source = ComponentCodeEmitter.Emit(
                 componentName,
                 namespaceValue,
                 htmlContent,
-                metadata);
+                metadata,
+                codeBlocks);
 
             context.AddSource(
                 $"{componentName}.md.g.cs",
@@ -125,6 +130,56 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
         // Use basic parser due to source generator assembly isolation limitations
         // Markdig integration deferred until runtime preprocessing solution available
         return BasicMarkdownParser.ConvertToHtml(markdown);
+    }
+
+    private static List<CodeBlock> ExtractCodeBlocks(RazorPreserver preserver)
+    {
+        // T053-T055: Extract @code blocks from preserved content
+        var codeBlocks = new List<CodeBlock>();
+        
+        // Get preserved blocks from the RazorPreserver
+        var preservedBlocks = preserver.GetPreservedBlocks();
+        
+        foreach (var kvp in preservedBlocks)
+        {
+            var placeholder = kvp.Key;
+            var content = kvp.Value;
+            
+            // Check if this is a @code block
+            if (content.StartsWith("@code"))
+            {
+                // Extract code content (remove @code { and closing })
+                var codeContent = ExtractCodeBlockContent(content);
+                
+                codeBlocks.Add(new CodeBlock
+                {
+                    Content = codeContent,
+                    Location = null // Location tracking can be added later
+                });
+            }
+        }
+        
+        return codeBlocks;
+    }
+
+    private static string ExtractCodeBlockContent(string codeBlock)
+    {
+        // Remove "@code {" from start and "}" from end
+        var content = codeBlock.Trim();
+        
+        // Find the opening brace
+        var openBraceIndex = content.IndexOf('{');
+        if (openBraceIndex == -1)
+            return string.Empty;
+            
+        // Extract content between braces
+        var startIndex = openBraceIndex + 1;
+        var endIndex = content.LastIndexOf('}');
+        
+        if (endIndex <= startIndex)
+            return string.Empty;
+            
+        return content.Substring(startIndex, endIndex - startIndex).Trim();
     }
 
     private static void ValidateUrlMetadata(

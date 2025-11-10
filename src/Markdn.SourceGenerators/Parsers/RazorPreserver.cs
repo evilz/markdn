@@ -39,17 +39,35 @@ public sealed class RazorPreserver
     /// Restore preserved Razor syntax from placeholders.
     /// </summary>
     /// <param name="content">Content with placeholders</param>
+    /// <param name="excludeCodeBlocks">If true, @code blocks won't be restored (they're emitted separately)</param>
     /// <returns>Content with original Razor syntax restored</returns>
-    public string RestoreRazorSyntax(string content)
+    public string RestoreRazorSyntax(string content, bool excludeCodeBlocks = false)
     {
         var result = content;
 
         foreach (var kvp in _preservedBlocks)
         {
+            // Skip @code blocks if requested (they're emitted separately in the class)
+            if (excludeCodeBlocks && kvp.Value.StartsWith("@code"))
+            {
+                // Replace placeholder with empty string to remove it from HTML
+                result = result.Replace(kvp.Key, string.Empty);
+                continue;
+            }
+            
             result = result.Replace(kvp.Key, kvp.Value);
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Get the preserved blocks dictionary for code extraction.
+    /// </summary>
+    /// <returns>Dictionary of placeholder to original content mappings</returns>
+    public IReadOnlyDictionary<string, string> GetPreservedBlocks()
+    {
+        return _preservedBlocks;
     }
 
     /// <summary>

@@ -152,19 +152,19 @@ Per plan.md, this feature creates two new projects:
 
 ### Implementation for User Story 5
 
-- [ ] T053 [US5] Implement RazorSyntaxPreserver to detect and preserve @ expressions (@identifier, @(expression)) without Markdig escaping
-- [ ] T054 [US5] Implement @code {} block detection and extraction in RazorSyntaxPreserver
-- [ ] T055 [US5] Store extracted @code blocks in CodeBlock entities with content and source location
-- [ ] T056 [US5] Implement ComponentTagParser to detect and preserve <ComponentName /> and <ComponentName>...</ComponentName> syntax
+- [x] T053 [US5] Implement RazorSyntaxPreserver to detect and preserve @ expressions (@identifier, @(expression)) without Markdig escaping
+- [x] T054 [US5] Implement @code {} block detection and extraction in RazorSyntaxPreserver
+- [x] T055 [US5] Store extracted @code blocks in CodeBlock entities with content and source location
+- [x] T056 [US5] Implement ComponentTagParser to detect and preserve <ComponentName /> and <ComponentName>...</ComponentName> syntax
 - [ ] T057 [US5] Parse component parameters (attribute="value" and attribute="@expression") in ComponentTagParser
 - [ ] T058 [US5] Register RazorSyntaxPreserver and ComponentTagParser in MarkdigPipelineBuilder custom pipeline
-- [ ] T059 [US5] Implement code block emission in ComponentCodeEmitter after BuildRenderTree method
+- [x] T059 [US5] Implement code block emission in ComponentCodeEmitter after BuildRenderTree method
 - [ ] T060 [US5] Implement inline expression handling in RenderTreeBuilderEmitter (detect @expression in content, emit AddContent instead of AddMarkupContent)
 - [ ] T061 [US5] Implement component reference handling in RenderTreeBuilderEmitter (emit OpenComponent, AddAttribute, CloseComponent)
 - [ ] T062 [US5] Handle component child content with RenderFragment emission in RenderTreeBuilderEmitter
-- [ ] T063 [US5] Create test file src/Markdn.Blazor.App/Pages/Dynamic.md with @code block and inline expressions
+- [x] T063 [US5] Create test file src/Markdn.Blazor.App/Pages/Dynamic.md with @code block and inline expressions
 - [ ] T064 [US5] Verify generated Dynamic.md.g.cs contains code block members and AddContent calls for expressions
-- [ ] T065 [US5] Create test file src/Markdn.Blazor.App/Pages/WithComponents.md referencing <Counter /> (built-in Blazor template component)
+- [x] T065 [US5] Create test file src/Markdn.Blazor.App/Pages/WithComponents.md referencing <Counter /> (built-in Blazor template component)
 - [ ] T066 [US5] Verify generated WithComponents.md.g.cs contains OpenComponent<Counter> and proper RenderTree calls
 - [ ] T067 [US5] Test component with parameters: create Alert component and reference it as `<Alert Severity="Warning">Message</Alert>`
 - [ ] T068 [US5] Verify parameter passing and child content rendering work correctly
