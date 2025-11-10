@@ -82,7 +82,7 @@ paths:
       summary: Query collection items
       description: |
         Query and filter content items in a collection using OData-like syntax.
-        Supports filtering, sorting, pagination, and field selection.
+        Supports filtering, sorting, and pagination.
       operationId: queryCollectionItems
       tags:
         - Content Items
@@ -136,15 +136,6 @@ paths:
             minimum: 0
             default: 0
           example: 0
-        - name: $select
-          in: query
-          required: false
-          description: |
-            Comma-separated list of fields to include in response.
-            If omitted, all fields are returned.
-          schema:
-            type: string
-          example: "title,author,publishDate"
       responses:
         '200':
           description: Query results

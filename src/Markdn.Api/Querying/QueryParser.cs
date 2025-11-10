@@ -5,7 +5,7 @@ namespace Markdn.Api.Querying;
 
 /// <summary>
 /// Parses OData-like query strings into structured QueryExpression objects.
-/// Supports $filter, $orderby, $top, $skip, and $select.
+/// Supports $filter, $orderby, $top, and $skip.
 /// </summary>
 public class QueryParser : IQueryParser
 {
@@ -22,11 +22,10 @@ public class QueryParser : IQueryParser
         string? orderBy,
         int? top,
         int? skip,
-        string? select,
         CollectionSchema schema)
     {
-        _logger.LogDebug("Parsing query: filter={Filter}, orderBy={OrderBy}, top={Top}, skip={Skip}, select={Select}",
-            filter, orderBy, top, skip, select);
+        _logger.LogDebug("Parsing query: filter={Filter}, orderBy={OrderBy}, top={Top}, skip={Skip}",
+            filter, orderBy, top, skip);
 
         var query = new QueryExpression
         {
@@ -44,12 +43,6 @@ public class QueryParser : IQueryParser
         if (!string.IsNullOrWhiteSpace(orderBy))
         {
             query.OrderBy = ParseOrderBy(orderBy, schema);
-        }
-
-        // Parse $select
-        if (!string.IsNullOrWhiteSpace(select))
-        {
-            query.Select = ParseSelect(select, schema);
         }
 
         ValidateQuery(query, schema);
@@ -268,21 +261,6 @@ public class QueryParser : IQueryParser
         }
 
         return clauses;
-    }
-
-    private List<string> ParseSelect(string select, CollectionSchema schema)
-    {
-        var fields = select.Split(',')
-            .Select(f => f.Trim())
-            .Where(f => !string.IsNullOrWhiteSpace(f))
-            .ToList();
-
-        foreach (var field in fields)
-        {
-            ValidateFieldName(field, schema);
-        }
-
-        return fields;
     }
 
     private void ValidateFieldName(string fieldName, CollectionSchema schema)

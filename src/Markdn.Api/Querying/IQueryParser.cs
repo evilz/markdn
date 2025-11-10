@@ -14,7 +14,6 @@ public interface IQueryParser
     /// <param name="orderBy">The $orderby query parameter value.</param>
     /// <param name="top">The $top query parameter value.</param>
     /// <param name="skip">The $skip query parameter value.</param>
-    /// <param name="select">The $select query parameter value.</param>
     /// <param name="schema">The collection schema for validation.</param>
     /// <returns>A parsed QueryExpression.</returns>
     /// <exception cref="ArgumentException">Thrown when query syntax is invalid or references non-existent fields.</exception>
@@ -23,6 +22,5 @@ public interface IQueryParser
         string? orderBy,
         int? top,
         int? skip,
-        string? select,
         CollectionSchema schema);
 }

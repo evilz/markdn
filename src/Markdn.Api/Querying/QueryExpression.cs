@@ -1,7 +1,7 @@
 namespace Markdn.Api.Querying;
 
 /// <summary>
-/// Represents a parsed OData-like query expression with filtering, sorting, pagination, and field selection.
+/// Represents a parsed OData-like query expression with filtering, sorting, and pagination.
 /// </summary>
 public class QueryExpression
 {
@@ -24,10 +24,4 @@ public class QueryExpression
     /// Number of items to skip ($skip clause).
     /// </summary>
     public int? Skip { get; set; }
-
-    /// <summary>
-    /// List of fields to include in results ($select clause).
-    /// If null or empty, all fields are returned.
-    /// </summary>
-    public List<string>? Select { get; set; }
 }

@@ -16,7 +16,7 @@ A lightweight, file-based headless CMS for serving Markdown content via REST API
 - 🏗️ **Type-Safe Collections**: Define schemas for content validation and type safety (like Astro Content Collections)
 - ✅ **Automatic Validation**: Content validated at startup and runtime against collection schemas
 - 🔄 **Runtime Monitoring**: File watcher integration for detecting content and schema changes
-- 🔎 **Advanced Queries**: OData-like query syntax with `$filter`, `$orderby`, `$top`, `$skip`, `$select`
+- 🔎 **Advanced Queries**: OData-like query syntax with `$filter`, `$orderby`, `$top`, `$skip`
 
 ## Content Collections
 
@@ -188,27 +188,15 @@ $skip=20
 $top=10&$skip=20  # Page 3 (items 21-30)
 ```
 
-#### Field Selection
-
-```bash
-# Select specific fields only
-$select=title,author,date
-
-# Combine with filtering
-$filter=featured eq true&$select=title,slug
-```
-
 #### Complete Example
 
 ```bash
 # Get top 10 featured blog posts by Jane Doe,
-# sorted by views (descending),
-# return only title, author, and views fields
+# sorted by views (descending)
 curl "http://localhost:5219/api/collections/blog/items?\
 $filter=author eq 'Jane Doe' and featured eq true&\
 $orderby=views desc&\
-$top=10&\
-$select=title,author,views"
+$top=10"
 ```
 
 ### Collections API Reference
@@ -242,7 +230,6 @@ Get all items from a collection.
 - `$orderby` (string, optional): Sort expression (field [asc|desc])
 - `$top` (integer, optional): Maximum items to return
 - `$skip` (integer, optional): Number of items to skip
-- `$select` (string, optional): Comma-separated list of fields to include
 
 **Response:**
 - `200 OK` with array of content items

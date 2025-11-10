@@ -5,7 +5,7 @@ namespace Markdn.Api.Querying;
 
 /// <summary>
 /// Executes query expressions against collections of content items.
-/// Applies filtering, sorting, pagination, and field selection.
+/// Applies filtering, sorting, and pagination.
 /// </summary>
 public class QueryExecutor
 {
@@ -53,12 +53,6 @@ public class QueryExecutor
         }
 
         var finalResults = results.ToList();
-
-        // Apply field selection (if needed)
-        if (query.Select != null && query.Select.Any())
-        {
-            finalResults = ApplyFieldSelection(finalResults, query.Select);
-        }
 
         _logger.LogInformation("Query execution complete: {ResultCount} items returned", finalResults.Count);
 
@@ -150,18 +144,5 @@ public class QueryExecutor
             "lastmodified" => item.LastModified,
             _ => item.CustomFields?.GetValueOrDefault(fieldName)
         };
-    }
-
-    private List<ContentItem> ApplyFieldSelection(List<ContentItem> items, List<string> selectedFields)
-    {
-        // For now, return full items
-        // Field selection would require creating a dynamic projection
-        // which is complex in strongly-typed C#
-        // This could be enhanced later with a custom DTO or dynamic object
-        
-        _logger.LogDebug("Field selection requested but returning full items: {Fields}", 
-            string.Join(", ", selectedFields));
-        
-        return items;
     }
 }

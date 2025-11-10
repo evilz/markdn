@@ -187,7 +187,6 @@ public static class CollectionsEndpoints
         string? orderby = null,
         int? top = null,
         int? skip = null,
-        string? select = null,
         CancellationToken cancellationToken = default)
     {
         try
@@ -198,8 +197,7 @@ public static class CollectionsEndpoints
             var hasQuery = !string.IsNullOrWhiteSpace(filter) ||
                           !string.IsNullOrWhiteSpace(orderby) ||
                           top.HasValue ||
-                          skip.HasValue ||
-                          !string.IsNullOrWhiteSpace(select);
+                          skip.HasValue;
 
             IReadOnlyList<ContentItem> items;
 
@@ -214,7 +212,7 @@ public static class CollectionsEndpoints
                 }
 
                 // Parse and validate query
-                var query = queryParser.Parse(filter, orderby, top, skip, select, collection.Schema);
+                var query = queryParser.Parse(filter, orderby, top, skip, collection.Schema);
                 
                 // Execute query
                 items = await collectionService.QueryAsync(name, query, cancellationToken);
