@@ -230,12 +230,20 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /api/collections/{collectionName}/validate:
+  /api/collections/{collectionName}/validate-all:
     post:
-      summary: Validate collection
+      summary: Validate all items in collection
       description: |
-        Triggers background validation of all items in a collection.
-        Returns immediately with validation job ID. Use GET to check status.
+        Validates all items in a collection against its schema and returns
+        a comprehensive validation report synchronously.
+        
+        This endpoint processes all files in the collection and returns:
+        - Total item count
+        - Valid vs invalid item counts  
+        - Detailed error information for each invalid item
+        
+        Use this endpoint to manually trigger validation or get a full
+        validation status report for monitoring/debugging.
       operationId: validateCollection
       tags:
         - Validation
@@ -247,47 +255,18 @@ paths:
             type: string
           example: blog
       responses:
-        '202':
-          description: Validation started
+        '200':
+          description: Validation complete - returns full validation report
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  jobId:
-                    type: string
-                  status:
-                    type: string
-                    enum: [pending, running, completed, failed]
+                $ref: '#/components/schemas/CollectionValidationReport'
         '404':
           description: Collection not found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
-    get:
-      summary: Get validation status
-      description: Returns the current validation status for a collection
-      operationId: getValidationStatus
-      tags:
-        - Validation
-      parameters:
-        - name: collectionName
-          in: path
-          required: true
-          schema:
-            type: string
-          example: blog
-      responses:
-        '200':
-          description: Validation status
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ValidationStatus'
-        '404':
-          description: Collection not found
           content:
             application/json:
               schema:
@@ -358,6 +337,8 @@ components:
 
     ValidationStatus:
       type: object
+      description: Deprecated - use CollectionValidationReport
+      deprecated: true
       required:
         - collectionName
         - totalItems
@@ -395,8 +376,76 @@ components:
           format: date-time
           example: '2025-11-09T10:00:00Z'
 
+    CollectionValidationReport:
+      type: object
+      description: Comprehensive validation report for a collection
+      required:
+        - collectionName
+        - totalItems
+        - validItems
+        - invalidItems
+        - validationTimestamp
+      properties:
+        collectionName:
+          type: string
+          description: Name of the collection
+          example: blog
+        totalItems:
+          type: integer
+          description: Total number of content items in the collection
+          example: 50
+        validItems:
+          type: integer
+          description: Number of items that passed validation
+          example: 48
+        invalidItems:
+          type: integer
+          description: Number of items that failed validation
+          example: 2
+        validationTimestamp:
+          type: string
+          format: date-time
+          description: When the validation was performed
+          example: '2025-11-09T10:00:00Z'
+        errors:
+          type: array
+          description: Validation errors for invalid items
+          items:
+            $ref: '#/components/schemas/ItemValidationError'
+        isValid:
+          type: boolean
+          description: Whether all items passed validation
+          example: false
+
+    ItemValidationError:
+      type: object
+      description: Validation error for a specific content item
+      required:
+        - filePath
+        - slug
+        - errorMessages
+      properties:
+        filePath:
+          type: string
+          description: File path of the item with errors
+          example: content/blog/broken-post.md
+        slug:
+          type: string
+          description: Slug of the item
+          example: broken-post
+        errorMessages:
+          type: array
+          description: List of validation error messages
+          items:
+            type: string
+          example:
+            - "Required property 'title' not found"
+            - "Property 'publishDate' must be a valid date"
+
     ContentValidationError:
       type: object
+      description: Deprecated - use ItemValidationError
+      deprecated: true
       required:
         - itemId
         - fieldName
