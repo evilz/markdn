@@ -182,14 +182,14 @@ Per plan.md, this feature creates two new projects:
 
 ### Implementation for User Story 4
 
-- [ ] T070 [US4] Verify IIncrementalGenerator pipeline is properly configured for incremental compilation (only changed files regenerate)
-- [ ] T071 [US4] Create test scenario: run `dotnet watch` in src/Markdn.Blazor.App/
-- [ ] T072 [US4] Edit src/Markdn.Blazor.App/Pages/Dynamic.md content while app is running
-- [ ] T073 [US4] Verify source generator reruns automatically and emits new Dynamic.md.g.cs
-- [ ] T074 [US4] Verify Blazor hot reload picks up the change and updates browser without full reload
-- [ ] T075 [US4] Verify application state is preserved (e.g., counter values, form inputs remain)
-- [ ] T076 [US4] Edit YAML front matter (e.g., change page title) and verify hot reload works for metadata changes
-- [ ] T077 [US4] Document hot reload behavior and limitations in specs/003-blazor-markdown-components/quickstart.md
+- [x] T070 [US4] Verify IIncrementalGenerator pipeline is properly configured for incremental compilation (only changed files regenerate)
+- [x] T071 [US4] Create test scenario: run `dotnet watch` in src/Markdn.Blazor.App/
+- [x] T072 [US4] Edit src/Markdn.Blazor.App/Pages/Dynamic.md content while app is running
+- [x] T073 [US4] Verify source generator reruns automatically and emits new Dynamic.md.g.cs
+- [x] T074 [US4] Verify Blazor hot reload picks up the change and updates browser without full reload
+- [x] T075 [US4] Verify application state is preserved (e.g., counter values, form inputs remain)
+- [x] T076 [US4] Edit YAML front matter (e.g., change page title) and verify hot reload works for metadata changes
+- [x] T077 [US4] Document hot reload behavior and limitations in specs/003-blazor-markdown-components/quickstart.md
 
 **Checkpoint**: Development workflow supports live editing with hot reload
 

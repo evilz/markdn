@@ -437,6 +437,84 @@ dotnet build --configuration Release
 
 # Clean
 dotnet clean
+
+# Blazor Hot Reload (003-blazor-markdown-components)
+dotnet watch --project src/Markdn.Blazor.App  # Start with hot reload enabled
+```
+
+---
+
+## Hot Reload Development (Blazor Markdown Components)
+
+**Feature 003**: Markdown files auto-regenerate into Blazor components with hot reload support.
+
+### How It Works
+
+1. **Start Watch Mode**:
+   ```bash
+   cd src/Markdn.Blazor.App
+   dotnet watch
+   ```
+
+2. **Edit Markdown Files**: Modify any `.md` file in `Pages/` folder:
+   ```markdown
+   ---
+   url: /my-page
+   title: My Dynamic Page
+   ---
+   
+   # Hello World
+   
+   Current time: @DateTime.Now.ToString("HH:mm:ss")
+   ```
+
+3. **Automatic Updates**:
+   - Source generator detects file change
+   - Regenerates `*.md.g.cs` component
+   - Hot reload updates browser **without full refresh**
+   - Page state preserved (if applicable)
+
+### What Triggers Hot Reload
+
+✅ **Markdown content changes**
+- HTML markup
+- Inline Razor expressions (`@variable`, `@method()`)
+- Component usage (`<Counter />`)
+
+✅ **YAML front matter changes**
+- `url`, `title`, `namespace`, etc.
+
+✅ **@code block changes**
+- Component logic
+- Properties and methods
+
+### Hot Reload Behavior
+
+- **Speed**: Updates typically complete in <3 seconds
+- **State**: Browser state preserved where possible
+- **Feedback**: Terminal shows `🔥 Hot reload succeeded`
+- **Errors**: Compiler errors prevent hot reload (shown in terminal)
+
+### Limitations
+
+- Changing base class or layout requires full restart
+- Adding new dependencies requires rebuild
+- Source generator code changes require restart
+
+### Example Workflow
+
+```bash
+# Terminal 1: Start watch mode
+dotnet watch --project src/Markdn.Blazor.App
+
+# Terminal 2: Edit markdown
+echo "New content: @DateTime.Now" >> Pages/Dynamic.md
+
+# Terminal 1: Watch for output
+# dotnet watch ⌚ File updated: .\Pages\Dynamic.md
+# dotnet watch 🔥 [Markdn.Blazor.App (net8.0)] Hot reload succeeded.
+
+# Browser: Auto-refreshes with new content
 ```
 
 ---
