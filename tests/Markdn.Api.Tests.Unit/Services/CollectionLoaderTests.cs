@@ -16,13 +16,13 @@ public class CollectionLoaderTests
 {
     private readonly Mock<ILogger<CollectionLoader>> _loggerMock;
     private readonly Mock<IOptions<CollectionsOptions>> _optionsMock;
-    private readonly Mock<IMemoryCache> _cacheMock;
+    private readonly IMemoryCache _cache;
 
     public CollectionLoaderTests()
     {
         _loggerMock = new Mock<ILogger<CollectionLoader>>();
-        _optionsMock = new Mock<IOptions<CollectionsOptions>>();
-        _cacheMock = new Mock<IMemoryCache>();
+    _optionsMock = new Mock<IOptions<CollectionsOptions>>();
+    _cache = new MemoryCache(new MemoryCacheOptions { SizeLimit = 1024 });
         _optionsMock.Setup(o => o.Value).Returns(new CollectionsOptions
         {
             ConfigurationFilePath = "content/collections.json"
@@ -57,7 +57,7 @@ public class CollectionLoaderTests
             ConfigurationFilePath = tempFile
         });
 
-        var loader = new CollectionLoader(_optionsMock.Object, _cacheMock.Object, _loggerMock.Object);
+    var loader = new CollectionLoader(_optionsMock.Object, _cache, _loggerMock.Object);
 
         // Act
         var collections = await loader.LoadCollectionsAsync();
@@ -108,7 +108,7 @@ public class CollectionLoaderTests
             ConfigurationFilePath = tempFile
         });
 
-        var loader = new CollectionLoader(_optionsMock.Object, _cacheMock.Object, _loggerMock.Object);
+    var loader = new CollectionLoader(_optionsMock.Object, _cache, _loggerMock.Object);
 
         // Act
         var collections = await loader.LoadCollectionsAsync();
@@ -135,7 +135,7 @@ public class CollectionLoaderTests
             ConfigurationFilePath = "nonexistent/collections.json"
         });
 
-        var loader = new CollectionLoader(_optionsMock.Object, _cacheMock.Object, _loggerMock.Object);
+    var loader = new CollectionLoader(_optionsMock.Object, _cache, _loggerMock.Object);
 
         // Act & Assert
         await Assert.ThrowsAsync<FileNotFoundException>(
@@ -154,7 +154,7 @@ public class CollectionLoaderTests
             ConfigurationFilePath = tempFile
         });
 
-        var loader = new CollectionLoader(_optionsMock.Object, _cacheMock.Object, _loggerMock.Object);
+    var loader = new CollectionLoader(_optionsMock.Object, _cache, _loggerMock.Object);
 
         // Act & Assert
         await Assert.ThrowsAsync<System.Text.Json.JsonException>(
@@ -180,7 +180,7 @@ public class CollectionLoaderTests
             ConfigurationFilePath = tempFile
         });
 
-        var loader = new CollectionLoader(_optionsMock.Object, _cacheMock.Object, _loggerMock.Object);
+    var loader = new CollectionLoader(_optionsMock.Object, _cache, _loggerMock.Object);
 
         // Act
         var collections = await loader.LoadCollectionsAsync();

@@ -49,8 +49,14 @@ public static class YamlFrontMatterParser
 
         if (closingDelimiterIndex == -1)
         {
-            // No closing delimiter found - treat as regular content
-            return (ComponentMetadata.Empty, content, new List<string>());
+            // No closing delimiter found - report invalid YAML front matter (MD001)
+            var yamlErrors = new List<string>
+            {
+                "Invalid YAML front matter: missing closing '---' delimiter"
+            };
+
+            // Treat whole file as markdown content when front matter is malformed
+            return (ComponentMetadata.Empty, content, yamlErrors);
         }
 
         // Extract YAML content (between delimiters)

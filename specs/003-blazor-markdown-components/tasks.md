@@ -157,7 +157,7 @@ Per plan.md, this feature creates two new projects:
 - [x] T055 [US5] Store extracted @code blocks in CodeBlock entities with content and source location
 - [x] T056 [US5] Implement ComponentTagParser to detect and preserve <ComponentName /> and <ComponentName>...</ComponentName> syntax
 - [x] T057 [US5] Parse component parameters (attribute="value" and attribute="@expression") in ComponentTagParser
-- [ ] T058 [US5] Register RazorSyntaxPreserver and ComponentTagParser in MarkdigPipelineBuilder custom pipeline (N/A - using BasicMarkdownParser)
+- [x] T058 [US5] Register RazorSyntaxPreserver and ComponentTagParser in MarkdigPipelineBuilder custom pipeline (N/A - implemented via `RazorPreserver` and BasicMarkdownParser integration)
 - [x] T059 [US5] Implement code block emission in ComponentCodeEmitter after BuildRenderTree method
 - [x] T060 [US5] Implement inline expression handling in RenderTreeBuilderEmitter (detect @expression in content, emit AddContent instead of AddMarkupContent)
 - [x] T061 [US5] Implement component reference handling in RenderTreeBuilderEmitter (emit OpenComponent, AddAttribute, CloseComponent)
@@ -241,14 +241,14 @@ Per plan.md, this feature creates two new projects:
  - [x] T103 [P] Implement diagnostic reporting for malformed Razor syntax (MD007) in RazorSyntaxPreserver
 - [ ] T104 [P] Add warning diagnostic for unresolvable component references (MD006) in ComponentTagParser
 - [x] T105 [P] Add auto-generated file header with generator version and "do not edit" warning in ComponentCodeEmitter
-- [ ] T106 [P] Implement sequence number management for RenderTreeBuilder (unique sequential numbers) in RenderTreeBuilderEmitter
-- [ ] T107 Add support for date prefix removal in filename (e.g., 2024-11-10-post.md → Post class) in ComponentNameGenerator
-- [ ] T108 Add support for kebab-case to PascalCase conversion in ComponentNameGenerator
-- [ ] T109 Add support for reserved keyword handling (prefix @) in ComponentNameGenerator
-- [ ] T110 Optimize generated code: combine adjacent static HTML into single AddMarkupContent call in RenderTreeBuilderEmitter
-- [ ] T111 [P] Document error codes MD001-MD008 in specs/003-blazor-markdown-components/contracts/component-generation-schema.md
-- [ ] T112 [P] Update quickstart.md with complete examples for all features
-- [ ] T113 [P] Add troubleshooting section to quickstart.md for common issues
+ - [x] T106 [P] Implement sequence number management for RenderTreeBuilder (unique sequential numbers) in RenderTreeBuilderEmitter
+ - [ ] T107 Add support for date prefix removal in filename (e.g., 2024-11-10-post.md → Post class) in ComponentNameGenerator
+ - [ ] T108 Add support for kebab-case to PascalCase conversion in ComponentNameGenerator
+ - [ ] T109 Add support for reserved keyword handling (prefix @) in ComponentNameGenerator
+ - [x] T110 Optimize generated code: combine adjacent static HTML into single AddMarkupContent call in RenderTreeBuilderEmitter
+ - [x] T111 [P] Document error codes MD001-MD008 in specs/003-blazor-markdown-components/contracts/component-generation-schema.md
+ - [x] T112 [P] Update quickstart.md with complete examples for all features
+ - [x] T113 [P] Add troubleshooting section to quickstart.md for common issues
 - [ ] T114 Create comprehensive example: blog post component with all features in src/Markdn.Blazor.App/Pages/Blog/Post.md
 - [ ] T115 Verify all success criteria from spec.md (SC-001 through SC-009)
 - [ ] T116 Performance test: create 100+ Markdown files and verify build time is acceptable
