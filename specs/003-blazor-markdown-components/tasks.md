@@ -68,8 +68,8 @@ Per plan.md, this feature creates two new projects:
 - [x] T020 Create ComponentNameGenerator in src/Markdn.SourceGenerators/Generators/ComponentNameGenerator.cs for filename to class name conversion
 - [x] T021 [P] Create NamespaceGenerator in src/Markdn.SourceGenerators/Generators/NamespaceGenerator.cs for directory structure to namespace mapping
 - [x] T022 Create DiagnosticDescriptors in src/Markdn.SourceGenerators/Diagnostics/DiagnosticDescriptors.cs with codes MD001-MD008
-- [ ] T023 [P] Create ComponentCodeEmitter in src/Markdn.SourceGenerators/CodeGeneration/ComponentCodeEmitter.cs for generating C# source code structure
-- [ ] T024 Create RenderTreeBuilder code generation in src/Markdn.SourceGenerators/CodeGeneration/RenderTreeBuilderEmitter.cs for BuildRenderTree method
+- [x] T023 [P] Create ComponentCodeEmitter in src/Markdn.SourceGenerators/CodeGeneration/ComponentCodeEmitter.cs for generating C# source code structure
+- [x] T024 Create RenderTreeBuilder code generation in src/Markdn.SourceGenerators/CodeGeneration/RenderTreeBuilderEmitter.cs for BuildRenderTree method
 - [x] T025 [P] Create MarkdownComponentGenerator implementing IIncrementalGenerator in src/Markdn.SourceGenerators/MarkdownComponentGenerator.cs with generator registration and pipeline
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
@@ -240,7 +240,7 @@ Per plan.md, this feature creates two new projects:
 - [x] T102 [P] Implement diagnostic reporting for invalid YAML syntax (MD001) in YamlFrontMatterParser
 - [ ] T103 [P] Implement diagnostic reporting for malformed Razor syntax (MD007) in RazorSyntaxPreserver
 - [ ] T104 [P] Add warning diagnostic for unresolvable component references (MD006) in ComponentTagParser
-- [ ] T105 [P] Add auto-generated file header with generator version and "do not edit" warning in ComponentCodeEmitter
+- [x] T105 [P] Add auto-generated file header with generator version and "do not edit" warning in ComponentCodeEmitter
 - [ ] T106 [P] Implement sequence number management for RenderTreeBuilder (unique sequential numbers) in RenderTreeBuilderEmitter
 - [ ] T107 Add support for date prefix removal in filename (e.g., 2024-11-10-post.md → Post class) in ComponentNameGenerator
 - [ ] T108 Add support for kebab-case to PascalCase conversion in ComponentNameGenerator
