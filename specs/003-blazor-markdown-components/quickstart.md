@@ -365,6 +365,15 @@ When `componentNamespaces` (or `$using`) is provided the generator will emit `us
 
 Examples and more details are available in `specs/003-blazor-markdown-components/quickstart-addenda.md`.
 
+## Diagnostics and common errors
+
+The generator emits structured diagnostics with codes MD001-MD008. See `specs/003-blazor-markdown-components/contracts/component-generation-schema.md` for full details and recommended remediations.
+
+- MD006 (Warning): Unresolvable component reference — add `$using` or `componentNamespaces` to front matter or ensure the component type is compiled in the same project.
+- MD007 (Error): Malformed Razor syntax — fix unmatched `@code {}` blocks or control-flow braces in your Markdown. Example: missing `}` will cause MD007 and the generator will point to the file name and a short message.
+
+If you encounter MD007 during build, open the affected `.md` file and check for unclosed `@code` blocks, unbalanced parentheses in `@(...)` expressions, or unclosed `@if/@foreach` blocks.
+
 
 ## Debugging Generated Code
 

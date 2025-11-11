@@ -64,8 +64,31 @@ public static class RenderTreeBuilderEmitter
         
         // Parse content into segments (HTML, expressions, components)
         var segments = ParseContentSegments(content);
-        
-        foreach (var segment in segments)
+
+        // T110: coalesce adjacent HTML segments to reduce AddMarkupContent calls
+        var coalesced = new List<ContentSegment>();
+        for (int i = 0; i < segments.Count; i++)
+        {
+            var current = segments[i];
+            if (current.Type == SegmentType.Html)
+            {
+                var sbHtml = new StringBuilder(current.Content ?? string.Empty);
+                int j = i + 1;
+                while (j < segments.Count && segments[j].Type == SegmentType.Html)
+                {
+                    sbHtml.Append(segments[j].Content);
+                    j++;
+                }
+                coalesced.Add(new ContentSegment { Type = SegmentType.Html, Content = sbHtml.ToString() });
+                i = j - 1;
+            }
+            else
+            {
+                coalesced.Add(current);
+            }
+        }
+
+        foreach (var segment in coalesced)
         {
             switch (segment.Type)
             {

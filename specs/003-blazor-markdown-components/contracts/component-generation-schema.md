@@ -1,3 +1,41 @@
+
+# Component Generation Schema & Diagnostics
+
+This document lists the generator diagnostics (MD00x) emitted by the Markdown → Razor component generator and their meaning. Use these codes in CI and troubleshooting.
+
+| Code | Severity | Meaning | Recommended action |
+|------|----------|---------|-------------------|
+| MD001 | Error | Invalid YAML front matter parsing error | Fix YAML syntax in the Markdown front matter (missing `:` or incorrect indentation) |
+| MD002 | Error | Invalid URL format in `url` or `url` array (must start with `/`) | Ensure route URLs begin with `/` |
+| MD003 | Error | Invalid parameter name in `$parameters` (not a valid C# identifier) | Rename parameter to a valid C# identifier (PascalCase recommended) |
+| MD004 | Error | Invalid parameter type syntax in `$parameters` | Correct the type syntax (e.g., `string`, `int`, `List<string>`) |
+| MD005 | Error | Duplicate parameter name declared in `$parameters` | Remove duplicate entries or rename parameters |
+| MD006 | Warning | Component reference may not be resolvable at generation time | Add `$using` or `componentNamespaces` to front matter or ensure component type is available to the compilation unit |
+| MD007 | Error | Malformed Razor syntax detected while preserving Razor fragments (unmatched braces/parentheses) | Fix Razor syntax in the Markdown (e.g., close `@code {}` or `@if (...) { }` blocks) |
+| MD008 | Error | Mutually exclusive URL properties: both `url` (scalar) and `url` (array) provided | Use one form only; prefer `url:` (string) or `url:` (array) but not both |
+
+Examples
+
+Malformed Razor (MD007):
+
+```markdown
+@code {
+  private int x = 0;
+  // missing closing brace -> generator will emit MD007
+
+```
+
+Unresolvable component (MD006):
+
+```markdown
+<UnknownComponent />
+
+```
+
+Remediation
+- Add explicit `$using` or `componentNamespaces` in front matter when referencing components from other namespaces.
+- Fix YAML syntax in front matter.
+- Correct Razor blocks and expressions.
 # Component Generation Contract
 
 **Feature**: 003-blazor-markdown-components  

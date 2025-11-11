@@ -238,7 +238,7 @@ Per plan.md, this feature creates two new projects:
 
 - [ ] T102 [P] Implement diagnostic reporting for invalid YAML syntax (MD001) in YamlFrontMatterParser
 - [x] T102 [P] Implement diagnostic reporting for invalid YAML syntax (MD001) in YamlFrontMatterParser
-- [ ] T103 [P] Implement diagnostic reporting for malformed Razor syntax (MD007) in RazorSyntaxPreserver
+ - [x] T103 [P] Implement diagnostic reporting for malformed Razor syntax (MD007) in RazorSyntaxPreserver
 - [ ] T104 [P] Add warning diagnostic for unresolvable component references (MD006) in ComponentTagParser
 - [x] T105 [P] Add auto-generated file header with generator version and "do not edit" warning in ComponentCodeEmitter
 - [ ] T106 [P] Implement sequence number management for RenderTreeBuilder (unique sequential numbers) in RenderTreeBuilderEmitter
