@@ -31,13 +31,13 @@ public static class RenderTreeBuilderEmitter
         sb.AppendLine($"{innerIndent}Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder builder)");
         sb.AppendLine($"{indent}{{");
         
-        int sequence = 0;
+    var seq = new SequenceCounter();
         
         // T088: Emit PageTitle component if Title is specified
         if (metadata?.Title != null)
         {
-            sb.AppendLine($"{innerIndent}builder.OpenComponent<Microsoft.AspNetCore.Components.Web.PageTitle>({sequence++});");
-            sb.AppendLine($"{innerIndent}builder.AddAttribute({sequence++}, \"ChildContent\", (Microsoft.AspNetCore.Components.RenderFragment)((builder2) => {{");
+            sb.AppendLine($"{innerIndent}builder.OpenComponent<Microsoft.AspNetCore.Components.Web.PageTitle>({seq.Next()});");
+            sb.AppendLine($"{innerIndent}builder.AddAttribute({seq.Next()}, \"ChildContent\", (Microsoft.AspNetCore.Components.RenderFragment)((builder2) => {{");
             sb.AppendLine($"{innerIndent}    builder2.AddContent(0, @\"{EscapeForVerbatimString(metadata.Title)}\");");
             sb.AppendLine($"{innerIndent}}}));");
             sb.AppendLine($"{innerIndent}builder.CloseComponent();");
@@ -45,7 +45,7 @@ public static class RenderTreeBuilderEmitter
         }
         
     // T060-T062: Parse content and emit appropriate builder calls
-    var statements = ParseContentAndEmitStatements(htmlContent, innerIndent, ref sequence, componentTypeMap, componentNamespace, availableNamespaces);
+    var statements = ParseContentAndEmitStatements(htmlContent, innerIndent, seq, componentTypeMap, componentNamespace, availableNamespaces);
         sb.Append(statements);
         
         sb.AppendLine($"{indent}}}");
@@ -58,7 +58,7 @@ public static class RenderTreeBuilderEmitter
     /// T060: Handle inline expressions (@name, @DateTime.Now)
     /// T061: Handle component tags (<Counter />, <Alert>...</Alert>)
     /// </summary>
-    private static string ParseContentAndEmitStatements(string content, string indent, ref int sequence, Dictionary<string, string>? componentTypeMap = null, string componentNamespace = "", IEnumerable<string>? availableNamespaces = null)
+    private static string ParseContentAndEmitStatements(string content, string indent, SequenceCounter seq, Dictionary<string, string>? componentTypeMap = null, string componentNamespace = "", IEnumerable<string>? availableNamespaces = null)
     {
         var sb = new StringBuilder();
         
@@ -96,19 +96,18 @@ public static class RenderTreeBuilderEmitter
                     // Static HTML content
                     if (!string.IsNullOrWhiteSpace(segment.Content))
                     {
-                        sb.AppendLine($"{indent}builder.AddMarkupContent({sequence++}, @\"{EscapeForVerbatimString(segment.Content)}\");");
+                        sb.AppendLine($"{indent}builder.AddMarkupContent({seq.Next()}, @\"{EscapeForVerbatimString(segment.Content)}\");");
                     }
                     break;
                     
                 case SegmentType.Expression:
                     // T060: Inline expression like @name or @DateTime.Now
-                    sb.AppendLine($"{indent}builder.AddContent({sequence++}, {segment.Content});");
+                    sb.AppendLine($"{indent}builder.AddContent({seq.Next()}, {segment.Content});");
                     break;
                     
                     case SegmentType.Component:
                         // T061: Component reference like <Counter />
-                        EmitComponentCall(sb, segment, ref sequence, indent, componentTypeMap, componentNamespace, availableNamespaces);
-                        break;
+                    EmitComponentCall(sb, segment, seq, indent, componentTypeMap, componentNamespace, availableNamespaces);
                     break;
             }
         }
@@ -116,7 +115,7 @@ public static class RenderTreeBuilderEmitter
         // If no segments, emit empty markup
         if (segments.Count == 0)
         {
-            sb.AppendLine($"{indent}builder.AddMarkupContent({sequence}, @\"{EscapeForVerbatimString(content)}\");");
+            sb.AppendLine($"{indent}builder.AddMarkupContent({seq.Next()}, @\"{EscapeForVerbatimString(content)}\");");
         }
         
         return sb.ToString();
@@ -440,7 +439,7 @@ public static class RenderTreeBuilderEmitter
     /// T061: OpenComponent, AddAttribute, CloseComponent
     /// T062: ChildContent with RenderFragment
     /// </summary>
-    private static void EmitComponentCall(StringBuilder sb, ContentSegment segment, ref int sequence, string indent, Dictionary<string, string>? componentTypeMap = null, string componentNamespace = "", IEnumerable<string>? availableNamespaces = null)
+    private static void EmitComponentCall(StringBuilder sb, ContentSegment segment, SequenceCounter seq, string indent, Dictionary<string, string>? componentTypeMap = null, string componentNamespace = "", IEnumerable<string>? availableNamespaces = null)
     {
         // Determine fully-qualified component type using provided map or fallback to componentNamespace
         string qualifiedType;
@@ -467,30 +466,30 @@ public static class RenderTreeBuilderEmitter
         {
             qualifiedType = segment.ComponentName; // best-effort fallback (may fail to compile)
         }
-        sb.AppendLine($"{indent}builder.OpenComponent({sequence++}, typeof({qualifiedType}));");
+                        sb.AppendLine($"{indent}builder.OpenComponent({seq.Next()}, typeof({qualifiedType}));");
         
         // Add attributes/parameters
-        if (segment.Parameters != null)
-        {
-            foreach (var (name, value) in segment.Parameters)
+                    if (segment.Parameters != null)
             {
-                // Check if value is an expression (starts with @)
-                if (value.StartsWith("@"))
+                foreach (var (name, value) in segment.Parameters)
                 {
-                    var expr = value.Substring(1);
-                    sb.AppendLine($"{indent}builder.AddAttribute({sequence++}, \"{name}\", {expr});");
-                }
-                else
-                {
-                    sb.AppendLine($"{indent}builder.AddAttribute({sequence++}, \"{name}\", \"{value}\");");
+                    // Check if value is an expression (starts with @)
+                    if (value.StartsWith("@"))
+                    {
+                        var expr = value.Substring(1);
+                        sb.AppendLine($"{indent}builder.AddAttribute({seq.Next()}, \"{name}\", {expr});");
+                    }
+                    else
+                    {
+                        sb.AppendLine($"{indent}builder.AddAttribute({seq.Next()}, \"{name}\", \"{value}\");");
+                    }
                 }
             }
-        }
         
         // T062: Add child content if present
-        if (!string.IsNullOrEmpty(segment.ChildContent))
+            if (!string.IsNullOrEmpty(segment.ChildContent))
         {
-            sb.AppendLine($"{indent}builder.AddAttribute({sequence++}, \"ChildContent\", (Microsoft.AspNetCore.Components.RenderFragment)((builder2) => {{");
+            sb.AppendLine($"{indent}builder.AddAttribute({seq.Next()}, \"ChildContent\", (Microsoft.AspNetCore.Components.RenderFragment)((builder2) => {{");
             sb.AppendLine($"{indent}    builder2.AddMarkupContent(0, @\"{EscapeForVerbatimString(segment.ChildContent)}\");");
             sb.AppendLine($"{indent}}}));");
         }
@@ -548,5 +547,23 @@ public static class RenderTreeBuilderEmitter
     public static string EmitAddMarkupContent(string htmlContent, int sequenceNumber = 0)
     {
         return $"builder.AddMarkupContent({sequenceNumber}, @\"{EscapeForVerbatimString(htmlContent)}\");";
+    }
+
+    /// <summary>
+    /// Simple sequence counter for deterministic sequence numbers in RenderTreeBuilder emissions.
+    /// Encapsulates an integer counter and exposes Next() for allocation.
+    /// </summary>
+    private struct SequenceCounter
+    {
+        private int _value;
+
+        public int Next()
+        {
+            return _value++;
+        }
+
+        public int Peek() => _value;
+
+        public void Reset(int value = 0) => _value = value;
     }
 }
