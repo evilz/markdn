@@ -28,15 +28,51 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
         var filesWithCompilation = markdownFiles
             .Combine(context.CompilationProvider);
 
-        // Generate source for each markdown file
-        context.RegisterSourceOutput(filesWithCompilation, GenerateSource);
+        // Read build property RootNamespace (if provided) from analyzer config options.
+        var rootNamespaceProvider = context.AnalyzerConfigOptionsProvider.Select((opts, ct) =>
+        {
+            if (opts.GlobalOptions.TryGetValue("build_property.RootNamespace", out var val))
+            {
+                return string.IsNullOrWhiteSpace(val) ? null : val.Trim();
+            }
+            return null;
+        });
+
+        // Combine files, compilation and root-namespace option
+        var combined = filesWithCompilation.Combine(rootNamespaceProvider);
+
+        // Generate source for each markdown file with knowledge of the project's RootNamespace
+        // Use an inline lambda to destructure the combined tuple to avoid complex
+        // tuple type signatures in the method declaration.
+        context.RegisterSourceOutput(combined, (spc, input) =>
+        {
+            try
+            {
+                var ((file, compilation), providedRootNamespace) = input;
+                GenerateSourceWithOptions(spc, file, compilation, providedRootNamespace);
+            }
+            catch (Exception ex)
+            {
+                var diag = Diagnostic.Create(
+                    new DiagnosticDescriptor(
+                        "MD999",
+                        "Generator error",
+                        $"Error during source generation dispatch: {ex.Message}",
+                        "MarkdownGenerator",
+                        DiagnosticSeverity.Error,
+                        true),
+                    Location.None);
+                spc.ReportDiagnostic(diag);
+            }
+        });
     }
 
-    private static void GenerateSource(
+    private static void GenerateSourceWithOptions(
         SourceProductionContext context,
-        (AdditionalText File, Compilation Compilation) input)
+        AdditionalText file,
+        Compilation compilation,
+        string? providedRootNamespace)
     {
-        var (file, compilation) = input;
         var sourceText = file.GetText(context.CancellationToken);
         if (sourceText == null)
         {
@@ -73,8 +109,22 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
             var razorPreserver = new RazorPreserver();
             var contentWithPlaceholders = razorPreserver.ExtractRazorSyntax(markdownContent);
 
-            // Get root namespace from compilation
-            var rootNamespace = compilation.AssemblyName ?? "Generated";
+            // Report any Razor preservation/parsing errors (T103)
+            var razorErrors = razorPreserver.GetErrors();
+            foreach (var err in razorErrors)
+            {
+                var diagnostic = Diagnostic.Create(
+                    Diagnostics.DiagnosticDescriptors.MalformedRazorSyntax,
+                    Location.None,
+                    fileName,
+                    err);
+                context.ReportDiagnostic(diagnostic);
+            }
+
+            // Prefer the project's RootNamespace (from MSBuild) when available; fall back to assembly name
+            var rootNamespace = !string.IsNullOrWhiteSpace(providedRootNamespace)
+                ? providedRootNamespace!
+                : (compilation.AssemblyName ?? "Generated");
             
             // For namespace generation, we'll use a simple heuristic
             // The file path typically contains project structure
@@ -92,20 +142,64 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
             var codeBlocks = ExtractCodeBlocks(razorPreserver);
 
             // Attempt to resolve referenced component types in the current compilation so
-            // we can emit fully-qualified type names (avoids needing fragile using directives)
+            // we can emit fully-qualified type names (avoids needing fragile using directives).
+            // Strategy:
+            // 1) Scan the HTML for component tag simple names.
+            // 2) For each name, first try to find a type in this compilation by simple name
+            //    (FindTypeNamespaceBySimpleName). If found and it's a component, emit the
+            //    fully-qualified namespace for that type.
+            // 3) If not found, respect explicit front-matter `componentNamespaces` by trying
+            //    to resolve the type using those namespaces.
+            // 4) If still unresolved, try common candidate namespaces under the project's
+            //    root namespace as a last attempt.
+            // 5) If unresolved after all attempts, emit MD006 to clearly inform the user.
+
             var componentTypeMap = new Dictionary<string, string>(StringComparer.Ordinal);
             var componentNamePattern = new System.Text.RegularExpressions.Regex(@"<([A-Z][A-Za-z0-9_]*)\b");
             var matches = componentNamePattern.Matches(htmlContent);
-            // Collect all component simple names found in the content
             var componentNames = new HashSet<string>(StringComparer.Ordinal);
+
             foreach (System.Text.RegularExpressions.Match m in matches)
             {
                 var name = m.Groups[1].Value;
-                componentNames.Add(name);
-                if (string.IsNullOrEmpty(name) || componentTypeMap.ContainsKey(name))
+                if (string.IsNullOrEmpty(name) || componentNames.Contains(name))
+                {
                     continue;
+                }
+                componentNames.Add(name);
 
-                // Try common namespaces where components may live
+                // 1) Try to find any type in the compilation with this simple name (preferred)
+                var discoveredNs = FindTypeNamespaceBySimpleName(compilation, name);
+                if (!string.IsNullOrEmpty(discoveredNs))
+                {
+                    componentTypeMap[name] = discoveredNs;
+                    continue;
+                }
+
+                // 2) If front-matter provides explicit component namespaces, attempt to resolve
+                if (metadata.ComponentNamespaces != null && metadata.ComponentNamespaces.Count > 0)
+                {
+                    foreach (var ns in metadata.ComponentNamespaces)
+                    {
+                        if (string.IsNullOrWhiteSpace(ns))
+                        {
+                            continue;
+                        }
+
+                        var full = ns.Trim().TrimEnd('.') + "." + name;
+                        var symbol = compilation.GetTypeByMetadataName(full);
+                        if (symbol != null && IsComponentType(symbol))
+                        {
+                            componentTypeMap[name] = symbol.ContainingNamespace?.ToDisplayString() ?? ns.Trim();
+                            break;
+                        }
+                    }
+
+                    if (componentTypeMap.ContainsKey(name))
+                        continue;
+                }
+
+                // 3) Try common candidate namespaces under the project's root namespace
                 var candidates = new[] {
                     $"{rootNamespace}.Components.{name}",
                     $"{rootNamespace}.Components.Shared.{name}",
@@ -117,79 +211,26 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
                 foreach (var full in candidates)
                 {
                     var symbol = compilation.GetTypeByMetadataName(full);
-                    if (symbol != null)
+                    if (symbol != null && IsComponentType(symbol))
                     {
-                        // Ensure the resolved type is a Blazor component (inherits ComponentBase)
-                        if (IsComponentType(symbol))
+                        var ns = symbol.ContainingNamespace?.ToDisplayString();
+                        if (!string.IsNullOrEmpty(ns))
                         {
-                            var ns = symbol.ContainingNamespace?.ToDisplayString() ?? string.Empty;
-                            if (!string.IsNullOrEmpty(ns))
-                            {
-                                componentTypeMap[name] = ns;
-                                break;
-                            }
+                            componentTypeMap[name] = ns;
+                            break;
                         }
                     }
                 }
-                // If we couldn't resolve the type via compilation (may happen for generated types
-                // in other projects or generation order), fall back to the common Components
-                // namespace under the root assembly name so generated code can reference
-                // Markdn.Blazor.App.Components.<Name> which matches typical layout.
+
+                // 4) If still unresolved, report a diagnostic so the user knows how to fix it
                 if (!componentTypeMap.ContainsKey(name))
                 {
-                    // Try to find any type in the compilation that has the simple name
-                    var discoveredNs = FindTypeNamespaceBySimpleName(compilation, name);
-                    if (!string.IsNullOrEmpty(discoveredNs))
-                    {
-                        componentTypeMap[name] = discoveredNs;
-                    }
-                    else
-                    {
-                        // Last-resort fallback: prefer Components.Shared (common for small UI
-                        // building blocks), then fall back to Components.
-                        componentTypeMap[name] = rootNamespace + ".Components.Shared";
-                    }
-                }
-
-                // If explicit component namespaces are provided in the front-matter, prefer them
-                // and try to resolve any names that remain unresolved.
-                if (metadata.ComponentNamespaces != null && metadata.ComponentNamespaces.Count > 0)
-                {
-                    foreach (var compName in componentNames)
-                    {
-                        if (componentTypeMap.ContainsKey(compName))
-                        {
-                            continue;
-                        }
-
-                        foreach (var ns in metadata.ComponentNamespaces)
-                        {
-                            if (string.IsNullOrWhiteSpace(ns))
-                            {
-                                continue;
-                            }
-
-                            var full = ns.Trim().TrimEnd('.') + "." + compName;
-                            var symbol = compilation.GetTypeByMetadataName(full);
-                            if (symbol != null && IsComponentType(symbol))
-                            {
-                                componentTypeMap[compName] = symbol.ContainingNamespace?.ToDisplayString() ?? ns;
-                                break;
-                            }
-                        }
-
-                        // If still unresolved, emit a helpful diagnostic (MD006) telling the user
-                        // they can add explicit componentNamespaces to the front-matter.
-                        if (!componentTypeMap.ContainsKey(compName))
-                        {
-                            var diagnostic = Diagnostic.Create(
-                                Diagnostics.DiagnosticDescriptors.UnresolvableComponentReference,
-                                Location.None,
-                                compName,
-                                fileName);
-                            context.ReportDiagnostic(diagnostic);
-                        }
-                    }
+                    var diagnostic = Diagnostic.Create(
+                        Diagnostics.DiagnosticDescriptors.UnresolvableComponentReference,
+                        Location.None,
+                        name,
+                        fileName);
+                    context.ReportDiagnostic(diagnostic);
                 }
             }
 
@@ -574,7 +615,33 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
 
     private static bool NamespaceExists(Compilation compilation, string namespaceName)
     {
-        return FindNamespaceSymbol(compilation.GlobalNamespace, namespaceName) != null;
+        var ns = FindNamespaceSymbol(compilation.GlobalNamespace, namespaceName);
+        if (ns == null)
+            return false;
+
+        // Consider a namespace to "exist" for our purposes only if it contains any type members
+        // (placeholder/empty namespace declarations without types should not count).
+        return NamespaceHasAnyType(ns);
+    }
+
+    private static bool NamespaceHasAnyType(INamespaceSymbol ns)
+    {
+        try
+        {
+            if (ns.GetTypeMembers().Length > 0)
+                return true;
+
+            foreach (var child in ns.GetNamespaceMembers())
+            {
+                if (NamespaceHasAnyType(child))
+                    return true;
+            }
+        }
+        catch
+        {
+            // swallow and fall through
+        }
+        return false;
     }
 
     private static INamespaceSymbol? FindNamespaceSymbol(INamespaceSymbol ns, string target)

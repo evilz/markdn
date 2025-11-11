@@ -421,16 +421,19 @@ public static class RenderTreeBuilderEmitter
     {
         // Determine fully-qualified component type using provided map or fallback to componentNamespace
         string qualifiedType;
-        if (availableNamespaces != null)
-        {
-            // If the generator emitted using directives for candidate namespaces, prefer
-            // leaving the type unqualified so the using directives can resolve it.
-            qualifiedType = segment.ComponentName;
-        }
-        else if (componentTypeMap != null && componentTypeMap.TryGetValue(segment.ComponentName, out var resolvedNamespace) && !string.IsNullOrEmpty(resolvedNamespace))
+        // Prefer an explicitly resolved component namespace (from compilation) and emit
+        // a fully-qualified type to avoid depending on generated using directives.
+        if (componentTypeMap != null && componentTypeMap.TryGetValue(segment.ComponentName, out var resolvedNamespace) && !string.IsNullOrEmpty(resolvedNamespace))
         {
             // If we resolved to a specific namespace for this component, use fully-qualified name
             qualifiedType = $"global::{resolvedNamespace}.{segment.ComponentName}";
+        }
+        else if (availableNamespaces != null)
+        {
+            // If no explicit resolution was found, but the generator will emit using
+            // directives for candidate namespaces, prefer leaving the type unqualified
+            // so normal using resolution can succeed.
+            qualifiedType = segment.ComponentName;
         }
         else if (!string.IsNullOrEmpty(componentNamespace))
         {

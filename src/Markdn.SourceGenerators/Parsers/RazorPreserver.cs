@@ -12,6 +12,7 @@ namespace Markdn.SourceGenerators.Parsers;
 public sealed class RazorPreserver
 {
     private readonly Dictionary<string, string> _preservedBlocks = new Dictionary<string, string>();
+    private readonly List<string> _errors = new List<string>();
     private int _blockCounter = 0;
 
     /// <summary>
@@ -74,6 +75,11 @@ public sealed class RazorPreserver
     }
 
     /// <summary>
+    /// Get parsing errors detected while preserving Razor syntax (e.g., unmatched braces).
+    /// </summary>
+    public IReadOnlyList<string> GetErrors() => _errors;
+
+    /// <summary>
     /// Preserve @code {} blocks.
     /// Pattern: @code { ... } (can be multiline)
     /// </summary>
@@ -88,12 +94,20 @@ public sealed class RazorPreserver
             var startIndex = match.Index;
             var openBraceIndex = content.IndexOf('{', startIndex);
             
-            if (openBraceIndex == -1) continue;
+            if (openBraceIndex == -1)
+            {
+                _errors.Add($"Could not find opening '{{' for @code block starting at index {startIndex}.");
+                continue;
+            }
 
             // Find matching closing brace
             var closeBraceIndex = FindMatchingBrace(content, openBraceIndex);
             
-            if (closeBraceIndex == -1) continue;
+            if (closeBraceIndex == -1)
+            {
+                _errors.Add($"Could not find matching '}}' for @code block starting at index {startIndex}.");
+                continue;
+            }
 
             // Extract the entire @code block
             var codeBlock = content.Substring(startIndex, closeBraceIndex - startIndex + 1);
@@ -147,7 +161,11 @@ public sealed class RazorPreserver
                     searchIndex++;
                 }
                 
-                if (closingParenIndex == -1) continue;
+                if (closingParenIndex == -1)
+                {
+                    _errors.Add($"Could not find closing ')' for control flow starting at index {startIndex} (keyword: {keyword}).");
+                    continue;
+                }
                 
                 // Find the opening brace after the closing parenthesis
                 var braceSearchIndex = closingParenIndex + 1;
@@ -169,12 +187,20 @@ public sealed class RazorPreserver
                     braceSearchIndex++;
                 }
                 
-                if (openBraceIndex == -1) continue;
+                if (openBraceIndex == -1)
+                {
+                    _errors.Add($"Could not find '{{' after control flow parentheses starting at index {closingParenIndex} (keyword: {keyword}).");
+                    continue;
+                }
 
                 // Find matching closing brace
                 var closeBraceIndex = FindMatchingBrace(content, openBraceIndex);
                 
-                if (closeBraceIndex == -1) continue;
+                if (closeBraceIndex == -1)
+                {
+                    _errors.Add($"Could not find matching '}}' for control flow block starting at index {startIndex} (keyword: {keyword}).");
+                    continue;
+                }
 
                 // Extract the entire control flow block
                 var controlFlowBlock = content.Substring(startIndex, closeBraceIndex - startIndex + 1);

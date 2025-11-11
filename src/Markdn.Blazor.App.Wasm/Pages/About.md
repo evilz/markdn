@@ -1,3 +1,8 @@
+---
+url: /about-legacy
+title: About This Project
+---
+
 # About This Project
 
 Welcome to the **Markdn Blazor Components** demo!

@@ -10,7 +10,6 @@ This is the **About** page, demonstrating automatic routing from YAML front matt
 ## Features
 
 - ✅ Single route: `/about`
- - ✅ Single route: `/about`
 - ✅ Auto-generated `[Route("/about")]` attribute
 - ✅ No manual Razor wrapper needed
 

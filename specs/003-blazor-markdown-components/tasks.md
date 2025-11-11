@@ -62,9 +62,9 @@ Per plan.md, this feature creates two new projects:
 - [x] T024 Create RenderTreeBuilderEmitter in src/Markdn.SourceGenerators/Emitters/RenderTreeBuilderEmitter.cs
 - [x] T016 [P] Create MarkdigPipelineBuilder in src/Markdn.SourceGenerators/Parsers/MarkdigPipelineBuilder.cs for custom Markdig pipeline configuration
   - **Note**: Markdig created but not usable due to source generator assembly isolation. Using BasicMarkdownParser.cs instead (CommonMark subset: H1-H6, bold, italic, strikethrough, links, code blocks, lists)
-- [ ] T017 Create RazorSyntaxPreserver implementing IInlineParser in src/Markdn.SourceGenerators/Parsers/RazorSyntaxPreserver.cs for preserving @ expressions and @code blocks
-- [ ] T018 [P] Create ComponentTagParser implementing IInlineParser in src/Markdn.SourceGenerators/Parsers/ComponentTagParser.cs for preserving <Component /> tags
-- [ ] T019 Create MarkdownComponentParser orchestrator in src/Markdn.SourceGenerators/Parsers/MarkdownComponentParser.cs that combines YAML, Markdig, and Razor parsing
+- [x] T017 Create RazorSyntaxPreserver implementing IInlineParser in src/Markdn.SourceGenerators/Parsers/RazorSyntaxPreserver.cs for preserving @ expressions and @code blocks
+- [x] T018 [P] Create ComponentTagParser implementing IInlineParser in src/Markdn.SourceGenerators/Parsers/ComponentTagParser.cs for preserving <Component /> tags
+- [x] T019 Create MarkdownComponentParser orchestrator in src/Markdn.SourceGenerators/Parsers/MarkdownComponentParser.cs that combines YAML, Markdig, and Razor parsing
 - [x] T020 Create ComponentNameGenerator in src/Markdn.SourceGenerators/Generators/ComponentNameGenerator.cs for filename to class name conversion
 - [x] T021 [P] Create NamespaceGenerator in src/Markdn.SourceGenerators/Generators/NamespaceGenerator.cs for directory structure to namespace mapping
 - [x] T022 Create DiagnosticDescriptors in src/Markdn.SourceGenerators/Diagnostics/DiagnosticDescriptors.cs with codes MD001-MD008

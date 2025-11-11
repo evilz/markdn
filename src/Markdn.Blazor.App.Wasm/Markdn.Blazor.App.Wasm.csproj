@@ -19,6 +19,12 @@
     <ProjectReference Include="..\Markdn.SourceGenerators\Markdn.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
+  <!-- Page manifest generation removed: CodeTaskFactory inline tasks are not supported by .NET SDK MSBuild.
+       Previously we attempted to generate wwwroot/_page-manifest.json at build time. This approach failed on
+       some SDKs (CodeTaskFactory not available). For now, rely on runtime reflection fallback in NavMenu.
+       If deterministic build-time manifests are required, consider adding a small dotnet tool or an MSBuild
+       task assembly (prebuilt) that can be referenced via UsingTask. -->
+
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.0" PrivateAssets="all" />
