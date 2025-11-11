@@ -248,10 +248,10 @@ Per plan.md, this feature creates two new projects:
  - [x] T111 [P] Document error codes MD001-MD008 in specs/003-blazor-markdown-components/contracts/component-generation-schema.md
  - [x] T112 [P] Update quickstart.md with complete examples for all features
  - [x] T113 [P] Add troubleshooting section to quickstart.md for common issues
-- [ ] T114 Create comprehensive example: blog post component with all features in src/Markdn.Blazor.App/Pages/Blog/Post.md
-- [ ] T115 Verify all success criteria from spec.md (SC-001 through SC-009)
-- [ ] T116 Performance test: create 100+ Markdown files and verify build time is acceptable
-- [ ] T117 Run quickstart.md validation walkthrough from start to finish
+- [x] T114 Create comprehensive example: blog post component with all features in src/Markdn.Blazor.App/Pages/Blog/Post.md
+- [x] T115 Verify all success criteria from spec.md (SC-001 through SC-009)
+- [x] T116 Performance test: create 100+ Markdown files and verify build time is acceptable
+- [x] T117 Run quickstart.md validation walkthrough from start to finish
 
 ---
 
