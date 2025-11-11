@@ -109,6 +109,28 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
             var razorPreserver = new RazorPreserver();
             var contentWithPlaceholders = razorPreserver.ExtractRazorSyntax(markdownContent);
 
+            // T104: Surface parser-level component tag concerns early.
+            // The RazorPreserver collects component tag names it found; report a low-confidence
+            // MD006 (UnresolvableComponentReference) for names that are not valid C# identifiers
+            // (this helps catch obvious user mistakes like invalid characters or hyphens).
+            var parserComponentNames = razorPreserver.GetComponentNames();
+            foreach (var compName in parserComponentNames)
+            {
+                if (string.IsNullOrWhiteSpace(compName))
+                    continue;
+
+                // If the name is not a valid C# identifier, warn early
+                if (!Microsoft.CodeAnalysis.CSharp.SyntaxFacts.IsValidIdentifier(compName))
+                {
+                    var diagnostic = Diagnostic.Create(
+                        Diagnostics.DiagnosticDescriptors.UnresolvableComponentReference,
+                        Location.None,
+                        compName,
+                        fileName);
+                    context.ReportDiagnostic(diagnostic);
+                }
+            }
+
             // Report any Razor preservation/parsing errors (T103)
             var razorErrors = razorPreserver.GetErrors();
             foreach (var err in razorErrors)

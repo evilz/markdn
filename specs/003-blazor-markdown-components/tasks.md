@@ -236,15 +236,14 @@ Per plan.md, this feature creates two new projects:
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T102 [P] Implement diagnostic reporting for invalid YAML syntax (MD001) in YamlFrontMatterParser
 - [x] T102 [P] Implement diagnostic reporting for invalid YAML syntax (MD001) in YamlFrontMatterParser
  - [x] T103 [P] Implement diagnostic reporting for malformed Razor syntax (MD007) in RazorSyntaxPreserver
-- [ ] T104 [P] Add warning diagnostic for unresolvable component references (MD006) in ComponentTagParser
+- [x] T104 [P] Add warning diagnostic for unresolvable component references (MD006) in ComponentTagParser
 - [x] T105 [P] Add auto-generated file header with generator version and "do not edit" warning in ComponentCodeEmitter
  - [x] T106 [P] Implement sequence number management for RenderTreeBuilder (unique sequential numbers) in RenderTreeBuilderEmitter
- - [ ] T107 Add support for date prefix removal in filename (e.g., 2024-11-10-post.md → Post class) in ComponentNameGenerator
- - [ ] T108 Add support for kebab-case to PascalCase conversion in ComponentNameGenerator
- - [ ] T109 Add support for reserved keyword handling (prefix @) in ComponentNameGenerator
+ - [x] T107 Add support for date prefix removal in filename (e.g., 2024-11-10-post.md  Post class) in ComponentNameGenerator
+ - [x] T108 Add support for kebab-case to PascalCase conversion in ComponentNameGenerator
+ - [x] T109 Add support for reserved keyword handling (prefix @) in ComponentNameGenerator
  - [x] T110 Optimize generated code: combine adjacent static HTML into single AddMarkupContent call in RenderTreeBuilderEmitter
  - [x] T111 [P] Document error codes MD001-MD008 in specs/003-blazor-markdown-components/contracts/component-generation-schema.md
  - [x] T112 [P] Update quickstart.md with complete examples for all features

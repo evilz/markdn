@@ -13,6 +13,7 @@ public sealed class RazorPreserver
 {
     private readonly Dictionary<string, string> _preservedBlocks = new Dictionary<string, string>();
     private readonly List<string> _errors = new List<string>();
+    private readonly HashSet<string> _componentNames = new HashSet<string>(StringComparer.Ordinal);
     private int _blockCounter = 0;
 
     /// <summary>
@@ -222,16 +223,31 @@ public sealed class RazorPreserver
         // Match component tags: <ComponentName ... /> or <ComponentName>...</ComponentName>
         // Component names start with uppercase letter
         var pattern = @"<([A-Z][a-zA-Z0-9_]*)((?:\s+[^>]*)?)(?:\s*/>|>(.*?)</\1>)";
-        
+
         var result = Regex.Replace(content, pattern, match =>
         {
             var componentTag = match.Value;
+            var nameGroup = match.Groups[1].Value;
+            if (!string.IsNullOrEmpty(nameGroup))
+            {
+                _componentNames.Add(nameGroup);
+            }
+
             var placeholder = CreatePlaceholder();
             _preservedBlocks[placeholder] = componentTag;
             return placeholder;
         }, RegexOptions.Singleline);
 
         return result;
+    }
+
+    /// <summary>
+    /// Get the list of preserved component names that were found while preserving component tags.
+    /// This allows higher layers (the generator) to make resolution decisions or report diagnostics.
+    /// </summary>
+    public IReadOnlyList<string> GetComponentNames()
+    {
+        return new List<string>(_componentNames);
     }
 
     /// <summary>
