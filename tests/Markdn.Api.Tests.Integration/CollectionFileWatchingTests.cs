@@ -83,11 +83,11 @@ date: 2024-01-01
 
         await Task.Delay(1000); // Wait for initial load
 
-        // Load once to populate cache
-        var initialResponse = await _client.GetAsync("/api/collections/blog/items");
-        var initialItems = await initialResponse.Content.ReadFromJsonAsync<List<ContentItem>>();
-        initialItems.Should().NotBeNull();
-        initialItems!.Count.Should().Be(1);
+    // Load once to populate cache
+    var initialResponse = await _client.GetAsync("/api/collections/blog/items");
+    var initialWrapper = await initialResponse.Content.ReadFromJsonAsync<CollectionItemsResponse>();
+    initialWrapper.Should().NotBeNull();
+    initialWrapper!.Items.Count.Should().Be(1);
 
         // Act - Create a new file
         var file2 = Path.Combine(blogDir, "post2.md");
@@ -100,14 +100,14 @@ date: 2024-01-02
 
         await Task.Delay(1000); // Wait for file watcher debounce and cache invalidation
 
-        var response = await _client.GetAsync("/api/collections/blog/items");
-        var items = await response.Content.ReadFromJsonAsync<List<ContentItem>>();
+    var response = await _client.GetAsync("/api/collections/blog/items");
+    var wrapper = await response.Content.ReadFromJsonAsync<CollectionItemsResponse>();
 
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        items.Should().NotBeNull();
-        items!.Count.Should().Be(2);
-        items.Should().Contain(i => i.Title == "Second Post");
+    // Assert
+    response.StatusCode.Should().Be(HttpStatusCode.OK);
+    wrapper.Should().NotBeNull();
+    wrapper!.Items.Count.Should().Be(2);
+    wrapper.Items.Should().Contain(i => i.Title == "Second Post");
 
         // Cleanup
         Directory.Delete(_testContentDir, true);
@@ -128,9 +128,9 @@ date: 2024-01-01
 
         await Task.Delay(1000); // Wait for initial load
 
-        // Load once to populate cache
-        var initialResponse = await _client.GetAsync("/api/collections/blog/items");
-        initialResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+    // Load once to populate cache
+    var initialResponse = await _client.GetAsync("/api/collections/blog/items");
+    initialResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // Act - Modify the file
         await File.WriteAllTextAsync(testFile, @"---
@@ -142,16 +142,16 @@ date: 2024-01-01
 
         await Task.Delay(1000); // Wait for file watcher debounce and cache invalidation
 
-        var response = await _client.GetAsync("/api/collections/blog/items");
-        var items = await response.Content.ReadFromJsonAsync<List<ContentItem>>();
+    var response = await _client.GetAsync("/api/collections/blog/items");
+    var wrapper = await response.Content.ReadFromJsonAsync<CollectionItemsResponse>();
 
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        items.Should().NotBeNull();
-        items!.Should().ContainSingle();
-        var item = items[0];
-        item.Title.Should().Be("Updated Title");
-        item.HtmlContent.Should().Contain("Updated Content");
+    // Assert
+    response.StatusCode.Should().Be(HttpStatusCode.OK);
+    wrapper.Should().NotBeNull();
+    wrapper!.Items.Should().ContainSingle();
+    var item = wrapper.Items[0];
+    item.Title.Should().Be("Updated Title");
+    item.HtmlContent.Should().Contain("Updated Content");
 
         // Cleanup
         Directory.Delete(_testContentDir, true);
@@ -181,25 +181,25 @@ date: 2024-01-02
 
         await Task.Delay(1000); // Wait for initial load
 
-        // Load once to populate cache
-        var initialResponse = await _client.GetAsync("/api/collections/blog/items");
-        var initialItems = await initialResponse.Content.ReadFromJsonAsync<List<ContentItem>>();
-        initialItems.Should().NotBeNull();
-        initialItems!.Count.Should().Be(2);
+    // Load once to populate cache
+    var initialResponse = await _client.GetAsync("/api/collections/blog/items");
+    var initialWrapper = await initialResponse.Content.ReadFromJsonAsync<CollectionItemsResponse>();
+    initialWrapper.Should().NotBeNull();
+    initialWrapper!.Items.Count.Should().Be(2);
 
         // Act - Delete one file
         File.Delete(file2);
 
         await Task.Delay(1000); // Wait for file watcher debounce and cache invalidation
 
-        var response = await _client.GetAsync("/api/collections/blog/items");
-        var items = await response.Content.ReadFromJsonAsync<List<ContentItem>>();
+    var response = await _client.GetAsync("/api/collections/blog/items");
+    var wrapper = await response.Content.ReadFromJsonAsync<CollectionItemsResponse>();
 
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        items.Should().NotBeNull();
-        items!.Should().ContainSingle();
-        items[0].Title.Should().Be("First Post");
+    // Assert
+    response.StatusCode.Should().Be(HttpStatusCode.OK);
+    wrapper.Should().NotBeNull();
+    wrapper!.Items.Should().ContainSingle();
+    wrapper.Items[0].Title.Should().Be("First Post");
 
         // Cleanup
         Directory.Delete(_testContentDir, true);

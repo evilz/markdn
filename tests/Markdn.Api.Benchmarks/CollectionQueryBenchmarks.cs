@@ -64,6 +64,10 @@ public class CollectionQueryBenchmarks
         var meterFactory = new TestMeterFactory();
 
         var collectionLoader = new TestCollectionLoader();
+
+        var schemaValidator = new SchemaValidator(NullLogger<SchemaValidator>.Instance);
+        var contentItemValidator = new ContentItemValidator(schemaValidator, NullLogger<ContentItemValidator>.Instance);
+
         _collectionService = new CollectionService(
             collectionLoader,
             frontMatterParser,
@@ -72,11 +76,11 @@ public class CollectionQueryBenchmarks
             cache,
             options,
             queryExecutor,
+            contentItemValidator,
             activitySource,
             meterFactory,
             NullLogger<CollectionService>.Instance);
 
-        var schemaValidator = new SchemaValidator(NullLogger<SchemaValidator>.Instance);
         _queryParser = new QueryParser(schemaValidator, NullLogger<QueryParser>.Instance);
     }
 

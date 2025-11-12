@@ -1,0 +1,14 @@
+@using Microsoft.AspNetCore.Components
+@namespace Markdn.Blazor.App.Components.Shared
+
+<div class="alert alert-@Severity.ToLower()" role="alert">
+    @ChildContent
+</div>
+
+@code {
+    [Parameter]
+    public string Severity { get; set; } = "Info";
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

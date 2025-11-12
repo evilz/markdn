@@ -244,8 +244,8 @@ title: Test Post
 
             var updatedItemsResponse = await updatedResponse.Content.ReadFromJsonAsync<CollectionItemsResponse>();
             updatedItemsResponse.Should().NotBeNull();
-            updatedItemsResponse!.Items.Should().HaveCount(1);
-            updatedItemsResponse.Items[0].IsValid.Should().BeFalse("post is missing required 'author' field after schema change");
+            // After schema change invalid items are excluded from the normal items list
+            updatedItemsResponse!.Items.Should().BeEmpty();
 
             // Act 4 - Validate collection manually
             var validateResponse = await client.PostAsync("/api/collections/blog/validate-all", null);

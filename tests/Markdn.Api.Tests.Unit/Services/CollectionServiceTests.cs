@@ -24,7 +24,7 @@ public class CollectionServiceTests
     private readonly Mock<SlugGenerator> _mockSlugGenerator;
     private readonly Mock<IMemoryCache> _mockCache;
     private readonly Mock<IOptions<MarkdnOptions>> _mockOptions;
-    private readonly Mock<QueryExecutor> _mockQueryExecutor;
+    private readonly QueryExecutor _queryExecutor;
     private readonly ActivitySource _activitySource;
     private readonly Mock<IMeterFactory> _mockMeterFactory;
     private readonly Mock<ILogger<CollectionService>> _mockLogger;
@@ -38,7 +38,8 @@ public class CollectionServiceTests
         _mockSlugGenerator = new Mock<SlugGenerator>();
         _mockCache = new Mock<IMemoryCache>();
         _mockOptions = new Mock<IOptions<MarkdnOptions>>();
-        _mockQueryExecutor = new Mock<QueryExecutor>();
+    var queryExecutorLogger = new Mock<ILogger<QueryExecutor>>();
+    _queryExecutor = new QueryExecutor(queryExecutorLogger.Object);
         _activitySource = new ActivitySource("Markdn.Api.Tests");
         _mockMeterFactory = new Mock<IMeterFactory>();
         _mockLogger = new Mock<ILogger<CollectionService>>();
@@ -53,6 +54,12 @@ public class CollectionServiceTests
         var testMeter = new Meter("Markdn.Api.Tests");
         _mockMeterFactory.Setup(f => f.Create(It.IsAny<MeterOptions>())).Returns(testMeter);
 
+        // Create a simple ContentItemValidator with a mocked ISchemaValidator
+        var mockSchemaValidator = new Mock<Markdn.Api.Services.ISchemaValidator>();
+        var contentItemValidator = new Markdn.Api.Validation.ContentItemValidator(
+            mockSchemaValidator.Object,
+            Mock.Of<ILogger<Markdn.Api.Validation.ContentItemValidator>>());
+
         _sut = new CollectionService(
             _mockCollectionLoader.Object,
             _mockFrontMatterParser.Object,
@@ -60,7 +67,8 @@ public class CollectionServiceTests
             _mockSlugGenerator.Object,
             _mockCache.Object,
             _mockOptions.Object,
-            _mockQueryExecutor.Object,
+            _queryExecutor,
+            contentItemValidator,
             _activitySource,
             _mockMeterFactory.Object,
             _mockLogger.Object);

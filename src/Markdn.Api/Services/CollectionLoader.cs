@@ -13,6 +13,7 @@ namespace Markdn.Api.Services;
 public class CollectionLoader : ICollectionLoader, IDisposable
 {
     private readonly CollectionsOptions _options;
+    private readonly MarkdnOptions _markdnOptions;
     private readonly ILogger<CollectionLoader> _logger;
     private readonly IMemoryCache _cache;
     private readonly JsonSerializerOptions _jsonOptions;
@@ -28,10 +29,12 @@ public class CollectionLoader : ICollectionLoader, IDisposable
 
     public CollectionLoader(
         IOptions<CollectionsOptions> options,
+        IOptions<MarkdnOptions> markdnOptions,
         IMemoryCache cache,
         ILogger<CollectionLoader> logger)
     {
         _options = options.Value;
+        _markdnOptions = markdnOptions.Value;
         _cache = cache;
         _logger = logger;
         _jsonOptions = new JsonSerializerOptions
@@ -42,6 +45,18 @@ public class CollectionLoader : ICollectionLoader, IDisposable
         };
 
         InitializeFileWatcher();
+    }
+
+    /// <summary>
+    /// Backwards-compatible constructor for callers that don't provide MarkdnOptions.
+    /// Delegates to the main constructor using default MarkdnOptions.
+    /// </summary>
+    public CollectionLoader(
+        IOptions<CollectionsOptions> options,
+        IMemoryCache cache,
+        ILogger<CollectionLoader> logger)
+        : this(options, Microsoft.Extensions.Options.Options.Create(new MarkdnOptions()), cache, logger)
+    {
     }
 
     /// <inheritdoc />
@@ -56,20 +71,21 @@ public class CollectionLoader : ICollectionLoader, IDisposable
             return cachedCollections;
         }
 
-        _logger.LogInformation("Loading collections from {ConfigFile}", _options.ConfigurationFilePath);
+        var resolvedConfigPath = GetResolvedConfigurationFilePath();
+        _logger.LogInformation("Loading collections from {ConfigFile}", resolvedConfigPath);
 
-        if (!File.Exists(_options.ConfigurationFilePath))
+        if (!File.Exists(resolvedConfigPath))
         {
             _logger.LogWarning("Collections configuration file not found at {ConfigFile}", 
-                _options.ConfigurationFilePath);
+                resolvedConfigPath);
             throw new FileNotFoundException(
-                $"Collections configuration file not found: {_options.ConfigurationFilePath}",
-                _options.ConfigurationFilePath);
+                $"Collections configuration file not found: {resolvedConfigPath}",
+                resolvedConfigPath);
         }
 
         try
         {
-            using var stream = File.OpenRead(_options.ConfigurationFilePath);
+            using var stream = File.OpenRead(resolvedConfigPath);
             var config = await JsonSerializer.DeserializeAsync<CollectionsConfiguration>(
                 stream, _jsonOptions, cancellationToken).ConfigureAwait(false);
 
@@ -105,7 +121,19 @@ public class CollectionLoader : ICollectionLoader, IDisposable
                 AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10),
                 Size = 1 // Each collection definition counts as 1 unit
             };
-            _cache.Set(CacheKey, collections, cacheOptions);
+
+            // Defensive: some test harnesses provide a mocked IMemoryCache where CreateEntry
+            // may return null (causing Set extension to throw NullReferenceException).
+            // Wrap cache set in try/catch and continue if caching fails — caching is an
+            // optimization and should not break collection loading.
+            try
+            {
+                _cache?.Set(CacheKey, collections, cacheOptions);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to cache collections, continuing without cache");
+            }
 
             return collections;
         }
@@ -282,17 +310,19 @@ public class CollectionLoader : ICollectionLoader, IDisposable
 
     private void InitializeFileWatcher()
     {
-        if (!File.Exists(_options.ConfigurationFilePath))
+        var resolvedConfigPath = GetResolvedConfigurationFilePath();
+
+        if (!File.Exists(resolvedConfigPath))
         {
             _logger.LogWarning("Cannot watch non-existent configuration file: {ConfigFile}",
-                _options.ConfigurationFilePath);
+                resolvedConfigPath);
             return;
         }
 
         try
         {
-            var directory = Path.GetDirectoryName(_options.ConfigurationFilePath);
-            var fileName = Path.GetFileName(_options.ConfigurationFilePath);
+            var directory = Path.GetDirectoryName(resolvedConfigPath);
+            var fileName = Path.GetFileName(resolvedConfigPath);
 
             if (string.IsNullOrEmpty(directory) || string.IsNullOrEmpty(fileName))
             {
@@ -313,7 +343,7 @@ public class CollectionLoader : ICollectionLoader, IDisposable
             _configWatcher.Renamed += OnConfigFileChanged;
 
             _logger.LogInformation("Started watching collections configuration file: {ConfigFile}",
-                _options.ConfigurationFilePath);
+                resolvedConfigPath);
         }
         catch (Exception ex)
         {
@@ -342,7 +372,7 @@ public class CollectionLoader : ICollectionLoader, IDisposable
                 _logger.LogInformation("Cache invalidated, collections will reload on next access");
 
                 // Raise event for subscribers
-                ConfigurationChanged?.Invoke(this, _options.ConfigurationFilePath);
+                ConfigurationChanged?.Invoke(this, GetResolvedConfigurationFilePath());
             }
             catch (Exception ex)
             {
@@ -354,6 +384,37 @@ public class CollectionLoader : ICollectionLoader, IDisposable
                 _debounceTimer = null;
             }
         }, null, DebounceDelayMs, Timeout.Infinite);
+    }
+
+    private string GetResolvedConfigurationFilePath()
+    {
+        var configPath = _options.ConfigurationFilePath ?? "content/collections.json";
+
+        if (Path.IsPathRooted(configPath))
+        {
+            return Path.GetFullPath(configPath);
+        }
+
+        var contentDir = _markdnOptions?.ContentDirectory ?? "content";
+
+        // If the configPath already begins with the content directory segment (for example
+        // configPath == "content/collections.json" and contentDir == "content"), combining
+        // them would produce "content/content/collections.json" which is incorrect. Detect
+        // that case and return the full path for configPath directly. Otherwise combine
+        // contentDir and configPath as expected.
+        var splitSeparators = new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
+        var configFirstSegment = configPath.Split(splitSeparators, StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault();
+
+        if (!string.IsNullOrEmpty(configFirstSegment) &&
+            string.Equals(configFirstSegment, contentDir, StringComparison.OrdinalIgnoreCase))
+        {
+            // configPath already targets the content directory; return as-is (resolved)
+            return Path.GetFullPath(configPath);
+        }
+
+        var combined = Path.Combine(contentDir, configPath);
+        return Path.GetFullPath(combined);
     }
 
     public void Dispose()

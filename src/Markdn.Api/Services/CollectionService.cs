@@ -24,21 +24,23 @@ public class CollectionService : ICollectionService
     private readonly ILogger<CollectionService> _logger;
     private readonly MarkdnOptions _options;
     private readonly QueryExecutor _queryExecutor;
+    private readonly Validation.ContentItemValidator _contentItemValidator;
     private readonly ActivitySource _activitySource;
     private readonly Counter<long> _cacheHitCounter;
     private readonly Counter<long> _cacheMissCounter;
 
     public CollectionService(
-        ICollectionLoader collectionLoader,
-        FrontMatterParser frontMatterParser,
-        MarkdownParser markdownParser,
-        SlugGenerator slugGenerator,
-        IMemoryCache cache,
-        IOptions<MarkdnOptions> options,
-        QueryExecutor queryExecutor,
-        ActivitySource activitySource,
-        IMeterFactory meterFactory,
-        ILogger<CollectionService> logger)
+    ICollectionLoader collectionLoader,
+    FrontMatterParser frontMatterParser,
+    MarkdownParser markdownParser,
+    SlugGenerator slugGenerator,
+    IMemoryCache cache,
+    IOptions<MarkdnOptions> options,
+    QueryExecutor queryExecutor,
+    Validation.ContentItemValidator contentItemValidator,
+    ActivitySource activitySource,
+    IMeterFactory meterFactory,
+    ILogger<CollectionService> logger)
     {
         _collectionLoader = collectionLoader;
         _frontMatterParser = frontMatterParser;
@@ -49,6 +51,7 @@ public class CollectionService : ICollectionService
         _queryExecutor = queryExecutor;
         _activitySource = activitySource;
         _logger = logger;
+    _contentItemValidator = contentItemValidator ?? throw new ArgumentNullException(nameof(contentItemValidator));
         
         // Create metrics
         var meter = meterFactory.Create("Markdn.Api.CollectionService");
@@ -89,10 +92,10 @@ public class CollectionService : ICollectionService
             return Array.Empty<ContentItem>();
         }
 
-        var items = await LoadCollectionItemsAsync(collection, cancellationToken).ConfigureAwait(false);
-        
-        // Validate slug uniqueness
-        var slugGroups = items.GroupBy(i => i.Slug, StringComparer.OrdinalIgnoreCase)
+        var allItems = await LoadCollectionItemsAsync(collection, cancellationToken).ConfigureAwait(false);
+
+        // Validate slug uniqueness across all items
+        var slugGroups = allItems.GroupBy(i => i.Slug, StringComparer.OrdinalIgnoreCase)
             .Where(g => g.Count() > 1)
             .ToList();
 
@@ -108,18 +111,21 @@ public class CollectionService : ICollectionService
             }
         }
 
+        // Only return & cache validated items for normal consumers
+        var validItems = allItems.Where(i => i.IsValid).ToList();
+
         // Cache for 5 minutes
         var cacheOptions = new MemoryCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5),
-            Size = items.Count // Each item counts as 1 unit
+            Size = validItems.Count // Each item counts as 1 unit
         };
-        _cache.Set(cacheKey, items, cacheOptions);
+        _cache.Set(cacheKey, validItems, cacheOptions);
 
-        _logger.LogInformation("Loaded {Count} items from collection {CollectionName}", 
-            items.Count, collectionName);
+        _logger.LogInformation("Loaded {Count} valid items from collection {CollectionName}", 
+            validItems.Count, collectionName);
 
-        return items;
+        return validItems;
     }
 
     /// <inheritdoc/>
@@ -256,15 +262,8 @@ public class CollectionService : ICollectionService
                 var item = await ParseContentItemAsync(filePath, content, fileInfo, collection, cancellationToken)
                     .ConfigureAwait(false);
 
-                // Only include valid items
-                if (item.IsValid)
-                {
-                    items.Add(item);
-                }
-                else
-                {
-                    _logger.LogWarning("Skipping invalid item: {FilePath}", filePath);
-                }
+                // Include all parsed items (validation status is part of the item)
+                items.Add(item);
             }
             catch (Exception ex)
             {
@@ -388,8 +387,32 @@ public class CollectionService : ICollectionService
             FileSizeBytes = fileInfo.Length,
             HasParsingErrors = hasErrors,
             ParsingWarnings = warnings,
-            IsValid = true // Will be validated if needed
+            IsValid = true // will be updated after schema validation
         };
+
+        // If collection has a schema, validate the item and set validation metadata
+        if (collection?.Schema != null)
+        {
+            try
+            {
+                var validation = await _contentItemValidator.ValidateAsync(item, collection.Schema, cancellationToken).ConfigureAwait(false);
+                item.ValidationResult = validation;
+                item.IsValid = !hasErrors && (validation?.IsValid ?? true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Validation failed for item {FilePath}", filePath);
+                item.ValidationResult = new Models.ValidationResult
+                {
+                    IsValid = false,
+                    Errors = new List<Models.ValidationError>
+                    {
+                        new Models.ValidationError { FieldName = string.Empty, ErrorType = Models.ValidationErrorType.Other, Message = $"Validation exception: {ex.Message}" }
+                    }
+                };
+                item.IsValid = false;
+            }
+        }
 
         return item;
     }
