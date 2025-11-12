@@ -113,12 +113,13 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
             // The RazorPreserver collects component tag names it found; report a low-confidence
             // MD006 (UnresolvableComponentReference) for names that are not valid C# identifiers
             // (this helps catch obvious user mistakes like invalid characters or hyphens).
-            var parserComponentNames = razorPreserver.GetComponentNames();
+            // Filter out empty/whitespace names up-front to keep the loop body focused.
+            var parserComponentNames = razorPreserver.GetComponentNames()
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .Select(n => n!.Trim());
+
             foreach (var compName in parserComponentNames)
             {
-                if (string.IsNullOrWhiteSpace(compName))
-                    continue;
-
                 // If the name is not a valid C# identifier, warn early
                 if (!Microsoft.CodeAnalysis.CSharp.SyntaxFacts.IsValidIdentifier(compName))
                 {

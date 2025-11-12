@@ -397,8 +397,22 @@ public class CollectionLoader : ICollectionLoader, IDisposable
 
         var contentDir = _markdnOptions?.ContentDirectory ?? "content";
 
-        // If the configPath is already starting with the content dir segment (e.g. "content/collections.json"),
-        // Path.Combine will still produce the correct path: e.g. "<contentDir>/content/collections.json".
+        // If the configPath already begins with the content directory segment (for example
+        // configPath == "content/collections.json" and contentDir == "content"), combining
+        // them would produce "content/content/collections.json" which is incorrect. Detect
+        // that case and return the full path for configPath directly. Otherwise combine
+        // contentDir and configPath as expected.
+        var splitSeparators = new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
+        var configFirstSegment = configPath.Split(splitSeparators, StringSplitOptions.RemoveEmptyEntries)
+            .FirstOrDefault();
+
+        if (!string.IsNullOrEmpty(configFirstSegment) &&
+            string.Equals(configFirstSegment, contentDir, StringComparison.OrdinalIgnoreCase))
+        {
+            // configPath already targets the content directory; return as-is (resolved)
+            return Path.GetFullPath(configPath);
+        }
+
         var combined = Path.Combine(contentDir, configPath);
         return Path.GetFullPath(combined);
     }

@@ -89,6 +89,23 @@ public static class ComponentCodeEmitter
             sb.AppendLine();
         }
 
+        // Ensure the parent namespace of the generated component is available as a using
+        // This helps resolve sibling components (e.g., Counter in Pages) without
+        // requiring the generator to perfectly discover every type's namespace.
+        if (!string.IsNullOrWhiteSpace(namespaceValue))
+        {
+            var lastDot = namespaceValue.LastIndexOf('.');
+            if (lastDot > 0)
+            {
+                var parentNs = namespaceValue.Substring(0, lastDot);
+                if (!string.IsNullOrWhiteSpace(parentNs))
+                {
+                    sb.AppendLine($"using {parentNs};");
+                    sb.AppendLine();
+                }
+            }
+        }
+
         // Using directives (from metadata)
         if (metadata.Using != null && metadata.Using.Count > 0)
         {
@@ -149,7 +166,7 @@ public static class ComponentCodeEmitter
         }
 
     // BuildRenderTree method (using RenderTreeBuilderEmitter)
-    sb.Append(RenderTreeBuilderEmitter.EmitBuildRenderTree(htmlContent, metadata, componentTypeMap, namespaceValue, availableNamespaces, indentLevel: 2));
+    sb.Append(RenderTreeBuilderEmitter.EmitBuildRenderTree(htmlContent, metadata, componentTypeMap, indentLevel: 2));
 
         // T059: Emit @code blocks after BuildRenderTree method
         if (codeBlocks != null && codeBlocks.Count > 0)

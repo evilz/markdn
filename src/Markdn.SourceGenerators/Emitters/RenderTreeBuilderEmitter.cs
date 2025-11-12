@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Linq;
 using Markdn.SourceGenerators.Models;
 
 namespace Markdn.SourceGenerators.Emitters;
@@ -20,8 +21,7 @@ public static class RenderTreeBuilderEmitter
     /// <param name="indentLevel">Indentation level (default: 2 for inside class)</param>
     /// <returns>Complete BuildRenderTree method code</returns>
     // componentTypeMap: optional map of component simple name -> fully-qualified namespace (from compilation)
-    // componentNamespace: the namespace of the generated component (used as a fallback)
-    public static string EmitBuildRenderTree(string htmlContent, ComponentMetadata? metadata = null, Dictionary<string, string>? componentTypeMap = null, string componentNamespace = "", IEnumerable<string>? availableNamespaces = null, int indentLevel = 2)
+    public static string EmitBuildRenderTree(string htmlContent, ComponentMetadata? metadata = null, Dictionary<string, string>? componentTypeMap = null, int indentLevel = 2)
     {
         var indent = new string(' ', indentLevel * 4);
         var innerIndent = new string(' ', (indentLevel + 1) * 4);
@@ -45,7 +45,7 @@ public static class RenderTreeBuilderEmitter
         }
         
     // T060-T062: Parse content and emit appropriate builder calls
-    var statements = ParseContentAndEmitStatements(htmlContent, innerIndent, seq, componentTypeMap, componentNamespace, availableNamespaces);
+    var statements = ParseContentAndEmitStatements(htmlContent, innerIndent, seq, componentTypeMap);
         sb.Append(statements);
         
         sb.AppendLine($"{indent}}}");
@@ -58,7 +58,7 @@ public static class RenderTreeBuilderEmitter
     /// T060: Handle inline expressions (@name, @DateTime.Now)
     /// T061: Handle component tags (<Counter />, <Alert>...</Alert>)
     /// </summary>
-    private static string ParseContentAndEmitStatements(string content, string indent, SequenceCounter seq, Dictionary<string, string>? componentTypeMap = null, string componentNamespace = "", IEnumerable<string>? availableNamespaces = null)
+    private static string ParseContentAndEmitStatements(string content, string indent, SequenceCounter seq, Dictionary<string, string>? componentTypeMap = null)
     {
         var sb = new StringBuilder();
         
@@ -107,7 +107,7 @@ public static class RenderTreeBuilderEmitter
                     
                     case SegmentType.Component:
                         // T061: Component reference like <Counter />
-                    EmitComponentCall(sb, segment, seq, indent, componentTypeMap, componentNamespace, availableNamespaces);
+                        EmitComponentCall(sb, segment, seq, indent, componentTypeMap);
                     break;
             }
         }
@@ -390,9 +390,8 @@ public static class RenderTreeBuilderEmitter
             }
         }
         
-        // Check for self-closing tag />
-        bool isSelfClosing = false;
-        string? childContent = null;
+    // Check for self-closing tag or child content
+    string? childContent = null;
         
         if (pos < content.Length && content[pos] == '/')
         {
@@ -400,7 +399,7 @@ public static class RenderTreeBuilderEmitter
             if (pos < content.Length && content[pos] == '>')
             {
                 pos++; // Skip >
-                isSelfClosing = true;
+                // self-closing tag; no child content
             }
         }
         else if (pos < content.Length && content[pos] == '>')
@@ -418,8 +417,7 @@ public static class RenderTreeBuilderEmitter
             }
             else
             {
-                // No closing tag, treat as self-closing
-                isSelfClosing = true;
+                // No closing tag, treat as self-closing (no child content)
             }
         }
         
@@ -439,32 +437,25 @@ public static class RenderTreeBuilderEmitter
     /// T061: OpenComponent, AddAttribute, CloseComponent
     /// T062: ChildContent with RenderFragment
     /// </summary>
-    private static void EmitComponentCall(StringBuilder sb, ContentSegment segment, SequenceCounter seq, string indent, Dictionary<string, string>? componentTypeMap = null, string componentNamespace = "", IEnumerable<string>? availableNamespaces = null)
+    private static void EmitComponentCall(StringBuilder sb, ContentSegment segment, SequenceCounter seq, string indent, Dictionary<string, string>? componentTypeMap = null)
     {
         // Determine fully-qualified component type using provided map or fallback to componentNamespace
         string qualifiedType;
         // Prefer an explicitly resolved component namespace (from compilation) and emit
         // a fully-qualified type to avoid depending on generated using directives.
-        if (componentTypeMap != null && componentTypeMap.TryGetValue(segment.ComponentName, out var resolvedNamespace) && !string.IsNullOrEmpty(resolvedNamespace))
+        if (componentTypeMap != null && componentTypeMap.TryGetValue(segment.ComponentName ?? string.Empty, out var resolvedNamespace) && !string.IsNullOrEmpty(resolvedNamespace))
         {
             // If we resolved to a specific namespace for this component, use fully-qualified name
-            qualifiedType = $"global::{resolvedNamespace}.{segment.ComponentName}";
-        }
-        else if (availableNamespaces != null)
-        {
-            // If no explicit resolution was found, but the generator will emit using
-            // directives for candidate namespaces, prefer leaving the type unqualified
-            // so normal using resolution can succeed.
-            qualifiedType = segment.ComponentName;
-        }
-        else if (!string.IsNullOrEmpty(componentNamespace))
-        {
-            // Fallback to the generated component's namespace
-            qualifiedType = $"global::{componentNamespace}.{segment.ComponentName}";
+            qualifiedType = $"global::{resolvedNamespace}.{(segment.ComponentName ?? string.Empty)}";
         }
         else
         {
-            qualifiedType = segment.ComponentName; // best-effort fallback (may fail to compile)
+            // We couldn't reliably resolve the component type. To avoid introducing
+            // hard compile errors for missing or project-local components, fall back
+            // to ComponentBase. This preserves compilation and allows the project to
+            // build even when the heuristic resolver doesn't find a match.
+            qualifiedType = "global::Microsoft.AspNetCore.Components.ComponentBase";
+            sb.AppendLine($"{indent}// Unresolved component '{segment.ComponentName ?? string.Empty}' - falling back to ComponentBase to avoid build errors");
         }
                         sb.AppendLine($"{indent}builder.OpenComponent({seq.Next()}, typeof({qualifiedType}));");
         
@@ -488,11 +479,12 @@ public static class RenderTreeBuilderEmitter
         
         // T062: Add child content if present
             if (!string.IsNullOrEmpty(segment.ChildContent))
-        {
-            sb.AppendLine($"{indent}builder.AddAttribute({seq.Next()}, \"ChildContent\", (Microsoft.AspNetCore.Components.RenderFragment)((builder2) => {{");
-            sb.AppendLine($"{indent}    builder2.AddMarkupContent(0, @\"{EscapeForVerbatimString(segment.ChildContent)}\");");
-            sb.AppendLine($"{indent}}}));");
-        }
+            {
+                var child = segment.ChildContent ?? string.Empty;
+                sb.AppendLine($"{indent}builder.AddAttribute({seq.Next()}, \"ChildContent\", (Microsoft.AspNetCore.Components.RenderFragment)((builder2) => {{");
+                sb.AppendLine($"{indent}    builder2.AddMarkupContent(0, @\"{EscapeForVerbatimString(child)}\");");
+                sb.AppendLine($"{indent}}}));");
+            }
         
         // CloseComponent
         sb.AppendLine($"{indent}builder.CloseComponent();");
