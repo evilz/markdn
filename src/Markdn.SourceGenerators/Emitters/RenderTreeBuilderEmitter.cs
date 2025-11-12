@@ -439,28 +439,27 @@ public static class RenderTreeBuilderEmitter
     /// </summary>
     private static void EmitComponentCall(StringBuilder sb, ContentSegment segment, SequenceCounter seq, string indent, Dictionary<string, string>? componentTypeMap = null)
     {
-        // Determine fully-qualified component type using provided map or fallback to componentNamespace
-        string qualifiedType;
+    // Determine fully-qualified component type using provided map; if unresolved,
+    // we'll emit a safe markup placeholder instead of attempting to instantiate
+    // an abstract runtime type.
         // Prefer an explicitly resolved component namespace (from compilation) and emit
         // a fully-qualified type to avoid depending on generated using directives.
-        if (componentTypeMap != null && componentTypeMap.TryGetValue(segment.ComponentName ?? string.Empty, out var resolvedNamespace) && !string.IsNullOrEmpty(resolvedNamespace))
+        var resolved = false;
+        string resolvedQualifiedType = string.Empty;
+            if (componentTypeMap != null && componentTypeMap.TryGetValue(segment.ComponentName ?? string.Empty, out var resolvedNamespace) && !string.IsNullOrEmpty(resolvedNamespace))
         {
             // If we resolved to a specific namespace for this component, use fully-qualified name
-            qualifiedType = $"global::{resolvedNamespace}.{(segment.ComponentName ?? string.Empty)}";
+            resolved = true;
+            resolvedQualifiedType = $"global::{resolvedNamespace}.{(segment.ComponentName ?? string.Empty)}";
+            sb.AppendLine($"{indent}// Resolved component '{segment.ComponentName ?? string.Empty}' to namespace '{resolvedNamespace}'");
         }
-        else
+
+        if (resolved)
         {
-            // We couldn't reliably resolve the component type. To avoid introducing
-            // hard compile errors for missing or project-local components, fall back
-            // to ComponentBase. This preserves compilation and allows the project to
-            // build even when the heuristic resolver doesn't find a match.
-            qualifiedType = "global::Microsoft.AspNetCore.Components.ComponentBase";
-            sb.AppendLine($"{indent}// Unresolved component '{segment.ComponentName ?? string.Empty}' - falling back to ComponentBase to avoid build errors");
-        }
-                        sb.AppendLine($"{indent}builder.OpenComponent({seq.Next()}, typeof({qualifiedType}));");
-        
-        // Add attributes/parameters
-                    if (segment.Parameters != null)
+            sb.AppendLine($"{indent}builder.OpenComponent({seq.Next()}, typeof({resolvedQualifiedType}));");
+
+            // Add attributes/parameters for the opened component
+            if (segment.Parameters != null)
             {
                 foreach (var (name, value) in segment.Parameters)
                 {
@@ -476,8 +475,8 @@ public static class RenderTreeBuilderEmitter
                     }
                 }
             }
-        
-        // T062: Add child content if present
+
+            // T062: Add child content if present
             if (!string.IsNullOrEmpty(segment.ChildContent))
             {
                 var child = segment.ChildContent ?? string.Empty;
@@ -485,9 +484,30 @@ public static class RenderTreeBuilderEmitter
                 sb.AppendLine($"{indent}    builder2.AddMarkupContent(0, @\"{EscapeForVerbatimString(child)}\");");
                 sb.AppendLine($"{indent}}}));");
             }
-        
-        // CloseComponent
-        sb.AppendLine($"{indent}builder.CloseComponent();");
+
+            // CloseComponent
+            sb.AppendLine($"{indent}builder.CloseComponent();");
+        }
+        else
+        {
+            // If we cannot resolve the component type, emit a safe markup placeholder
+            // instead of attempting OpenComponent(typeof(ComponentBase)) which would
+            // fail at runtime because ComponentBase is abstract. The placeholder
+            // makes the missing component visible in the rendered output and avoids
+            // throwing when navigating.
+            var placeholder = $"<span class=\"md-unresolved-component\">[Component: {segment.ComponentName ?? string.Empty}]</span>";
+            // If child content exists, include it after the placeholder content
+            if (!string.IsNullOrEmpty(segment.ChildContent))
+            {
+                placeholder += segment.ChildContent;
+            }
+            sb.AppendLine($"{indent}builder.AddMarkupContent({seq.Next()}, @\"{EscapeForVerbatimString(placeholder)}\");");
+
+            // Note: we intentionally do NOT emit AddAttribute/AddChildContent/CloseComponent here
+            // because no OpenComponent/OpenElement frame was written. Emitting attributes
+            // without an open frame leads to runtime InvalidOperationException.
+            return;
+        }
     }
 
     /// <summary>
