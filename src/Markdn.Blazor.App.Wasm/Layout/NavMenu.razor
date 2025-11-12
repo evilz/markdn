@@ -96,37 +96,34 @@
                         try
                         {
                             var attrs = t.GetCustomAttributesData();
-                            foreach (var ad in attrs)
+                            foreach (var ad in attrs.Where(ad => string.Equals(ad.AttributeType.FullName, "Microsoft.AspNetCore.Components.RouteAttribute", StringComparison.Ordinal)))
                             {
-                                if (string.Equals(ad.AttributeType.FullName, "Microsoft.AspNetCore.Components.RouteAttribute", StringComparison.Ordinal))
+                                string? template = null;
+                                if (ad.ConstructorArguments.Count > 0 && ad.ConstructorArguments[0].Value is string s) template = s;
+                                else
                                 {
-                                    string? template = null;
-                                    if (ad.ConstructorArguments.Count > 0 && ad.ConstructorArguments[0].Value is string s) template = s;
-                                    else
+                                    foreach (var na in ad.NamedArguments)
                                     {
-                                        foreach (var na in ad.NamedArguments)
+                                        if (na.MemberName == "Template" && na.TypedValue.Value is string ss) { template = ss; break; }
+                                    }
+                                }
+
+                                if (!string.IsNullOrWhiteSpace(template) && !seen.Contains(template))
+                                {
+                                    string name = t.Name;
+                                    try
+                                    {
+                                        var titleProp = t.GetProperty("Title", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
+                                        if (titleProp != null && titleProp.PropertyType == typeof(string))
                                         {
-                                            if (na.MemberName == "Template" && na.TypedValue.Value is string ss) { template = ss; break; }
+                                            var v = titleProp.GetValue(null) as string;
+                                            if (!string.IsNullOrWhiteSpace(v)) name = v;
                                         }
                                     }
+                                    catch { }
 
-                                    if (!string.IsNullOrWhiteSpace(template) && !seen.Contains(template))
-                                    {
-                                        string name = t.Name;
-                                        try
-                                        {
-                                            var titleProp = t.GetProperty("Title", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
-                                            if (titleProp != null && titleProp.PropertyType == typeof(string))
-                                            {
-                                                var v = titleProp.GetValue(null) as string;
-                                                if (!string.IsNullOrWhiteSpace(v)) name = v;
-                                            }
-                                        }
-                                        catch { }
-
-                                        routes.Add((template, name));
-                                        seen.Add(template);
-                                    }
+                                    routes.Add((template, name));
+                                    seen.Add(template);
                                 }
                             }
                         }
