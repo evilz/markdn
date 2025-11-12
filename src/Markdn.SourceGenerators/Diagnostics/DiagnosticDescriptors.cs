@@ -54,7 +54,11 @@ internal static class DiagnosticDescriptors
         title: "Component reference may not be resolvable",
         messageFormat: "Component '{0}' may not be resolvable in '{1}'",
         category: Category,
-        defaultSeverity: DiagnosticSeverity.Warning,
+        // This diagnostic is low-confidence (heuristic) and can appear in projects
+        // that intentionally reference framework components (e.g., Counter). Treat
+        // it as informational by default so it doesn't break builds when warnings
+        // are treated as errors.
+        defaultSeverity: DiagnosticSeverity.Info,
         isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor MalformedRazorSyntax = new(
