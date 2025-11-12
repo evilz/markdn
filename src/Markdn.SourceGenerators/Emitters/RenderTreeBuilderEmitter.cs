@@ -439,24 +439,28 @@ public static class RenderTreeBuilderEmitter
     /// </summary>
     private static void EmitComponentCall(StringBuilder sb, ContentSegment segment, SequenceCounter seq, string indent, Dictionary<string, string>? componentTypeMap = null)
     {
-    // Determine fully-qualified component type using provided map; if unresolved,
-    // we'll emit a safe markup placeholder instead of attempting to instantiate
-    // an abstract runtime type.
-        // Prefer an explicitly resolved component namespace (from compilation) and emit
-        // a fully-qualified type to avoid depending on generated using directives.
+        // Determine how to reference the component type:
+        // 1) If componentTypeMap provides a namespace, trust that the component exists
+        //    and emit using the simple name (relying on using directives in the generated file).
+        // 2) If unresolved, emit a safe markup placeholder instead of attempting to instantiate
+        //    an abstract runtime type or referencing a non-existent type.
+        
         var resolved = false;
-        string resolvedQualifiedType = string.Empty;
-            if (componentTypeMap != null && componentTypeMap.TryGetValue(segment.ComponentName ?? string.Empty, out var resolvedNamespace) && !string.IsNullOrEmpty(resolvedNamespace))
+        string? resolvedNamespace = null;
+        
+        if (componentTypeMap != null && componentTypeMap.TryGetValue(segment.ComponentName ?? string.Empty, out resolvedNamespace) && !string.IsNullOrEmpty(resolvedNamespace))
         {
-            // If we resolved to a specific namespace for this component, use fully-qualified name
+            // If we have a namespace for this component, consider it resolved.
+            // We'll use the simple component name and rely on using directives.
             resolved = true;
-            resolvedQualifiedType = $"global::{resolvedNamespace}.{(segment.ComponentName ?? string.Empty)}";
             sb.AppendLine($"{indent}// Resolved component '{segment.ComponentName ?? string.Empty}' to namespace '{resolvedNamespace}'");
         }
 
         if (resolved)
         {
-            sb.AppendLine($"{indent}builder.OpenComponent({seq.Next()}, typeof({resolvedQualifiedType}));");
+            // Use simple name; the generated file will have appropriate using statements
+            var simpleTypeName = segment.ComponentName ?? string.Empty;
+            sb.AppendLine($"{indent}builder.OpenComponent<{simpleTypeName}>({seq.Next()});");
 
             // Add attributes/parameters for the opened component
             if (segment.Parameters != null)

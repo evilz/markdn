@@ -218,6 +218,19 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
                         }
                     }
 
+                    // If type wasn't found in compilation but namespace is explicitly provided,
+                    // trust it and add to the map anyway. This handles Razor components that
+                    // haven't been compiled yet when the source generator runs.
+                    if (!componentTypeMap.ContainsKey(name))
+                    {
+                        // Use the first provided namespace as the resolution
+                        var firstNs = metadata.ComponentNamespaces.FirstOrDefault(s => !string.IsNullOrWhiteSpace(s));
+                        if (!string.IsNullOrEmpty(firstNs))
+                        {
+                            componentTypeMap[name] = firstNs.Trim().TrimEnd('.');
+                        }
+                    }
+
                     if (componentTypeMap.ContainsKey(name))
                         continue;
                 }
