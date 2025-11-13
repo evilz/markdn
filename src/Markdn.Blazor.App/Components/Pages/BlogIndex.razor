@@ -28,57 +28,68 @@ else
 }
 
 @code {
+    private const string BlogNamespace = "Markdn.Blazor.App.Pages.Blog";
+    private static readonly Lazy<List<BlogPostInfo>> LazyBlogPosts = new(() => LoadBlogPosts());
+    
     private List<BlogPostInfo> BlogPosts { get; set; } = new();
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        
+        BlogPosts = LazyBlogPosts.Value;
+    }
+
+    private static List<BlogPostInfo> LoadBlogPosts()
+    {
         try
         {
-            // Find all types in the Markdn.Blazor.App.Pages.Blog namespace
             var assembly = typeof(Program).Assembly;
-            var blogTypes = assembly.GetTypes()
-                .Where(t => t.Namespace == "Markdn.Blazor.App.Pages.Blog" 
+            var componentBaseType = typeof(Microsoft.AspNetCore.Components.ComponentBase);
+            
+            // Use DefinedTypes for better performance (avoids allocating Type array)
+            // Filter first, then materialize to reduce allocations
+            var blogPosts = assembly.DefinedTypes
+                .Where(t => t.Namespace?.StartsWith(BlogNamespace, StringComparison.Ordinal) == true
                     && t.IsClass 
                     && !t.IsAbstract
-                    && typeof(Microsoft.AspNetCore.Components.ComponentBase).IsAssignableFrom(t))
+                    && componentBaseType.IsAssignableFrom(t))
+                .Select(type =>
+                {
+                    // Use generic GetCustomAttribute<T>() for better performance
+                    var routeAttr = type.GetCustomAttribute<Microsoft.AspNetCore.Components.RouteAttribute>();
+                    if (routeAttr == null)
+                        return null;
+
+                    return new BlogPostInfo
+                    {
+                        Title = FormatTitle(type.Name),
+                        Url = routeAttr.Template,
+                        Date = ""
+                    };
+                })
+                .Where(p => p != null)
+                .Cast<BlogPostInfo>()
                 .ToList();
 
-            foreach (var type in blogTypes)
-            {
-                // Get the Route attribute
-                var routeAttr = type.GetCustomAttributes(typeof(Microsoft.AspNetCore.Components.RouteAttribute), false)
-                    .FirstOrDefault() as Microsoft.AspNetCore.Components.RouteAttribute;
-
-                if (routeAttr != null)
-                {
-                    // Try to extract title from the type name
-                    var title = FormatTitle(type.Name);
-                    
-                    BlogPosts.Add(new BlogPostInfo
-                    {
-                        Title = title,
-                        Url = routeAttr.Template,
-                        Date = "" // We can't easily extract the date from the generated component
-                    });
-                }
-            }
+            return blogPosts;
         }
         catch (Exception)
         {
-            // Silently fail if we can't load blog posts
-            BlogPosts = new List<BlogPostInfo>();
+            // Return empty list if we can't load blog posts
+            return new List<BlogPostInfo>();
         }
     }
 
-    private string FormatTitle(string typeName)
+    private static string FormatTitle(string typeName)
     {
         // Convert type names like "Post001" to "Test Post 1"
-        if (typeName.StartsWith("Post") && typeName.Length > 4)
+        if (typeName.StartsWith("Post", StringComparison.Ordinal) && typeName.Length > 4)
         {
             var number = typeName.Substring(4);
-            return $"Test Post {int.Parse(number)}";
+            if (int.TryParse(number, out var numValue))
+            {
+                return $"Test Post {numValue}";
+            }
         }
         return typeName;
     }
