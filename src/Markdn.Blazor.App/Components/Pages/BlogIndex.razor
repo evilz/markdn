@@ -1,0 +1,92 @@
+@page "/blog"
+@using System.Reflection
+
+<PageTitle>Blog</PageTitle>
+
+<h1>Blog</h1>
+
+<p>Welcome to our blog! Here are all the available posts:</p>
+
+@if (BlogPosts == null || BlogPosts.Count == 0)
+{
+    <p><em>No blog posts found.</em></p>
+}
+else
+{
+    <ul>
+        @foreach (var post in BlogPosts.OrderBy(p => p.Url))
+        {
+            <li>
+                <a href="@post.Url">@post.Title</a>
+                @if (!string.IsNullOrEmpty(post.Date))
+                {
+                    <span> - @post.Date</span>
+                }
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private List<BlogPostInfo> BlogPosts { get; set; } = new();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        
+        try
+        {
+            // Find all types in the Markdn.Blazor.App.Pages.Blog namespace
+            var assembly = typeof(Program).Assembly;
+            var blogTypes = assembly.GetTypes()
+                .Where(t => t.Namespace == "Markdn.Blazor.App.Pages.Blog" 
+                    && t.IsClass 
+                    && !t.IsAbstract
+                    && typeof(Microsoft.AspNetCore.Components.ComponentBase).IsAssignableFrom(t))
+                .ToList();
+
+            foreach (var type in blogTypes)
+            {
+                // Get the Route attribute
+                var routeAttr = type.GetCustomAttributes(typeof(Microsoft.AspNetCore.Components.RouteAttribute), false)
+                    .FirstOrDefault() as Microsoft.AspNetCore.Components.RouteAttribute;
+
+                if (routeAttr != null)
+                {
+                    // Try to extract title from the type name
+                    var title = FormatTitle(type.Name);
+                    
+                    BlogPosts.Add(new BlogPostInfo
+                    {
+                        Title = title,
+                        Url = routeAttr.Template,
+                        Date = "" // We can't easily extract the date from the generated component
+                    });
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // Silently fail if we can't load blog posts
+            BlogPosts = new List<BlogPostInfo>();
+        }
+    }
+
+    private string FormatTitle(string typeName)
+    {
+        // Convert type names like "Post001" to "Test Post 1"
+        if (typeName.StartsWith("Post") && typeName.Length > 4)
+        {
+            var number = typeName.Substring(4);
+            return $"Test Post {int.Parse(number)}";
+        }
+        return typeName;
+    }
+
+    private class BlogPostInfo
+    {
+        public string Title { get; set; } = "";
+        public string Url { get; set; } = "";
+        public string Date { get; set; } = "";
+    }
+}
