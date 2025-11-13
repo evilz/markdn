@@ -68,6 +68,7 @@
             Routes = routes
                 .GroupBy(r => r.Route)
                 .Select(g => g.First())
+                .Where(r => !IsExcludedFromNavigation(r.Route))
                 .OrderBy(r => r.Route)
                 .ToList();
         }
@@ -75,6 +76,18 @@
         {
             Routes = new List<(string Route, string Name)>();
         }
+    }
+
+    private static bool IsExcludedFromNavigation(string route)
+    {
+        // Exclude individual blog post pages from navigation
+        // Keep the blog index page (/blog) but exclude specific posts like /blog/post-001, /blog/sample-post
+        if (route.StartsWith("/blog/", StringComparison.OrdinalIgnoreCase))
+        {
+            // Allow /blog but not /blog/anything
+            return route.Length > 6; // "/blog/" is 6 characters
+        }
+        return false;
     }
 }
 </div>

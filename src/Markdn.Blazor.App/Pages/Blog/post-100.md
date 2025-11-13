@@ -1,5 +1,6 @@
 ---
 title: "Test Post 100"
+url: /blog/post-100
 date: 2025-11-11
 ---
 

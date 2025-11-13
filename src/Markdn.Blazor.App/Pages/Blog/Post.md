@@ -1,6 +1,7 @@
 ---
 title: "Sample Blog Post"
 date: 2025-11-11
+url: /blog/sample-post
 componentNamespaces:
   - Markdn.Blazor.App.Components
   - Markdn.Blazor.App.Components.Pages

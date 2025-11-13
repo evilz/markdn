@@ -1,0 +1,103 @@
+@page "/blog"
+@using System.Reflection
+
+<PageTitle>Blog</PageTitle>
+
+<h1>Blog</h1>
+
+<p>Welcome to our blog! Here are all the available posts:</p>
+
+@if (BlogPosts == null || BlogPosts.Count == 0)
+{
+    <p><em>No blog posts found.</em></p>
+}
+else
+{
+    <ul>
+        @foreach (var post in BlogPosts.OrderBy(p => p.Url))
+        {
+            <li>
+                <a href="@post.Url">@post.Title</a>
+                @if (!string.IsNullOrEmpty(post.Date))
+                {
+                    <span> - @post.Date</span>
+                }
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private const string BlogNamespace = "Markdn.Blazor.App.Pages.Blog";
+    private static readonly Lazy<List<BlogPostInfo>> LazyBlogPosts = new(() => LoadBlogPosts());
+    
+    private List<BlogPostInfo> BlogPosts { get; set; } = new();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        BlogPosts = LazyBlogPosts.Value;
+    }
+
+    private static List<BlogPostInfo> LoadBlogPosts()
+    {
+        try
+        {
+            var assembly = typeof(Program).Assembly;
+            var componentBaseType = typeof(Microsoft.AspNetCore.Components.ComponentBase);
+            
+            // Use DefinedTypes for better performance (avoids allocating Type array)
+            // Filter first, then materialize to reduce allocations
+            var blogPosts = assembly.DefinedTypes
+                .Where(t => t.Namespace?.StartsWith(BlogNamespace, StringComparison.Ordinal) == true
+                    && t.IsClass 
+                    && !t.IsAbstract
+                    && componentBaseType.IsAssignableFrom(t))
+                .Select(type =>
+                {
+                    // Use generic GetCustomAttribute<T>() for better performance
+                    var routeAttr = type.GetCustomAttribute<Microsoft.AspNetCore.Components.RouteAttribute>();
+                    if (routeAttr == null)
+                        return null;
+
+                    return new BlogPostInfo
+                    {
+                        Title = FormatTitle(type.Name),
+                        Url = routeAttr.Template,
+                        Date = ""
+                    };
+                })
+                .Where(p => p != null)
+                .Cast<BlogPostInfo>()
+                .ToList();
+
+            return blogPosts;
+        }
+        catch (Exception)
+        {
+            // Return empty list if we can't load blog posts
+            return new List<BlogPostInfo>();
+        }
+    }
+
+    private static string FormatTitle(string typeName)
+    {
+        // Convert type names like "Post001" to "Test Post 1"
+        if (typeName.StartsWith("Post", StringComparison.Ordinal) && typeName.Length > 4)
+        {
+            var number = typeName.Substring(4);
+            if (int.TryParse(number, out var numValue))
+            {
+                return $"Test Post {numValue}";
+            }
+        }
+        return typeName;
+    }
+
+    private class BlogPostInfo
+    {
+        public string Title { get; set; } = "";
+        public string Url { get; set; } = "";
+        public string Date { get; set; } = "";
+    }
+}

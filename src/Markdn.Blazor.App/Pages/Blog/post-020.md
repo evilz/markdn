@@ -1,5 +1,6 @@
 ---
 title: "Test Post 20"
+url: /blog/post-020
 date: 2025-11-11
 ---
 
