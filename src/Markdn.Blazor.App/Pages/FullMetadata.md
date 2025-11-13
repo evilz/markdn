@@ -35,6 +35,7 @@ The current time is: @DateTime.Now.ToString("HH:mm:ss")
         if (string.IsNullOrEmpty(Title))
         {
             Title = "Default Title";
+            ShowDetails = true;
         }
     }
 }

@@ -14,9 +14,7 @@
             </NavLink>
         </div>
 
-        @if (Routes != null && Routes.Count > 0)
-        {
-            foreach (var r in Routes)
+        @foreach (var r in Routes)
             {
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="@r.Route">
@@ -25,24 +23,11 @@
                 </div>
             }
         }
-        else
-        {
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="counter">
-                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-                </NavLink>
-            </div>
 
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="weather">
-                    <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-                </NavLink>
-            </div>
-        }
     </nav>
 
 @code {
-    private List<(string Route, string Name)> Routes { get; set; } = new();
+    private List<(string Route, string Name)> Routes { get; set; } = [];
 
     protected override void OnInitialized()
     {
@@ -63,19 +48,19 @@
                     object[] attrs;
                     try { attrs = t.GetCustomAttributes(false); } catch { continue; }
 
+
                     foreach (var a in attrs)
                     {
                         var at = a.GetType();
-                        if (at.FullName == "Microsoft.AspNetCore.Components.RouteAttribute")
-                        {
-                            var prop = at.GetProperty("Template");
-                            var template = prop?.GetValue(a) as string ?? string.Empty;
-                            if (!string.IsNullOrWhiteSpace(template))
-                            {
-                                var name = t.Name;
-                                routes.Add((template, name));
-                            }
-                        }
+                        if (at.FullName != "Microsoft.AspNetCore.Components.RouteAttribute") continue;
+
+                        var prop = at.GetProperty("Template");
+                        var template = prop?.GetValue(a) as string ?? string.Empty;
+
+                        if (string.IsNullOrWhiteSpace(template)) continue;
+
+                        var name = t.Name;
+                        routes.Add((template, name));
                     }
                 }
             }

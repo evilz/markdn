@@ -77,7 +77,7 @@ internal static class MarkdownComponentParser
             FileName = fileName,
             ComponentName = componentName,
             Namespace = !string.IsNullOrWhiteSpace(metadata.Namespace) ? metadata.Namespace! : defaultNamespace,
-            Metadata = metadata ?? ComponentMetadata.Empty,
+            Metadata = metadata,
             Content = mdContent,
             CodeBlocks = codeBlocks,
             SourceFilePath = sourceFilePath

@@ -238,7 +238,7 @@ app.MapCollectionsEndpoints();
 // Map health check endpoint
 app.MapHealthChecks("/api/health");
 
-app.Run();
+await app.RunAsync();
 
 // Make Program accessible for testing
 public partial class Program { }
