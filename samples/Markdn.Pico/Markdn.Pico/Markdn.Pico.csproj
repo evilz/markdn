@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
@@ -11,12 +11,16 @@
   <ItemGroup>
     <!-- Include .md files as additional files for the source generator -->
     <AdditionalFiles Include="**\*.md" Exclude="wwwroot\**\*.md" />
+    <!-- Include collections.json as additional file for content collections generator -->
+    <AdditionalFiles Include="collections.json" />
+    <!-- Include markdown content files as embedded resources -->
+    <EmbeddedResource Include="Content\**\*.md" />
   </ItemGroup>
   
     <ItemGroup>
         <ProjectReference Include="..\..\..\src\Markdn.SourceGenerators\Markdn.SourceGenerators.csproj"  OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
         <ProjectReference Include="..\Markdn.Pico.Client\Markdn.Pico.Client.csproj"/>
-        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.0-rc.2.25502.107"/>
+        <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.0"/>
     </ItemGroup>
 
 </Project>
