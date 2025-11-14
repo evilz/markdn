@@ -1,0 +1,26 @@
+﻿<li>
+    <a href="@Url">@Title</a>
+
+    <small>
+        @GetMonthName(PubDate.Month - 1)
+        @PubDate.Day, @PubDate.Year
+    </small>
+
+    <p><i>@Description</i></p>
+</li>
+
+@code {
+    [Parameter] public string Url { get; set; } = default!;
+    [Parameter] public string Title { get; set; } = default!;
+    [Parameter] public DateTime PubDate { get; set; }
+    [Parameter] public string Description { get; set; } = default!;
+
+    private static readonly string[] Months = new[]
+    {
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    };
+
+    private string GetMonthName(int index)
+        => Months[index];
+}

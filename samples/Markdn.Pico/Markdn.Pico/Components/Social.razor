@@ -1,0 +1,22 @@
+﻿<a
+    href="https://www.@Platform\.com/@Username"
+    aria-label="Link to my @Platform"
+><img name="social/@Platform" />
+</a>
+
+<style>
+  svg {
+    width: 1.5em;
+    height: 1.5em;
+  }
+</style>
+
+
+
+@code {
+    [Parameter]
+    public string Platform { get; set; } = "";
+   [Parameter]
+    public string  Username  { get; set; } = "";
+
+}

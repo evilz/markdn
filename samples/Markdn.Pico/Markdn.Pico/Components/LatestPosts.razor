@@ -1,0 +1,34 @@
+﻿@using Markdn.Pico.Models
+@using Markdn.Pico.Services
+@inject IPostsService PostsService
+
+@code {
+    private List<Post> _orderedPosts = new();
+
+    private Lazy<List<Post>>? _lazyBlogPosts;
+
+
+    protected override void OnInitialized()
+    {
+        _lazyBlogPosts = new Lazy<List<Post>>(() => PostsService.GetAllPosts());
+        base.OnInitialized();
+        _orderedPosts = _lazyBlogPosts.Value
+            .OrderByDescending(p => p.PubDate)
+            .Take(3)
+            .ToList();;
+
+
+    }
+
+}
+
+<ul>
+    @foreach (var post in _orderedPosts)
+    {
+        <BlogPost
+            Url=@($"/posts/{post.Slug}/")
+            Title="@post.Title"
+            PubDate="@post.PubDate"
+            Description="@post.Description" />
+    }
+</ul>

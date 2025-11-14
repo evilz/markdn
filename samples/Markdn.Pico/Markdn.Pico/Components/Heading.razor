@@ -1,0 +1,18 @@
+﻿
+@if (H == "1")     { <h1>@Title</h1> }
+else if (H == "2") { <h2>@Title</h2> }
+else if (H == "3") { <h3>@Title</h3> }
+else if (H == "4") { <h4>@Title</h4> }
+else if (H == "5") { <h5>@Title</h5> }
+else               { <h6>@Title</h6> }
+
+@if (!string.IsNullOrEmpty(Description))
+{
+    <p>@Description</p>
+}
+
+@code {
+    [Parameter] public string Title { get; set; } = default!;
+    [Parameter] public string? H { get; set; } = "2";
+    [Parameter] public string? Description { get; set; }
+}
