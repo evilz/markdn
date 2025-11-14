@@ -296,9 +296,9 @@ public class ContentCollectionsGenerator : IIncrementalGenerator
             sb.AppendLine();
             sb.AppendLine($"    private List<{pascalName}Entry> LoadCollection()");
             sb.AppendLine("    {");
-            sb.AppendLine("        var entries = new List<{pascalName}Entry>();");
+            sb.AppendLine($"        var entries = new List<{pascalName}Entry>();");
             sb.AppendLine("        var assembly = Assembly.GetExecutingAssembly();");
-            sb.AppendLine($"        var resourcePrefix = assembly.GetName().Name + \".{collection.FolderPath.Replace("/", ".").Replace("\\\\", ".")}\";");
+            sb.AppendLine($"        var resourcePrefix = assembly.GetName().Name + \".{collection.FolderPath.Replace("/", ".").Replace("\\", ".")}\";");
             sb.AppendLine();
             sb.AppendLine("        var resourceNames = assembly.GetManifestResourceNames()");
             sb.AppendLine("            .Where(name => name.StartsWith(resourcePrefix, StringComparison.OrdinalIgnoreCase) && name.EndsWith(\".md\", StringComparison.OrdinalIgnoreCase))");
@@ -378,11 +378,16 @@ public class ContentCollectionsGenerator : IIncrementalGenerator
                 }
                 else if (field.Type == "string")
                 {
-                    sb.AppendLine($"                {propName} = fields.ContainsKey(\"{field.Name}\") ? fields[\"{field.Name}\"] : {(field.IsRequired ? "string.Empty" : "null")},");
+                    sb.AppendLine($"                {propName} = fields.ContainsKey(\"{field.Name}\") ? fields[\"{field.Name}\"] : {(field.IsRequired ? "\"\"" : "null")},");
+                }
+                else if (field.Type.Contains("List"))
+                {
+                    // Skip array types for now - parsing from YAML is complex
+                    sb.AppendLine($"                {propName} = new List<string>(),");
                 }
                 else
                 {
-                    sb.AppendLine($"                {propName} = fields.ContainsKey(\"{field.Name}\") ? fields[\"{field.Name}\"] : default,");
+                    sb.AppendLine($"                {propName} = default,");
                 }
             }
             
