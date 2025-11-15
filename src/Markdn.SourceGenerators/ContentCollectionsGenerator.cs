@@ -299,7 +299,7 @@ public sealed class CollectionAttribute : System.Attribute
         builder.AppendLine("            }");
         builder.AppendLine();
         builder.AppendLine("            var key = line.Substring(0, colonIndex).Trim();");
-        builder.AppendLine("            var value = line.Substring(colonIndex + 1).Trim().Trim('\"').Trim('\'');");
+        builder.AppendLine("            var value = line.Substring(colonIndex + 1).Trim().Trim('\"').Trim('\\'');");
         builder.AppendLine("            result[key] = value;");
         builder.AppendLine("        }");
         builder.AppendLine();
@@ -469,12 +469,8 @@ public sealed class CollectionAttribute : System.Attribute
                     if ("+()^$.{}![]|".IndexOf(current) >= 0)
                     {
                         sb.Append('\\');
-                        sb.Append(current);
                     }
-                    else
-                    {
-                        sb.Append(System.Text.RegularExpressions.Regex.Escape(current.ToString()));
-                    }
+                    sb.Append(current);
                     break;
             }
         }
