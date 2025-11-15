@@ -5,18 +5,19 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+      <!-- Enable generated files output for debugging -->
+      <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+      <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\Generated</CompilerGeneratedFilesOutputPath>
     </PropertyGroup>
 
 
   <ItemGroup>
     <!-- Include .md files as additional files for the source generator -->
     <AdditionalFiles Include="**\*.md" Exclude="wwwroot\**\*.md" />
-    <!-- Include collections.json as additional file for content collections generator -->
-    <AdditionalFiles Include="collections.json" />
     <!-- Include markdown content files as embedded resources -->
     <EmbeddedResource Include="Content\**\*.md" />
   </ItemGroup>
-  
+
     <ItemGroup>
         <ProjectReference Include="..\..\..\src\Markdn.SourceGenerators\Markdn.SourceGenerators.csproj"  OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
         <ProjectReference Include="..\Markdn.Pico.Client\Markdn.Pico.Client.csproj"/>

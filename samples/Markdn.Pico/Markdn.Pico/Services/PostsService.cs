@@ -1,10 +1,13 @@
-﻿using Markdn.Pico.Models;
+using Microsoft.AspNetCore.Components;
+using Markdn.Pico.Models;
 
 namespace Markdn.Pico.Services;
 
 public interface IPostsService
 {
     List<Post> GetAllPosts();
+    Post? GetPostBySlug(string slug);
+    RenderFragment? GetPostComponent(string slug);
 }
 
 public class PostsService : IPostsService
@@ -19,14 +22,26 @@ public class PostsService : IPostsService
 
     public List<Post> GetAllPosts()
     {
-        // Convert generated PostsEntry to Post model
-        var entries = _contentService.GetCollection();
-        return entries.Select(e => new Post
+        return _contentService.GetCollection();
+    }
+
+    public Post? GetPostBySlug(string slug)
+    {
+        if (string.IsNullOrWhiteSpace(slug))
         {
-            Slug = e.Slug,
-            Title = e.Title,
-            PubDate = e.PubDate,
-            Description = e.Description
-        }).ToList();
+            return null;
+        }
+
+        return _contentService.GetEntry(slug);
+    }
+
+    public RenderFragment? GetPostComponent(string slug)
+    {
+        if (string.IsNullOrWhiteSpace(slug))
+        {
+            return null;
+        }
+
+        return _contentService.GetComponent(slug);
     }
 }

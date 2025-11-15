@@ -8,16 +8,6 @@ namespace Markdn.SourceGenerators.Models;
 public sealed class ComponentMetadata
 {
     /// <summary>
-    /// Single route URL (e.g., "/home"). Mutually exclusive with UrlArray.
-    /// </summary>
-    public string? Url { get; init; }
-
-    /// <summary>
-    /// Multiple route URLs (e.g., ["/", "/home"]). Mutually exclusive with Url.
-    /// </summary>
-    public IReadOnlyList<string>? UrlArray { get; init; }
-
-    /// <summary>
     /// Page title for PageTitle component (e.g., "About Us")
     /// </summary>
     public string? Title { get; init; }
@@ -53,6 +43,11 @@ public sealed class ComponentMetadata
     /// Attributes to apply to class (e.g., ["Authorize(Roles = \"Admin\")"])
     /// </summary>
     public IReadOnlyList<string>? Attribute { get; init; }
+
+    /// <summary>
+    /// Content slug used for route generation.
+    /// </summary>
+    public string? Slug { get; init; }
 
     /// <summary>
     /// Component parameter declarations

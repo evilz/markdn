@@ -1,5 +1,5 @@
 ---
-url: /component-params
+slug: /component-params
 title: Component Parameters Test
 componentNamespaces:
 	- Markdn.Blazor.App.Components

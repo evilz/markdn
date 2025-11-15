@@ -99,9 +99,6 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
                 context.ReportDiagnostic(diagnostic);
             }
 
-            // Validate URL metadata (T044, T045)
-            ValidateUrlMetadata(context, file, metadata);
-
             // Validate parameter metadata (T085, T086, T087)
             ValidateParameterMetadata(context, file, metadata);
 
@@ -151,8 +148,9 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
             
             // For namespace generation, we'll use a simple heuristic
             // The file path typically contains project structure
-            var projectRoot = GetProjectRootFromPath(file.Path);
+            var projectRoot = ComponentPathUtilities.GetProjectRootFromPath(file.Path);
             var namespaceValue = metadata.Namespace ?? NamespaceGenerator.Generate(rootNamespace, file.Path, projectRoot);
+            var slugRoute = ResolveSlugRoute(metadata, file.Path, projectRoot);
 
             // Convert Markdown content to HTML (with placeholders)
             var htmlWithPlaceholders = ConvertMarkdownToHtml(contentWithPlaceholders);
@@ -304,7 +302,8 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
                 metadata,
                 codeBlocks,
                 componentTypeMap,
-                availableNamespaces);
+                availableNamespaces,
+                slugRoute);
 
             // Create unique hint name using relative path from project root
             var relativePath = GetRelativePath(file.Path, projectRoot);
@@ -332,26 +331,66 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
         }
     }
 
-    private static string GetProjectRootFromPath(string filePath)
+    private static readonly string[] RoutePrefixDirectories = new[] { "pages", "components", "shared", "views", "content" };
+
+    private static string? ResolveSlugRoute(ComponentMetadata metadata, string filePath, string projectRoot)
     {
-        // Source generators can't use File I/O, so we use path heuristics
-        // Typically paths look like: C:\path\to\project\Pages\File.md
-        // We look for common root directories (Pages, Components, etc.)
-        var directory = System.IO.Path.GetDirectoryName(filePath) ?? filePath;
-        
-        // Check if path contains common component directories
-        var commonDirs = new[] { "Pages", "Components", "Shared", "Views" };
-        foreach (var dir in commonDirs)
+        var slug = metadata.Slug;
+        if (string.IsNullOrWhiteSpace(slug))
         {
-            var index = directory.LastIndexOf(System.IO.Path.DirectorySeparatorChar + dir);
-            if (index > 0)
+            slug = DeriveSlugFromPath(filePath, projectRoot);
+        }
+
+        if (string.IsNullOrWhiteSpace(slug))
+        {
+            return null;
+        }
+
+        return NormalizeSlugRoute(slug);
+    }
+
+    private static string? DeriveSlugFromPath(string filePath, string projectRoot)
+    {
+        var relativePath = GetRelativePath(filePath, projectRoot);
+        if (string.IsNullOrWhiteSpace(relativePath))
+        {
+            return null;
+        }
+
+        var slug = relativePath.Replace(System.IO.Path.DirectorySeparatorChar, '/')
+            .Replace(System.IO.Path.AltDirectorySeparatorChar, '/');
+
+        if (slug.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+        {
+            slug = slug.Substring(0, slug.Length - 3);
+        }
+
+        return slug;
+    }
+
+    private static string NormalizeSlugRoute(string slug)
+    {
+        var normalized = slug.Replace('\\', '/').Trim();
+        if (normalized.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+        {
+            normalized = normalized.Substring(0, normalized.Length - 3);
+        }
+
+        normalized = normalized.Trim('/');
+        foreach (var prefix in RoutePrefixDirectories)
+        {
+            if (normalized.StartsWith(prefix + "/", StringComparison.OrdinalIgnoreCase))
             {
-                return directory.Substring(0, index);
+                normalized = normalized.Substring(prefix.Length + 1);
+                break;
             }
         }
-        
-        // Fallback: use parent directory of file
-        return directory;
+        if (string.IsNullOrEmpty(normalized))
+        {
+            return "/";
+        }
+
+        return "/" + normalized.ToLowerInvariant();
     }
 
     private static string GetRelativePath(string filePath, string projectRoot)
@@ -427,52 +466,6 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
             return string.Empty;
             
         return content.Substring(startIndex, endIndex - startIndex).Trim();
-    }
-
-    private static void ValidateUrlMetadata(
-        SourceProductionContext context,
-        AdditionalText file,
-        ComponentMetadata metadata)
-    {
-        var fileName = System.IO.Path.GetFileName(file.Path);
-
-        // T044: Check if both Url and UrlArray are specified (mutually exclusive)
-        if (!string.IsNullOrEmpty(metadata.Url) && metadata.UrlArray != null && metadata.UrlArray.Count > 0)
-        {
-            var diagnostic = Diagnostic.Create(
-                Diagnostics.DiagnosticDescriptors.MutuallyExclusiveUrls,
-                Location.None,
-                fileName);
-            context.ReportDiagnostic(diagnostic);
-        }
-
-        // T045: Validate that single URL starts with /
-        if (!string.IsNullOrEmpty(metadata.Url) && !metadata.Url.StartsWith("/"))
-        {
-            var diagnostic = Diagnostic.Create(
-                Diagnostics.DiagnosticDescriptors.InvalidUrl,
-                Location.None,
-                fileName,
-                metadata.Url);
-            context.ReportDiagnostic(diagnostic);
-        }
-
-        // T045: Validate that all URLs in array start with /
-        if (metadata.UrlArray != null)
-        {
-            foreach (var url in metadata.UrlArray)
-            {
-                if (!url.StartsWith("/"))
-                {
-                    var diagnostic = Diagnostic.Create(
-                        Diagnostics.DiagnosticDescriptors.InvalidUrl,
-                        Location.None,
-                        fileName,
-                        url);
-                    context.ReportDiagnostic(diagnostic);
-                }
-            }
-        }
     }
 
     private static bool IsValidGenericType(string typeName)

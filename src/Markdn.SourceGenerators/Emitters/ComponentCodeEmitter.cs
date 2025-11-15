@@ -58,7 +58,8 @@ public static class ComponentCodeEmitter
         ComponentMetadata metadata,
         List<CodeBlock>? codeBlocks = null,
         Dictionary<string, string>? componentTypeMap = null,
-        IEnumerable<string>? availableNamespaces = null)
+        IEnumerable<string>? availableNamespaces = null,
+        string? routeSlug = null)
     {
         var sb = new StringBuilder();
         
@@ -120,17 +121,10 @@ public static class ComponentCodeEmitter
         sb.AppendLine($"namespace {namespaceValue}");
         sb.AppendLine("{");
 
-        // Route attributes (T046, T047: from metadata Url/UrlArray)
-        if (!string.IsNullOrEmpty(metadata.Url))
+        // Route attribute based on slug
+        if (!string.IsNullOrWhiteSpace(routeSlug))
         {
-            sb.AppendLine($"    [Microsoft.AspNetCore.Components.RouteAttribute(\"{metadata.Url}\")]");
-        }
-        else if (metadata.UrlArray != null && metadata.UrlArray.Count > 0)
-        {
-            foreach (var url in metadata.UrlArray)
-            {
-                sb.AppendLine($"    [Microsoft.AspNetCore.Components.RouteAttribute(\"{url}\")]");
-            }
+            sb.AppendLine($"    [Microsoft.AspNetCore.Components.RouteAttribute(\"{routeSlug}\")]");
         }
 
         // T091: Layout attribute (from metadata)
