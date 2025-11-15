@@ -18,19 +18,14 @@ internal static class ComponentPathUtilities
     public static string GetProjectRootFromPath(string filePath)
     {
         var directory = Path.GetDirectoryName(filePath) ?? filePath;
+        // Normalize all separators to Path.DirectorySeparatorChar
+        directory = directory.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
 
         foreach (var dir in CommonDirectories)
         {
             var segment = Path.DirectorySeparatorChar + dir;
-            var altSegment = Path.AltDirectorySeparatorChar + dir;
 
             var index = directory.LastIndexOf(segment, StringComparison.OrdinalIgnoreCase);
-            if (index > 0)
-            {
-                return directory.Substring(0, index);
-            }
-
-            index = directory.LastIndexOf(altSegment, StringComparison.OrdinalIgnoreCase);
             if (index > 0)
             {
                 return directory.Substring(0, index);

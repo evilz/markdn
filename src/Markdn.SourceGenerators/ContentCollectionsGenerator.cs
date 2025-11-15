@@ -232,9 +232,10 @@ public sealed class CollectionAttribute : System.Attribute
         builder.AppendLine("                    components[parsed.Value.Slug] = descriptor.ComponentFragment;");
         builder.AppendLine("                }");
         builder.AppendLine("            }");
-        builder.AppendLine("            catch");
+        builder.AppendLine("            catch (Exception ex)");
         builder.AppendLine("            {");
-        builder.AppendLine("                // Ignore malformed entries");
+        builder.AppendLine("                // Ignore malformed entries, but log for debugging");
+        builder.AppendLine("                System.Diagnostics.Debug.WriteLine($\"Malformed entry ignored: {ex.Message}\");");
         builder.AppendLine("            }");
         builder.AppendLine("        }");
         builder.AppendLine();
@@ -287,18 +288,18 @@ public sealed class CollectionAttribute : System.Attribute
         builder.AppendLine("    private static Dictionary<string, string> ParseFrontMatter(string frontMatter)");
         builder.AppendLine("    {");
         builder.AppendLine("        var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);");
-        builder.AppendLine("        var lines = frontMatter.Split(new[] { \"\\n\", \"\\r\" }, StringSplitOptions.RemoveEmptyEntries);");
+        builder.AppendLine("        var lines = System.Text.RegularExpressions.Regex.Split(frontMatter, @\"\\r\\n|\\n|\\r\").Where(l => !string.IsNullOrWhiteSpace(l));");
         builder.AppendLine();
         builder.AppendLine("        foreach (var line in lines)");
         builder.AppendLine("        {");
         builder.AppendLine("            var colonIndex = line.IndexOf(':');");
-        builder.AppendLine("            if (colonIndex <= 0)");
+        builder.AppendLine("            if (colonIndex < 0)");
         builder.AppendLine("            {");
         builder.AppendLine("                continue;");
         builder.AppendLine("            }");
         builder.AppendLine();
         builder.AppendLine("            var key = line.Substring(0, colonIndex).Trim();");
-        builder.AppendLine("            var value = line.Substring(colonIndex + 1).Trim().Trim('\"').Trim((char)39);");
+        builder.AppendLine("            var value = line.Substring(colonIndex + 1).Trim().Trim('\"').Trim('\\'');");
         builder.AppendLine("            result[key] = value;");
         builder.AppendLine("        }");
         builder.AppendLine();
@@ -408,6 +409,13 @@ public sealed class CollectionAttribute : System.Attribute
                     var offsetFallback = property.IsNullable ? "null" : "DateTimeOffset.MinValue";
                     builder.AppendLine($"            {property.Name} = fields.TryGetValue(\"{key}\", out var {rawVariable}) && DateTimeOffset.TryParse({rawVariable}, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var {parsedVariable}) ? {parsedVariable} : {offsetFallback},");
                     break;
+                // NOTE: The parsing logic for StringArray and StringList expects comma-separated values in the frontmatter.
+                // YAML array syntax (using '-' prefix for each item) is NOT supported here.
+                // Example: tags: "foo, bar, baz"
+                // NOT supported: tags:
+                //   - foo
+                //   - bar
+                //   - baz
                 case PropertyValueKind.StringArray:
                     var arrayFallback = property.IsNullable ? "null" : "System.Array.Empty<string>()";
                     builder.AppendLine($"            {property.Name} = fields.TryGetValue(\"{key}\", out var {rawVariable}) ? {rawVariable}.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) : {arrayFallback},");
@@ -661,7 +669,15 @@ public sealed class CollectionAttribute : System.Attribute
         foreach (var file in files)
         {
             var relative = NormalizeRelativePath(normalizedProjectDir, file.Path);
-            var normalized = relative.Replace('\\', '/').TrimStart('.', '/');
+            var normalized = relative.Replace('\\', '/');
+            if (normalized.StartsWith("./"))
+            {
+                normalized = normalized.Substring(2);
+            }
+            else if (normalized.StartsWith("/"))
+            {
+                normalized = normalized.Substring(1);
+            }
             var slug = Path.GetFileNameWithoutExtension(file.Path) ?? "unknown";
             var suffix = normalized.Replace('/', '.');
 
@@ -704,8 +720,9 @@ public sealed class CollectionAttribute : System.Attribute
             var relativePath = Uri.UnescapeDataString(relativeUri.ToString());
             return relativePath.Replace('/', Path.DirectorySeparatorChar);
         }
-        catch
+        catch (Exception ex)
         {
+            System.Diagnostics.Debug.WriteLine($"GetRelativePathSafe error: {ex}");
             return targetPath;
         }
     }
@@ -767,6 +784,7 @@ public sealed class CollectionAttribute : System.Attribute
             unchecked
             {
                 var hash = StringComparer.Ordinal.GetHashCode(obj.FullyQualifiedTypeName ?? string.Empty);
+                // Use a prime number (397) to reduce hash collisions and improve distribution.
                 hash = (hash * 397) ^ StringComparer.Ordinal.GetHashCode(obj.GlobPattern ?? string.Empty);
                 return hash;
             }

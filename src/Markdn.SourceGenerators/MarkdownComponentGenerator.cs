@@ -377,11 +377,18 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
         }
 
         normalized = normalized.Trim('/');
+        // Remove known folder prefixes only if they are the first segment in the path
         foreach (var prefix in RoutePrefixDirectories)
         {
             if (normalized.StartsWith(prefix + "/", StringComparison.OrdinalIgnoreCase))
             {
                 normalized = normalized.Substring(prefix.Length + 1);
+                break;
+            }
+            // Also handle case where the entire path is just the prefix
+            else if (normalized.Equals(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                normalized = string.Empty;
                 break;
             }
         }

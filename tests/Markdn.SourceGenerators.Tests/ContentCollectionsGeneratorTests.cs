@@ -57,7 +57,14 @@ public class Post
         }
         finally
         {
-            Directory.Delete(projectDir, true);
+            try
+            {
+                Directory.Delete(projectDir, true);
+            }
+            catch
+            {
+                // Ignore cleanup errors
+            }
         }
     }
 
@@ -78,11 +85,19 @@ public class Post
             driver = driver.RunGeneratorsAndUpdateCompilation(compilation, out _, out _);
 
             var generatedSources = driver.GetRunResult().Results.SelectMany(r => r.GeneratedSources).ToList();
-            Assert.All(generatedSources, source => Assert.Equal("CollectionAttribute.g.cs", source.HintName));
+            Assert.Single(generatedSources);
+            Assert.Equal("CollectionAttribute.g.cs", generatedSources[0].HintName);
         }
         finally
         {
-            Directory.Delete(projectDir, true);
+            try
+            {
+                Directory.Delete(projectDir, true);
+            }
+            catch
+            {
+                // Ignore cleanup errors
+            }
         }
     }
 
@@ -125,14 +140,21 @@ public class Post
         }
         finally
         {
-            Directory.Delete(projectDir, true);
+            try
+            {
+                Directory.Delete(projectDir, true);
+            }
+            catch
+            {
+                // Ignore cleanup errors
+            }
         }
     }
 
     private static (Compilation Compilation, ImmutableArray<AdditionalText> AdditionalTexts, AnalyzerConfigOptionsProvider OptionsProvider, string ProjectDirectory)
         CreateTestEnvironment(string source)
     {
-        var projectDir = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"))).FullName;
+        var projectDir = CreateTempTestDirectory();
         var markdownPath = Path.Combine(projectDir, "Content", "Posts", "first-post.md");
         Directory.CreateDirectory(Path.GetDirectoryName(markdownPath)!);
 
@@ -162,6 +184,13 @@ description: ""Sample""
                 MetadataReference.CreateFromFile(typeof(Attribute).Assembly.Location),
             },
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+    }
+
+    private static string CreateTempTestDirectory()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        return tempDir;
     }
 
     private sealed class TestAdditionalText : AdditionalText
