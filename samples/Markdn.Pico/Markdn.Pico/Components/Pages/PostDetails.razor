@@ -1,0 +1,67 @@
+@page "/posts/{Slug}/"
+@layout BaseLayout
+@using Microsoft.AspNetCore.Components
+@using Markdn.Pico.Models
+@using Markdn.Pico.Services
+@inject IPostsService PostsService
+
+@if (_notFound)
+{
+    <main class="container">
+        <Pages.NotFound />
+    </main>
+}
+else if (_post is null || _contentFragment is null)
+{
+    <main class="container">
+        <p>Loading post...</p>
+    </main>
+}
+else
+{
+    <PageTitle>@_post.Title</PageTitle>
+    <main class="container">
+        <article class="post-detail">
+            <header>
+                <p class="text-muted text-sm">
+                    <strong>@_post.PubDate.ToString("MMMM dd, yyyy")</strong>
+                    @if (!string.IsNullOrWhiteSpace(_post.Description))
+                    {
+                        <span> &mdash; @_post.Description</span>
+                    }
+                </p>
+                <h1>@_post.Title</h1>
+            </header>
+            <section class="post-body">
+                @_contentFragment
+            </section>
+            <footer class="text-sm">
+                <a class="contrast" href="/">← Back to home</a>
+            </footer>
+        </article>
+    </main>
+}
+
+@code
+{
+    [Parameter]
+    public string Slug { get; set; } = string.Empty;
+
+    private Post? _post;
+    private RenderFragment? _contentFragment;
+    private bool _notFound;
+
+    protected override void OnParametersSet()
+    {
+        _post = PostsService.GetPostBySlug(Slug);
+        _contentFragment = PostsService.GetPostComponent(Slug);
+
+        if (_post is null || _contentFragment is null)
+        {
+            _notFound = true;
+            return;
+        }
+
+        _notFound = false;
+    }
+}

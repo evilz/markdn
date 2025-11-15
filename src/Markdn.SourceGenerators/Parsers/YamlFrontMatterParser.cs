@@ -194,30 +194,16 @@ public static class YamlFrontMatterParser
         }
 
         // Map to ComponentMetadata
-        var url = GetStringValue(properties, "url");
-        var urlArray = GetArrayValue(properties, "url")?.ToArray();
-        
-        // Validation: Url and UrlArray are mutually exclusive (will be reported as MD008 by generator)
-        // For now, if both are present, prioritize scalar Url
-        if (url != null && urlArray != null)
+        var metadata = new ComponentMetadata
         {
-            urlArray = null; // Ignore array if scalar is present
-        }
-        
-        // Validation: URLs must start with / (will be reported as MD002 by generator)
-        // This validation will be performed in the generator where diagnostics can be emitted
-        
-            var metadata = new ComponentMetadata
-        {
-            Url = url,
-            UrlArray = urlArray,
             Title = GetStringValue(properties, "title"),
             Namespace = GetStringValue(properties, "namespace", "$namespace"),
             Using = GetArrayValue(properties, "using", "$using")?.ToArray(),
-                ComponentNamespaces = GetArrayValue(properties, "componentNamespaces", "$componentNamespaces")?.ToArray(),
+            ComponentNamespaces = GetArrayValue(properties, "componentNamespaces", "$componentNamespaces")?.ToArray(),
             Layout = GetStringValue(properties, "layout", "$layout"),
             Inherit = GetStringValue(properties, "inherit", "$inherit"),
             Attribute = GetArrayValue(properties, "attribute", "$attribute")?.ToArray(),
+            Slug = GetStringValue(properties, "slug"),
             Parameters = ParseParameters(properties)
         };
         
