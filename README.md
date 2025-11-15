@@ -17,10 +17,16 @@ A lightweight, file-based headless CMS for serving Markdown content via REST API
 - ✅ **Automatic Validation**: Content validated at startup and runtime against collection schemas
 - 🔄 **Runtime Monitoring**: File watcher integration for detecting content and schema changes
 - 🔎 **Advanced Queries**: OData-like query syntax with `$filter`, `$orderby`, `$top`, `$skip`
+- 🎨 **Source Generator**: Compile-time source generator for Blazor apps with typed `GetCollection()` and `GetEntry()` API
 
 ## Content Collections
 
-Markdn supports **Content Collections** - a powerful feature inspired by [Astro Content Collections](https://docs.astro.build/en/guides/content-collections/) that provides type-safe, schema-validated content management.
+Markdn supports **Content Collections** in two flavors:
+
+1. **Runtime Collections API** - REST API for serving validated content (documented below)
+2. **Source-Generated Collections** - Compile-time source generator for Blazor apps with type-safe access ([see documentation](docs/source-generated-collections.md))
+
+Both are inspired by [Astro Content Collections](https://docs.astro.build/en/guides/content-collections/) and provide type-safe, schema-validated content management.
 
 ### What are Content Collections?
 
@@ -294,6 +300,30 @@ Existing content works without changes! Collections are optional:
 2. Add `collections.json` when you need schema validation
 3. Use Collections API (`/api/collections`) for type-safe queries
 4. Both APIs coexist - use whichever fits your needs
+
+### Source-Generated Collections for Blazor
+
+For **Blazor applications**, use the source generator to get compile-time type safety and IntelliSense:
+
+```csharp
+// Generated at compile-time from collections.json
+var postsService = new PostsService();
+var posts = postsService.GetCollection(); // Type: List<PostsEntry>
+var post = postsService.GetEntry("my-slug"); // Type: PostsEntry?
+
+// Type-safe property access with IntelliSense
+string title = post.Title;
+DateTime pubDate = post.PubDate;
+List<string> tags = post.Tags;
+```
+
+**Key benefits:**
+- ✅ Compile-time type safety
+- ✅ IntelliSense for all frontmatter properties  
+- ✅ No runtime overhead for type generation
+- ✅ Astro-like `GetCollection()` and `GetEntry()` API
+
+**📖 [Complete Source Generator Documentation](docs/source-generated-collections.md)**
 
 
 
