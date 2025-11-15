@@ -1,5 +1,5 @@
 ---
-url: /
+slug: /
 title: About This Project
 ---
 
