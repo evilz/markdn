@@ -239,7 +239,7 @@ public sealed class CollectionAttribute : System.Attribute
         builder.AppendLine("                {");
         builder.AppendLine("                    lookup[parsed.Value.Slug] = parsed.Value.Entry;");
         builder.AppendLine("                }");
-        builder.AppendLine("                if (!components.ContainsKey(parsed.Value.Slug))");
+        builder.AppendLine("                if (descriptor.ComponentFragment != null && !components.ContainsKey(parsed.Value.Slug))");
         builder.AppendLine("                {");
         builder.AppendLine("                    components[parsed.Value.Slug] = descriptor.ComponentFragment;");
         builder.AppendLine("                }");
@@ -336,7 +336,7 @@ public sealed class CollectionAttribute : System.Attribute
         builder.AppendLine("        public Dictionary<string, RenderFragment> Components { get; }");
         builder.AppendLine("    }");
         builder.AppendLine();
-        builder.AppendLine("    private readonly record struct ResourceDescriptor(string ResourceName, string ResourceSuffix, string Slug, RenderFragment ComponentFragment);");
+        builder.AppendLine("    private readonly record struct ResourceDescriptor(string ResourceName, string ResourceSuffix, string Slug, RenderFragment? ComponentFragment);");
         builder.AppendLine();
         builder.AppendLine("    private static readonly ResourceDescriptor[] _resources = new[]");
         builder.AppendLine("    {");
@@ -349,12 +349,22 @@ public sealed class CollectionAttribute : System.Attribute
                 var resourceLiteral = EscapeForStringLiteral(resourceName);
                 var suffixLiteral = EscapeForStringLiteral(file.ResourceSuffix);
                 var slugLiteral = EscapeForStringLiteral(file.Slug);
-                var componentLiteral = $"global::{file.ComponentFullTypeName}";
-                builder.AppendLine($"        new ResourceDescriptor(\"{resourceLiteral}\", \"{suffixLiteral}\", \"{slugLiteral}\", builder =>");
-                builder.AppendLine("        {");
-                builder.AppendLine($"            builder.OpenComponent<{componentLiteral}>(0);");
-                builder.AppendLine("            builder.CloseComponent();");
-                builder.AppendLine("        }),");
+                
+                // Only generate component reference for Markdown files
+                if (!string.IsNullOrEmpty(file.ComponentFullTypeName))
+                {
+                    var componentLiteral = $"global::{file.ComponentFullTypeName}";
+                    builder.AppendLine($"        new ResourceDescriptor(\"{resourceLiteral}\", \"{suffixLiteral}\", \"{slugLiteral}\", builder =>");
+                    builder.AppendLine("        {");
+                    builder.AppendLine($"            builder.OpenComponent<{componentLiteral}>(0);");
+                    builder.AppendLine("            builder.CloseComponent();");
+                    builder.AppendLine("        }),");
+                }
+                else
+                {
+                    // For non-markdown files, use null component fragment
+                    builder.AppendLine($"        new ResourceDescriptor(\"{resourceLiteral}\", \"{suffixLiteral}\", \"{slugLiteral}\", null!),");
+                }
             }
         }
 
@@ -702,9 +712,14 @@ public sealed class CollectionAttribute : System.Attribute
             var slug = GenerateSlugFromPath(normalized);
             var suffix = normalized.Replace('/', '.');
 
-            var componentNamespace = ComponentPathUtilities.GetComponentNamespace(rootNamespace, file.Path);
-            var componentName = ComponentNameGenerator.Generate(Path.GetFileName(file.Path));
-            var componentFullName = $"{componentNamespace}.{componentName}";
+            // Only generate component information for Markdown files
+            var componentFullName = string.Empty;
+            if (file.Path.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+            {
+                var componentNamespace = ComponentPathUtilities.GetComponentNamespace(rootNamespace, file.Path);
+                var componentName = ComponentNameGenerator.Generate(Path.GetFileName(file.Path));
+                componentFullName = $"{componentNamespace}.{componentName}";
+            }
 
             list.Add(new ResolvedContentFile(file.Path, normalized, suffix, slug, componentFullName));
         }
