@@ -54,7 +54,14 @@ public static class SlugGenerator
 
         var normalizedSlug = slug.StartsWith("/") ? slug : "/" + slug;
 
-        // If directory indicates blog or pages, prefix appropriately
+        // If slug contains more than one segment (e.g., /custom/route), treat it as absolute
+        var segmentCount = normalizedSlug.Split('/', StringSplitOptions.RemoveEmptyEntries).Length;
+        if (segmentCount > 1)
+        {
+            return normalizedSlug;
+        }
+
+        // If directory indicates blog or pages, prefix appropriately for single-segment slugs
         var dirName = Path.GetFileName(directory)?.ToLowerInvariant();
         
         if (dirName == "blog" && !normalizedSlug.StartsWith("/blog/"))

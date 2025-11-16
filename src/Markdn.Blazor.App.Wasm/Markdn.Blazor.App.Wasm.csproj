@@ -16,7 +16,8 @@
 
   <ItemGroup>
     <!-- Include .md files as additional files for the source generator -->
-    <AdditionalFiles Include="**\*.md" Exclude="wwwroot\**\*.md" />
+    <!-- Exclude content directory markdown files since they are processed by the pre-build generator -->
+    <AdditionalFiles Include="**\*.md" Exclude="wwwroot\**\*.md;content\**\*.md" />
   </ItemGroup>
 
   <ItemGroup>
@@ -41,7 +42,7 @@
   </ItemGroup>
 
   <!-- Pre-build target to generate Razor files from Markdown -->
-  <Target Name="GenerateRazorFromMarkdown" BeforeTargets="RazorCoreCompile">
+  <Target Name="GenerateRazorFromMarkdown" BeforeTargets="CoreCompile">
     <Message Text="Génération des pages .razor à partir des markdown..." Importance="high" />
     
     <!-- Build the generator tool first -->

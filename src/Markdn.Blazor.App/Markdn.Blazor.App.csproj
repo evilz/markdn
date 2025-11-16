@@ -35,7 +35,7 @@
   </ItemGroup>
 
   <!-- Pre-build target to generate Razor files from Markdown -->
-  <Target Name="GenerateRazorFromMarkdown" BeforeTargets="RazorCoreCompile">
+  <Target Name="GenerateRazorFromMarkdown" BeforeTargets="CoreCompile">
     <Message Text="Génération des pages .razor à partir des markdown..." Importance="high" />
     
     <!-- Build the generator tool first -->
