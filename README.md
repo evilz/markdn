@@ -1,10 +1,10 @@
 # Markdn
 
-A lightweight, file-based headless CMS for serving Markdown content via REST API. Built with ASP.NET Core 8.0 for high performance and simplicity.
+A lightweight, file-based headless CMS for serving content via REST API and source-generated collections. Built with ASP.NET Core 8.0 for high performance and simplicity.
 
 ## Features
 
-- 📝 **Markdown-First**: Store content as simple `.md` files with YAML front-matter
+- 📝 **Multi-Format Support**: Store content as Markdown (`.md`), YAML (`.yaml`, `.yml`), TOML (`.toml`), or JSON (`.json`) files
 - 🚀 **High Performance**: Efficient file system scanning with configurable caching
 - 🔍 **Advanced Filtering**: Filter by tags, categories, and date ranges with OData-style queries
 - 📊 **Flexible Sorting**: Sort by date, title, or last modified (ascending/descending)
@@ -18,6 +18,10 @@ A lightweight, file-based headless CMS for serving Markdown content via REST API
 - 🔄 **Runtime Monitoring**: File watcher integration for detecting content and schema changes
 - 🔎 **Advanced Queries**: OData-like query syntax with `$filter`, `$orderby`, `$top`, `$skip`
 - 🎨 **Source Generator**: Compile-time source generator for Blazor apps with typed `GetCollection()` and `GetEntry()` API
+- 🔧 **Dynamic Support**: Work with typed or dynamic (C# `dynamic`) content models
+- 🌐 **WebAPI Integration**: Automatically generate minimal Web API endpoints for collections
+- 🧩 **Auto-Slug Generation**: Automatic slug generation from file paths when not explicitly provided
+- ⚛️ **Blazor Components**: Generate routable Blazor components from Markdown files with automatic slug-based routing
 
 ## Content Collections
 
@@ -36,6 +40,11 @@ Content Collections allow you to:
 - **Validate content** automatically against these schemas
 - **Query content** with type safety and advanced filtering
 - **Organize content** in logical folders with consistent structure
+- **Support multiple formats**: Markdown (`.md`), YAML (`.yaml`, `.yml`), TOML (`.toml`), or JSON (`.json`)
+- **Typed or dynamic**: Use strongly-typed models or C# `dynamic` for flexible content access
+- **Auto-slug generation**: File paths automatically become slugs when not explicitly provided
+- **WebAPI endpoints**: Optionally generate minimal API endpoints for collections
+- **Blazor routing**: Markdown files with slugs automatically become routable Blazor pages
 
 ### Quick Example
 
@@ -306,22 +315,61 @@ Existing content works without changes! Collections are optional:
 For **Blazor applications**, use the source generator to get compile-time type safety and IntelliSense:
 
 ```csharp
-// Generated at compile-time from collections.json
+// Define a collection model with [Collection] attribute
+[Collection("Content/posts/**/*.md", Name = "posts")]
+public class Post
+{
+    public required string Slug { get; init; }
+    public required string Title { get; init; }
+    public DateTime PubDate { get; init; }
+    public string? Author { get; init; }
+    public string Content { get; init; } = string.Empty;
+}
+
+// Generated at compile-time - use the service
 var postsService = new PostsService();
-var posts = postsService.GetCollection(); // Type: List<PostsEntry>
-var post = postsService.GetEntry("my-slug"); // Type: PostsEntry?
+var posts = postsService.GetCollection(); // Type: List<Post>
+var post = postsService.GetEntry("my-slug"); // Type: Post?
 
 // Type-safe property access with IntelliSense
 string title = post.Title;
 DateTime pubDate = post.PubDate;
-List<string> tags = post.Tags;
+
+// Access generated Blazor component for Markdown files
+var component = postsService.GetComponent("my-slug"); // RenderFragment?
 ```
+
+**Supported file formats:**
+- **Markdown** (`.md`) - Parsed with YAML front-matter + generates Blazor components
+- **YAML** (`.yaml`, `.yml`) - Direct data files
+- **TOML** (`.toml`) - Configuration-friendly format
+- **JSON** (`.json`) - Standard JSON data files
 
 **Key benefits:**
 - ✅ Compile-time type safety
-- ✅ IntelliSense for all frontmatter properties  
+- ✅ IntelliSense for all frontmatter/data properties  
 - ✅ No runtime overhead for type generation
 - ✅ Astro-like `GetCollection()` and `GetEntry()` API
+- ✅ Support for multiple file formats (Markdown, YAML, TOML, JSON)
+- ✅ Auto-generated slugs from file paths
+- ✅ Blazor component generation for Markdown files
+- ✅ Optional WebAPI endpoint generation
+
+**Dynamic content support:**
+```csharp
+// Use C# dynamic for flexible, schema-less content
+[Collection("Content/data/**/*.json", Name = "dynamic")]
+public class DynamicContent
+{
+    public required string Slug { get; init; }
+    public required dynamic Data { get; init; } // Access any property dynamically
+}
+
+var service = new DynamicService();
+var item = service.GetEntry("my-item");
+var title = item.Data.title; // Dynamic property access
+var customField = item.Data.anyCustomField; // No schema required
+```
 
 **📖 [Complete Source Generator Documentation](docs/source-generated-collections.md)**
 
