@@ -12,10 +12,19 @@
 
 
   <ItemGroup>
-    <!-- Include .md files as additional files for the source generator -->
+    <!-- Include content files as additional files for the source generator -->
     <AdditionalFiles Include="**\*.md" Exclude="wwwroot\**\*.md" />
-    <!-- Include markdown content files as embedded resources -->
+    <AdditionalFiles Include="**\*.yaml" />
+    <AdditionalFiles Include="**\*.yml" />
+    <AdditionalFiles Include="**\*.json" Exclude="wwwroot\**\*.json;appsettings*.json;obj\**\*.json;bin\**\*.json" />
+    <AdditionalFiles Include="**\*.toml" />
+    
+    <!-- Include content files as embedded resources -->
     <EmbeddedResource Include="Content\**\*.md" />
+    <EmbeddedResource Include="Content\**\*.yaml" />
+    <EmbeddedResource Include="Content\**\*.yml" />
+    <EmbeddedResource Include="Content\**\*.json" />
+    <EmbeddedResource Include="Content\**\*.toml" />
   </ItemGroup>
 
     <ItemGroup>

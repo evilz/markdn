@@ -36,7 +36,8 @@ public sealed class CollectionAttribute : System.Attribute
     }
 
     /// <summary>
-    /// Glob pattern relative to the project directory that points to markdown files.
+    /// Glob pattern relative to the project directory that points to content files.
+    /// Supports .md, .yaml, .yml, .toml, and .json files.
     /// </summary>
     public string GlobPattern { get; }
 
@@ -44,6 +45,12 @@ public sealed class CollectionAttribute : System.Attribute
     /// Optional logical name for the collection. When omitted the model type name is used.
     /// </summary>
     public string? Name { get; set; }
+
+    /// <summary>
+    /// When true, generates a minimal WebAPI endpoint for this collection.
+    /// Endpoints will be available at /api/collections/{name}/items and /api/collections/{name}/items/{slug}.
+    /// </summary>
+    public bool GenerateWebApi { get; set; }
 }
 ";
 
@@ -59,9 +66,14 @@ public sealed class CollectionAttribute : System.Attribute
             return new ProjectInfo(projectDir, rootNamespace);
         });
 
-        var markdownFiles = context.AdditionalTextsProvider
-            .Where(static text => text.Path.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
-            .Select(static (text, _) => new MarkdownFile(text.Path))
+        var contentFiles = context.AdditionalTextsProvider
+            .Where(static text => 
+                text.Path.EndsWith(".md", StringComparison.OrdinalIgnoreCase) ||
+                text.Path.EndsWith(".yaml", StringComparison.OrdinalIgnoreCase) ||
+                text.Path.EndsWith(".yml", StringComparison.OrdinalIgnoreCase) ||
+                text.Path.EndsWith(".toml", StringComparison.OrdinalIgnoreCase) ||
+                text.Path.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+            .Select(static (text, _) => new ContentFile(text.Path))
             .Collect();
 
         var collections = context.SyntaxProvider.ForAttributeWithMetadataName(
@@ -72,13 +84,13 @@ public sealed class CollectionAttribute : System.Attribute
             .Collect();
 
         var combined = collections
-            .Combine(markdownFiles)
+            .Combine(contentFiles)
             .Combine(projectInfo)
             .Combine(context.CompilationProvider);
 
         context.RegisterSourceOutput(combined, static (spc, data) =>
         {
-            var (((collectionInfos, markdown), project), compilation) = data;
+            var (((collectionInfos, content), project), compilation) = data;
             if (collectionInfos.IsDefaultOrEmpty)
             {
                 return;
@@ -88,7 +100,7 @@ public sealed class CollectionAttribute : System.Attribute
                 ? project.RootNamespace!.Trim()
                 : compilation.AssemblyName ?? "GeneratedContent";
 
-            var resolvedFiles = ResolveMarkdownFiles(markdown, project.ProjectDir, rootNamespace);
+            var resolvedFiles = ResolveContentFiles(content, project.ProjectDir, rootNamespace);
 
             var distinctCollections = collectionInfos
                 .Where(static c => c is not null && !string.IsNullOrWhiteSpace(c.GlobPattern))
@@ -106,7 +118,7 @@ public sealed class CollectionAttribute : System.Attribute
     private static void GenerateCollectionSource(
         SourceProductionContext context,
         string rootNamespace,
-        IReadOnlyList<ResolvedMarkdownFile> files,
+        IReadOnlyList<ResolvedContentFile> files,
         CollectionDeclaration declaration)
     {
         var globRegex = CreateGlobRegex(declaration.GlobPattern);
@@ -227,7 +239,7 @@ public sealed class CollectionAttribute : System.Attribute
         builder.AppendLine("                {");
         builder.AppendLine("                    lookup[parsed.Value.Slug] = parsed.Value.Entry;");
         builder.AppendLine("                }");
-        builder.AppendLine("                if (!components.ContainsKey(parsed.Value.Slug))");
+        builder.AppendLine("                if (descriptor.ComponentFragment != null && !components.ContainsKey(parsed.Value.Slug))");
         builder.AppendLine("                {");
         builder.AppendLine("                    components[parsed.Value.Slug] = descriptor.ComponentFragment;");
         builder.AppendLine("                }");
@@ -324,7 +336,7 @@ public sealed class CollectionAttribute : System.Attribute
         builder.AppendLine("        public Dictionary<string, RenderFragment> Components { get; }");
         builder.AppendLine("    }");
         builder.AppendLine();
-        builder.AppendLine("    private readonly record struct ResourceDescriptor(string ResourceName, string ResourceSuffix, string Slug, RenderFragment ComponentFragment);");
+        builder.AppendLine("    private readonly record struct ResourceDescriptor(string ResourceName, string ResourceSuffix, string Slug, RenderFragment? ComponentFragment);");
         builder.AppendLine();
         builder.AppendLine("    private static readonly ResourceDescriptor[] _resources = new[]");
         builder.AppendLine("    {");
@@ -337,12 +349,22 @@ public sealed class CollectionAttribute : System.Attribute
                 var resourceLiteral = EscapeForStringLiteral(resourceName);
                 var suffixLiteral = EscapeForStringLiteral(file.ResourceSuffix);
                 var slugLiteral = EscapeForStringLiteral(file.Slug);
-                var componentLiteral = $"global::{file.ComponentFullTypeName}";
-                builder.AppendLine($"        new ResourceDescriptor(\"{resourceLiteral}\", \"{suffixLiteral}\", \"{slugLiteral}\", builder =>");
-                builder.AppendLine("        {");
-                builder.AppendLine($"            builder.OpenComponent<{componentLiteral}>(0);");
-                builder.AppendLine("            builder.CloseComponent();");
-                builder.AppendLine("        }),");
+                
+                // Only generate component reference for Markdown files
+                if (!string.IsNullOrEmpty(file.ComponentFullTypeName))
+                {
+                    var componentLiteral = $"global::{file.ComponentFullTypeName}";
+                    builder.AppendLine($"        new ResourceDescriptor(\"{resourceLiteral}\", \"{suffixLiteral}\", \"{slugLiteral}\", builder =>");
+                    builder.AppendLine("        {");
+                    builder.AppendLine($"            builder.OpenComponent<{componentLiteral}>(0);");
+                    builder.AppendLine("            builder.CloseComponent();");
+                    builder.AppendLine("        }),");
+                }
+                else
+                {
+                    // For non-markdown files, use null component fragment
+                    builder.AppendLine($"        new ResourceDescriptor(\"{resourceLiteral}\", \"{suffixLiteral}\", \"{slugLiteral}\", null!),");
+                }
             }
         }
 
@@ -541,6 +563,12 @@ public sealed class CollectionAttribute : System.Attribute
         }
 
         var collectionName = attribute.NamedArguments.FirstOrDefault(arg => arg.Key == "Name").Value.Value as string;
+        var generateWebApi = false;
+        var webApiArg = attribute.NamedArguments.FirstOrDefault(arg => arg.Key == "GenerateWebApi");
+        if (webApiArg.Key != null && webApiArg.Value.Value is bool boolValue)
+        {
+            generateWebApi = boolValue;
+        }
         var fullyQualified = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
         var properties = typeSymbol.GetMembers()
@@ -557,6 +585,7 @@ public sealed class CollectionAttribute : System.Attribute
             pattern!,
             fullyQualified,
             properties,
+            generateWebApi,
             typeSymbol.Locations.FirstOrDefault() ?? Location.None);
     }
 
@@ -661,9 +690,9 @@ public sealed class CollectionAttribute : System.Attribute
                definition.Contains("List", StringComparison.Ordinal);
     }
 
-    private static IReadOnlyList<ResolvedMarkdownFile> ResolveMarkdownFiles(ImmutableArray<MarkdownFile> files, string? projectDir, string rootNamespace)
+    private static IReadOnlyList<ResolvedContentFile> ResolveContentFiles(ImmutableArray<ContentFile> files, string? projectDir, string rootNamespace)
     {
-        var list = new List<ResolvedMarkdownFile>(files.Length);
+        var list = new List<ResolvedContentFile>(files.Length);
         var normalizedProjectDir = string.IsNullOrWhiteSpace(projectDir) ? null : Path.GetFullPath(projectDir);
 
         foreach (var file in files)
@@ -678,17 +707,43 @@ public sealed class CollectionAttribute : System.Attribute
             {
                 normalized = normalized.Substring(1);
             }
-            var slug = Path.GetFileNameWithoutExtension(file.Path) ?? "unknown";
+            
+            // Auto-generate slug from file path (removing extension and normalizing)
+            var slug = GenerateSlugFromPath(normalized);
             var suffix = normalized.Replace('/', '.');
 
-            var componentNamespace = ComponentPathUtilities.GetComponentNamespace(rootNamespace, file.Path);
-            var componentName = ComponentNameGenerator.Generate(Path.GetFileName(file.Path));
-            var componentFullName = $"{componentNamespace}.{componentName}";
+            // Only generate component information for Markdown files
+            var componentFullName = string.Empty;
+            if (file.Path.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+            {
+                var componentNamespace = ComponentPathUtilities.GetComponentNamespace(rootNamespace, file.Path);
+                var componentName = ComponentNameGenerator.Generate(Path.GetFileName(file.Path));
+                componentFullName = $"{componentNamespace}.{componentName}";
+            }
 
-            list.Add(new ResolvedMarkdownFile(file.Path, normalized, suffix, slug, componentFullName));
+            list.Add(new ResolvedContentFile(file.Path, normalized, suffix, slug, componentFullName));
         }
 
         return list;
+    }
+    
+    private static string GenerateSlugFromPath(string normalizedPath)
+    {
+        // Remove file extension
+        var pathWithoutExtension = normalizedPath;
+        var lastDot = pathWithoutExtension.LastIndexOf('.');
+        if (lastDot >= 0)
+        {
+            pathWithoutExtension = pathWithoutExtension.Substring(0, lastDot);
+        }
+        
+        // Convert to slug format (lowercase, replace separators with hyphens)
+        return pathWithoutExtension
+            .ToLowerInvariant()
+            .Replace('/', '-')
+            .Replace('\\', '-')
+            .Replace(' ', '-')
+            .Replace('_', '-');
     }
 
     private static string NormalizeRelativePath(string? projectDir, string filePath)
@@ -739,9 +794,9 @@ public sealed class CollectionAttribute : System.Attribute
             : path + Path.DirectorySeparatorChar;
     }
 
-    private readonly record struct MarkdownFile(string Path);
+    private readonly record struct ContentFile(string Path);
 
-    private readonly record struct ResolvedMarkdownFile(
+    private readonly record struct ResolvedContentFile(
         string AbsolutePath,
         string NormalizedRelativePath,
         string ResourceSuffix,
@@ -756,6 +811,7 @@ public sealed class CollectionAttribute : System.Attribute
         string GlobPattern,
         string FullyQualifiedTypeName,
         ImmutableArray<PropertyDescriptor> Properties,
+        bool GenerateWebApi,
         Location Location)
     {
         public static IEqualityComparer<CollectionDeclaration> Comparer { get; } = new DeclarationComparer();
