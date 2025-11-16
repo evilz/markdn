@@ -36,11 +36,6 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.0" PrivateAssets="all" />
   </ItemGroup>
 
-  <ItemGroup>
-    <!-- Include generated .razor files -->
-    <Content Include="$(GeneratedRazorRoot)\**\*.razor" />
-  </ItemGroup>
-
   <!-- Pre-build target to generate Razor files from Markdown -->
   <Target Name="GenerateRazorFromMarkdown" BeforeTargets="CoreCompile">
     <Message Text="Génération des pages .razor à partir des markdown..." Importance="high" />

@@ -159,7 +159,9 @@ public class Program
                 var razorContent = razorGenerator.Generate(metadata, htmlContent, route, title);
 
                 // Write output file
-                var outputFileName = $"{slug}.razor";
+                // Capitalize first letter for Razor component naming convention
+                var componentName = char.ToUpperInvariant(slug[0]) + slug.Substring(1);
+                var outputFileName = $"{componentName}.razor";
                 var outputFilePath = Path.Combine(outputPath, outputFileName);
                 File.WriteAllText(outputFilePath, razorContent);
 
