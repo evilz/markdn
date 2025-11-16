@@ -1,17 +1,19 @@
 # Source-Generated Content Collections
 
-Markdn provides a compile-time source generator that creates type-safe content services from markdown files, inspired by [Astro's Content Collections API](https://docs.astro.build/en/guides/content-collections/).
+Markdn provides a compile-time source generator that creates type-safe content services from content files, inspired by [Astro's Content Collections API](https://docs.astro.build/en/guides/content-collections/).
 
 ## Overview
 
 The **ContentCollectionsGenerator** is a C# source generator that:
-- Reads a `collections.json` configuration file at compile time
-- Generates typed C# classes for each collection based on JSON schema
+- Works with multiple file formats: Markdown (`.md`), YAML (`.yaml`, `.yml`), TOML (`.toml`), and JSON (`.json`)
+- Generates typed C# classes for collections using the `[Collection]` attribute
 - Creates service classes with `GetCollection()` and `GetEntry(slug)` methods
-- Provides compile-time type safety for frontmatter properties
-- Parses YAML frontmatter from markdown files at runtime
+- Provides compile-time type safety for content properties
+- Automatically generates slugs from file paths when not explicitly provided
+- Optionally generates minimal Web API endpoints for collections
+- For Markdown files, generates Blazor components with automatic routing
 
-This feature is ideal for **Blazor applications** where you want type-safe access to markdown content with IntelliSense support.
+This feature is ideal for **Blazor applications** where you want type-safe access to content with IntelliSense support.
 
 ## Quick Start
 
@@ -27,62 +29,44 @@ Add the `Markdn.SourceGenerators` package to your Blazor project:
 </ItemGroup>
 ```
 
-### 2. Create collections.json
+### 2. Define Your Content Model
 
-Create a `collections.json` file in your project root:
+Create a C# class or record with the `[Collection]` attribute:
 
-```json
+```csharp
+using Markdn.Content;
+
+[Collection("Content/posts/**/*.md", Name = "posts")]
+public class Post
 {
-  "collections": {
-    "posts": {
-      "folder": "Content/posts",
-      "schema": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string"
-          },
-          "pubDate": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "description": {
-            "type": "string"
-          },
-          "author": {
-            "type": "string"
-          },
-          "tags": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "required": ["title", "pubDate"]
-      }
-    }
-  }
+    public required string Slug { get; init; }
+    public required string Title { get; init; }
+    public DateTime PubDate { get; init; }
+    public string? Description { get; init; }
+    public string? Author { get; init; }
+    public List<string> Tags { get; init; } = new();
+    public string Content { get; init; } = string.Empty;
 }
 ```
 
 ### 3. Configure Your Project
 
-Add the configuration file and markdown files to your `.csproj`:
+Add content files to your `.csproj`:
 
 ```xml
 <ItemGroup>
-  <!-- Include collections.json for the source generator -->
-  <AdditionalFiles Include="collections.json" />
-  
-  <!-- Include markdown files as embedded resources -->
+  <!-- Include content files as embedded resources -->
   <EmbeddedResource Include="Content\**\*.md" />
+  <EmbeddedResource Include="Content\**\*.yaml" />
+  <EmbeddedResource Include="Content\**\*.yml" />
+  <EmbeddedResource Include="Content\**\*.toml" />
+  <EmbeddedResource Include="Content\**\*.json" />
 </ItemGroup>
 ```
 
 ### 4. Create Content
 
-Create markdown files with YAML frontmatter in your content folder:
+Create content files in your content folder:
 
 **Content/posts/getting-started.md:**
 ```markdown
@@ -214,6 +198,115 @@ public class PostsService : IPostsService
     private List<PostsEntry> LoadCollection() { /* ... */ }
 }
 ```
+
+## New Features
+
+### Multi-Format Support
+
+The source generator now supports multiple file formats beyond Markdown:
+
+**Supported Formats:**
+- **Markdown** (`.md`) - YAML front-matter + content body, generates Blazor components
+- **YAML** (`.yaml`, `.yml`) - Direct data files
+- **TOML** (`.toml`) - Configuration-friendly format
+- **JSON** (`.json`) - Standard JSON data files
+
+**Example YAML file (`Content/data/authors.yaml`):**
+```yaml
+slug: john-doe
+name: John Doe
+email: john@example.com
+bio: Senior developer and content creator
+```
+
+**Example JSON file (`Content/data/config.json`):**
+```json
+{
+  "slug": "site-config",
+  "siteName": "My Blog",
+  "theme": "dark",
+  "enableComments": true
+}
+```
+
+### Auto-Generated Slugs
+
+If your content files don't have an explicit `slug` property, the generator automatically creates one from the file path:
+
+```
+Content/posts/getting-started.md        → slug: "content-posts-getting-started"
+Content/blog/2024/my-article.md         → slug: "content-blog-2024-my-article"
+Data/authors/john-doe.yaml              → slug: "data-authors-john-doe"
+```
+
+The slug is:
+- Converted to lowercase
+- Path separators replaced with hyphens
+- Special characters normalized
+- File extension removed
+
+### WebAPI Endpoint Generation
+
+Automatically generate minimal Web API endpoints for your collections:
+
+```csharp
+[Collection("Content/posts/**/*.md", Name = "posts", GenerateWebApi = true)]
+public class Post
+{
+    public required string Slug { get; init; }
+    public required string Title { get; init; }
+    // ... other properties
+}
+```
+
+This generates:
+- `GET /api/collections/posts/items` - Get all posts
+- `GET /api/collections/posts/items/{slug}` - Get post by slug
+
+The endpoints are minimal and follow REST conventions. They're automatically registered in your application startup.
+
+### Dynamic Content Support
+
+For schema-less or flexible content, use C# `dynamic`:
+
+```csharp
+[Collection("Content/data/**/*.json", Name = "dynamic")]
+public class DynamicContent
+{
+    public required string Slug { get; init; }
+    public required dynamic Data { get; init; }
+}
+
+// Usage
+var service = new DynamicService();
+var item = service.GetEntry("my-item");
+var anyProperty = item.Data.customField; // Access any property
+```
+
+### Blazor Component Generation (Markdown Only)
+
+For Markdown files, the generator creates Blazor components:
+
+```csharp
+[Collection("Content/pages/**/*.md", Name = "pages")]
+public class Page
+{
+    public required string Slug { get; init; }
+    public required string Title { get; init; }
+    public string Content { get; init; } = string.Empty;
+}
+
+// Use the generated service
+var service = new PagesService();
+
+// Get the data
+var page = service.GetEntry("about");
+
+// Get the Blazor component (RenderFragment)
+var component = service.GetComponent("about");
+```
+
+If the Markdown file has a `slug` property in its front-matter, the generated component becomes a routable Blazor page with `@page "/{slug}"`.
 
 ## Schema Configuration
 
