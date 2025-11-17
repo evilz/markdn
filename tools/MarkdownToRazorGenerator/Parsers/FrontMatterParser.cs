@@ -10,6 +10,7 @@ namespace MarkdownToRazorGenerator.Parsers;
 public class FrontMatterParser
 {
     private readonly IDeserializer _deserializer;
+    private readonly IDeserializer _dynamicDeserializer;
 
     public FrontMatterParser()
     {
@@ -17,6 +18,46 @@ public class FrontMatterParser
             .WithNamingConvention(CamelCaseNamingConvention.Instance)
             .IgnoreUnmatchedProperties()
             .Build();
+            
+        // Create a deserializer that attempts to preserve types by trying to convert strings
+        // This won't work with YamlDotNet's default behavior, so we'll need to manually convert
+        _dynamicDeserializer = new DeserializerBuilder()
+            .Build();
+    }
+    
+    /// <summary>
+    /// Converts a YAML-deserialized value to its proper .NET type
+    /// </summary>
+    private object ConvertYamlValue(object value)
+    {
+        if (value is not string strValue)
+        {
+            return value; // Already the right type
+        }
+        
+        // Try to convert string to appropriate type
+        if (bool.TryParse(strValue, out var boolValue))
+        {
+            return boolValue;
+        }
+        
+        if (int.TryParse(strValue, out var intValue))
+        {
+            return intValue;
+        }
+        
+        if (long.TryParse(strValue, out var longValue))
+        {
+            return longValue;
+        }
+        
+        if (double.TryParse(strValue, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var doubleValue))
+        {
+            return doubleValue;
+        }
+        
+        // Return as string if no conversion applies
+        return strValue;
     }
 
     /// <summary>
@@ -81,6 +122,31 @@ public class FrontMatterParser
                     try
                     {
                         metadata = _deserializer.Deserialize<MarkdownMetadata>(yamlContent) ?? new MarkdownMetadata();
+                        
+                        // Second pass: deserialize variables and parameters with type preservation
+                        // Deserialize without type constraints
+                        var dynamicData = _dynamicDeserializer.Deserialize<object>(yamlContent);
+                        
+                        if (dynamicData is Dictionary<object, object> dict)
+                        {
+                            // Extract variables with proper types
+                            if (dict.ContainsKey("variables") && dict["variables"] is Dictionary<object, object> vars)
+                            {
+                                metadata.Variables = vars.ToDictionary(
+                                    kvp => kvp.Key.ToString() ?? "",
+                                    kvp => ConvertYamlValue(kvp.Value) // Convert to proper type
+                                );
+                            }
+                            
+                            // Extract parameters with proper types
+                            if (dict.ContainsKey("parameters") && dict["parameters"] is Dictionary<object, object> parms)
+                            {
+                                metadata.Parameters = parms.ToDictionary(
+                                    kvp => kvp.Key.ToString() ?? "",
+                                    kvp => ConvertYamlValue(kvp.Value) // Convert to proper type
+                                );
+                            }
+                        }
                     }
                     catch (Exception ex)
                     {
