@@ -17,3 +17,5 @@ This is a demonstration of the Markdown to Razor pre-build generator.
 ## How It Works
 
 The generator runs before the Razor compilation and creates physical `.razor` files from Markdown sources.
+
+<Alert>coucou</Alert>

@@ -15,6 +15,8 @@ Bienvenue dans cet article de démonstration du générateur Markdown vers Razor
 
 ## Fonctionnalités
 
+Greeting generated at: @DateTime.Now.ToString("HH:mm:ss")
+
 Du contenu **Markdown** avec:
 - Des listes
 - Des images
