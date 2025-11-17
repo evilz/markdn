@@ -9,9 +9,7 @@
     <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)\Generated</CompilerGeneratedFilesOutputPath>
     
     <!-- Markdown to Razor Generator Configuration -->
-    <MarkdownBlogDir>content/blog</MarkdownBlogDir>
-    <MarkdownPagesDir>content/pages</MarkdownPagesDir>
-    <GeneratedRazorRoot>Generated</GeneratedRazorRoot>
+    <MarkdownPattern>content/**/*.md</MarkdownPattern>
   </PropertyGroup>
 
   <ItemGroup>
@@ -38,16 +36,13 @@
           WorkingDirectory="$(MSBuildProjectDirectory)" />
     
     <!-- Run the generator tool -->
-    <Exec Command="dotnet run --no-build --project &quot;$(MSBuildThisFileDirectory)..\..\tools\MarkdownToRazorGenerator\MarkdownToRazorGenerator.csproj&quot; &quot;$(MSBuildProjectDirectory)&quot; --blogDir &quot;$(MarkdownBlogDir)&quot; --pagesDir &quot;$(MarkdownPagesDir)&quot; --outputRoot &quot;$(GeneratedRazorRoot)&quot;"
+    <Exec Command="dotnet run --no-build --project &quot;$(MSBuildThisFileDirectory)..\..\tools\MarkdownToRazorGenerator\MarkdownToRazorGenerator.csproj&quot; &quot;$(MSBuildProjectDirectory)&quot; --pattern &quot;$(MarkdownPattern)&quot;"
           WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
 
   <!-- Link generated .razor files as dependent on their .md source files -->
   <ItemGroup>
-    <Content Update="$(MarkdownBlogDir)\**\*.razor">
-      <DependentUpon>%(Filename).md</DependentUpon>
-    </Content>
-    <Content Update="$(MarkdownPagesDir)\**\*.razor">
+    <Content Update="content\**\*.razor">
       <DependentUpon>%(Filename).md</DependentUpon>
     </Content>
   </ItemGroup>
