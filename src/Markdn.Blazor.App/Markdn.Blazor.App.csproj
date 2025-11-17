@@ -42,4 +42,14 @@
           WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>
 
+  <!-- Link generated .razor files as dependent on their .md source files -->
+  <ItemGroup>
+    <Content Update="$(MarkdownBlogDir)\**\*.razor">
+      <DependentUpon>%(Filename).md</DependentUpon>
+    </Content>
+    <Content Update="$(MarkdownPagesDir)\**\*.razor">
+      <DependentUpon>%(Filename).md</DependentUpon>
+    </Content>
+  </ItemGroup>
+
 </Project>

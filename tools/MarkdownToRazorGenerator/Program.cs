@@ -1,3 +1,4 @@
+using System.Text;
 using MarkdownToRazorGenerator.Generators;
 using MarkdownToRazorGenerator.Parsers;
 using MarkdownToRazorGenerator.Utilities;
@@ -98,9 +99,6 @@ public class Program
 
         Console.WriteLine($"Processing {directoryType} directory: {inputPath}");
 
-        // Ensure output directory exists
-        Directory.CreateDirectory(outputPath);
-
         // Find all markdown files
         var markdownFiles = Directory.GetFiles(inputPath, "*.md", SearchOption.AllDirectories);
         totalFiles += markdownFiles.Length;
@@ -152,17 +150,18 @@ public class Program
                     route = SlugGenerator.GenerateRoute(slug, directoryType);
                 }
 
-                // Convert markdown to HTML
-                var htmlContent = markdownConverter.ToHtml(markdownBody);
+                // Generate Razor component (without converting to HTML)
+                var razorContent = razorGenerator.Generate(metadata, markdownBody, route, title);
 
-                // Generate Razor component
-                var razorContent = razorGenerator.Generate(metadata, htmlContent, route, title);
-
-                // Write output file
-                // Capitalize first letter for Razor component naming convention
-                var componentName = char.ToUpperInvariant(slug[0]) + slug.Substring(1);
-                var outputFileName = $"{componentName}.razor";
-                var outputFilePath = Path.Combine(outputPath, outputFileName);
+                // Write output file next to the original .md file
+                // Use PascalCase naming for Razor component compliance
+                var directory = Path.GetDirectoryName(filePath);
+                var fileNameWithoutExt = Path.GetFileNameWithoutExtension(filePath);
+                
+                // Convert to PascalCase: capitalize first letter and after hyphens/underscores
+                var pascalCaseName = ToPascalCase(fileNameWithoutExt);
+                var outputFileName = $"{pascalCaseName}.razor";
+                var outputFilePath = Path.Combine(directory!, outputFileName);
                 File.WriteAllText(outputFilePath, razorContent);
 
                 Console.WriteLine($"    Generated: {outputFileName} (route: {route})");
@@ -226,6 +225,33 @@ public class Program
         Console.WriteLine();
         Console.WriteLine("Example:");
         Console.WriteLine("  MarkdownToRazorGenerator C:\\MyProject --blogDir content/blog --outputRoot Generated");
+    }
+
+    private static string ToPascalCase(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+        {
+            return input;
+        }
+
+        // Split by common separators (hyphen, underscore, space)
+        var parts = input.Split(new[] { '-', '_', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+        var result = new StringBuilder();
+
+        foreach (var part in parts)
+        {
+            if (part.Length > 0)
+            {
+                // Capitalize first letter of each part
+                result.Append(char.ToUpperInvariant(part[0]));
+                if (part.Length > 1)
+                {
+                    result.Append(part.Substring(1));
+                }
+            }
+        }
+
+        return result.ToString();
     }
 
     private class GeneratorConfig

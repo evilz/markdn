@@ -361,7 +361,8 @@ Desktop.ini
 content/
 
 # Generated Razor files from Markdown (build artifacts)
-**/Generated/**/*.razor
+# Generated files are placed next to their .md source files
+**/content/**/*.razor
 
 # Logs
 logs/
