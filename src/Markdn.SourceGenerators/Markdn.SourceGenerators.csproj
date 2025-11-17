@@ -6,11 +6,11 @@
     <Nullable>enable</Nullable>
     <IsRoslynComponent>true</IsRoslynComponent>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-    
+
     <!-- Source Generator Metadata -->
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
-    
+
     <!-- Documentation -->
     <Title>Markdn Source Generators</Title>
     <Description>C# source generator that converts Markdown files to Blazor Razor components</Description>
@@ -20,10 +20,17 @@
 
   <ItemGroup>
     <!-- Roslyn Source Generator Dependencies -->
-    <PackageReference Include="Markdig" Version="0.37.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" PrivateAssets="all" />
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
-    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+    <!-- Markdown engine used inside the generator -->
+    <PackageReference Include="Markdig" Version="0.43.0" PrivateAssets="all" GeneratePathProperty="true" />
+  </ItemGroup>
+
+  <!-- Ensure Markdig is loadable with the analyzer during development (project reference) and when packed -->
+  <ItemGroup>
+    <Analyzer Include="$(PkgMarkdig)\lib\netstandard2.0\Markdig.dll" />
+    <!-- When packing, place dependency next to the analyzer -->
+    <None Include="$(PkgMarkdig)\lib\netstandard2.0\Markdig.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 
 </Project>

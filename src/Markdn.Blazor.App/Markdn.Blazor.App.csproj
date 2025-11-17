@@ -10,6 +10,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="wwwroot\**\*.*" CopyToOutputDirectory="PreserveNewest"  />
+  </ItemGroup>
+  <ItemGroup>
     <!-- Include .md files as additional files for the source generator -->
     <AdditionalFiles Include="**\*.md" Exclude="wwwroot\**\*.md" />
   </ItemGroup>
@@ -20,7 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Markdig" Version="0.37.0" />
+    <!-- Replace conflicting Markdig references with a single unified version -->
+    <PackageReference Include="Markdig" Version="0.43.0" />
+    <!-- Removed: Markdig 0.37.0 and Markdig.Signed 0.43.0 -->
   </ItemGroup>
 
 </Project>

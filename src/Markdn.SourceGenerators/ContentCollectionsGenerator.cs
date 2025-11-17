@@ -67,7 +67,7 @@ public sealed class CollectionAttribute : System.Attribute
         });
 
         var contentFiles = context.AdditionalTextsProvider
-            .Where(static text => 
+            .Where(static text =>
                 text.Path.EndsWith(".md", StringComparison.OrdinalIgnoreCase) ||
                 text.Path.EndsWith(".yaml", StringComparison.OrdinalIgnoreCase) ||
                 text.Path.EndsWith(".yml", StringComparison.OrdinalIgnoreCase) ||
@@ -349,7 +349,7 @@ public sealed class CollectionAttribute : System.Attribute
                 var resourceLiteral = EscapeForStringLiteral(resourceName);
                 var suffixLiteral = EscapeForStringLiteral(file.ResourceSuffix);
                 var slugLiteral = EscapeForStringLiteral(file.Slug);
-                
+
                 // Only generate component reference for Markdown files
                 if (!string.IsNullOrEmpty(file.ComponentFullTypeName))
                 {
@@ -707,7 +707,7 @@ public sealed class CollectionAttribute : System.Attribute
             {
                 normalized = normalized.Substring(1);
             }
-            
+
             // Auto-generate slug from file path (removing extension and normalizing)
             var slug = GenerateSlugFromPath(normalized);
             var suffix = normalized.Replace('/', '.');
@@ -726,7 +726,7 @@ public sealed class CollectionAttribute : System.Attribute
 
         return list;
     }
-    
+
     private static string GenerateSlugFromPath(string normalizedPath)
     {
         // Remove file extension
@@ -736,7 +736,7 @@ public sealed class CollectionAttribute : System.Attribute
         {
             pathWithoutExtension = pathWithoutExtension.Substring(0, lastDot);
         }
-        
+
         // Convert to slug format (lowercase, replace separators with hyphens)
         return pathWithoutExtension
             .ToLowerInvariant()
@@ -764,6 +764,22 @@ public sealed class CollectionAttribute : System.Attribute
     {
         try
         {
+            // Avoid Uri for non-rooted inputs which throws on relative paths
+            if (!Path.IsPathRooted(basePath) || !Path.IsPathRooted(targetPath))
+            {
+                // Best-effort manual relative path
+                var normalizedBase = AppendDirectorySeparator(basePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar));
+                var normalizedTarget = targetPath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+
+                if (normalizedTarget.StartsWith(normalizedBase, StringComparison.OrdinalIgnoreCase))
+                {
+                    var rel = normalizedTarget.Substring(normalizedBase.Length).TrimStart(Path.DirectorySeparatorChar);
+                    return string.IsNullOrEmpty(rel) ? Path.GetFileName(targetPath) : rel;
+                }
+
+                return targetPath;
+            }
+
             var baseUri = new Uri(AppendDirectorySeparator(basePath));
             var targetUri = new Uri(targetPath);
             if (!string.Equals(baseUri.Scheme, targetUri.Scheme, StringComparison.OrdinalIgnoreCase))

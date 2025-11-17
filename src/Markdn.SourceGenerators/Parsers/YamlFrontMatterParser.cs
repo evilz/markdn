@@ -2,14 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Markdig;
+using Markdig.Extensions.Yaml;
+using Markdig.Syntax;
 using Markdn.SourceGenerators.Models;
 
 namespace Markdn.SourceGenerators.Parsers;
 
 /// <summary>
-/// Basic YAML front matter parser for Markdown files.
-/// Parses --- delimited YAML at the start of files into ComponentMetadata.
-/// Zero external dependencies - implements subset of YAML needed for front matter.
+/// YAML front matter parser for Markdown files using Markdig's YAML extension for block detection
+/// and a minimal YAML subset parser for mapping to ComponentMetadata.
 /// </summary>
 public static class YamlFrontMatterParser
 {
@@ -27,60 +29,89 @@ public static class YamlFrontMatterParser
             return (ComponentMetadata.Empty, content ?? string.Empty, new List<string>());
         }
 
-        // Check if content starts with YAML front matter delimiter
-        var lines = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-        
-        if (lines.Length < 3 || lines[0].Trim() != Delimiter)
-        {
-            // No YAML front matter found
-            return (ComponentMetadata.Empty, content, new List<string>());
-        }
+        var errors = new List<string>();
 
-        // Find closing delimiter
-        int closingDelimiterIndex = -1;
-        for (int i = 1; i < lines.Length; i++)
+        // Pre-validate: if file starts with '---', ensure there's a closing '---'
+        var allLines = content.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+        if (allLines.Length > 0 && string.Equals(allLines[0].Trim(), Delimiter, StringComparison.Ordinal))
         {
-            if (lines[i].Trim() == Delimiter)
+            bool hasClosing = false;
+            for (int i = 1; i < allLines.Length; i++)
             {
-                closingDelimiterIndex = i;
-                break;
+                if (string.Equals(allLines[i].Trim(), Delimiter, StringComparison.Ordinal))
+                {
+                    hasClosing = true;
+                    break;
+                }
+            }
+            if (!hasClosing)
+            {
+                errors.Add("Invalid YAML front matter: missing closing '---' delimiter");
+                return (ComponentMetadata.Empty, content, errors);
             }
         }
 
-        if (closingDelimiterIndex == -1)
-        {
-            // No closing delimiter found - report invalid YAML front matter (MD001)
-            var yamlErrors = new List<string>
-            {
-                "Invalid YAML front matter: missing closing '---' delimiter"
-            };
+        // Build Markdig pipeline with YAML front matter support
+        var pipeline = new MarkdownPipelineBuilder()
+            .UseYamlFrontMatter()
+            .Build();
 
-            // Treat whole file as markdown content when front matter is malformed
-            return (ComponentMetadata.Empty, content, yamlErrors);
+        // Parse document
+        var document = Markdown.Parse(content, pipeline);
+
+        // Locate YAML front matter block if present
+        var yamlBlock = document.Descendants<YamlFrontMatterBlock>().FirstOrDefault();
+        if (yamlBlock == null)
+        {
+            // No front matter -> return original content
+            return (ComponentMetadata.Empty, content, errors);
         }
 
-        // Extract YAML content (between delimiters)
-        var yamlLines = lines.Skip(1).Take(closingDelimiterIndex - 1).ToArray();
-        var yamlContent = string.Join("\n", yamlLines);
+        // Extract YAML content lines from the block
+        var yamlBuilder = new StringBuilder();
+        for (int i = 0; i < yamlBlock.Lines.Count; i++)
+        {
+            var line = yamlBlock.Lines.Lines[i];
+            yamlBuilder.AppendLine(line.Slice.ToString());
+        }
+        var yamlText = yamlBuilder.ToString();
 
-        // Extract remaining Markdown content (after closing delimiter)
-        var markdownLines = lines.Skip(closingDelimiterIndex + 1);
-        var markdownContent = string.Join("\n", markdownLines);
+        // Parse YAML into ComponentMetadata (custom minimal mapping)
+        var (metadata, yamlErrors) = ParseYaml(yamlText);
+        if (yamlErrors.Count > 0)
+        {
+            errors.AddRange(yamlErrors);
+        }
 
-        // Parse YAML into ComponentMetadata
-        var (metadata, errors) = ParseYaml(yamlContent);
+        // Extract remaining Markdown content: take everything after the second '---' delimiter
+        int delimiterCount = 0;
+        int startLine = 0;
+        for (int i = 0; i < allLines.Length; i++)
+        {
+            if (string.Equals(allLines[i].Trim(), Delimiter, StringComparison.Ordinal))
+            {
+                delimiterCount++;
+                if (delimiterCount == 2)
+                {
+                    startLine = i + 1;
+                    break;
+                }
+            }
+        }
+        var markdownContent = startLine < allLines.Length
+            ? string.Join("\n", allLines.Skip(startLine))
+            : string.Empty;
 
         return (metadata, markdownContent, errors);
     }
 
     /// <summary>
     /// Parse YAML content into ComponentMetadata.
-    /// Supports basic key-value pairs and arrays.
+    /// Supports basic key-value pairs, arrays of scalars, and a special 'parameters' array of objects.
     /// </summary>
     private static (ComponentMetadata, List<string>) ParseYaml(string yaml)
     {
         var errors = new List<string>();
-        
         if (string.IsNullOrWhiteSpace(yaml))
         {
             return (ComponentMetadata.Empty, errors);
@@ -88,22 +119,19 @@ public static class YamlFrontMatterParser
 
         var properties = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
         var lines = yaml.Split('\n');
-        
+
         for (int i = 0; i < lines.Length; i++)
         {
             var line = lines[i];
-            
             // Skip empty lines and comments
             if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#"))
             {
                 continue;
             }
 
-            // Parse key-value pair
             var colonIndex = line.IndexOf(':');
             if (colonIndex == -1)
             {
-                // Invalid YAML line - no colon found
                 errors.Add($"Invalid YAML syntax: missing ':' in line '{line.Trim()}'");
                 continue;
             }
@@ -111,19 +139,16 @@ public static class YamlFrontMatterParser
             var key = line.Substring(0, colonIndex).Trim();
             var valueText = line.Substring(colonIndex + 1).Trim();
 
-            // Validate key is not empty
             if (string.IsNullOrWhiteSpace(key))
             {
                 errors.Add($"Invalid YAML syntax: empty key in line '{line.Trim()}'");
                 continue;
             }
 
-            // Check if this is an array (value is empty and next lines are indented with -)
+            // Arrays
             if (string.IsNullOrEmpty(valueText) && i + 1 < lines.Length)
             {
-                // Special handling for parameters which are array of objects
-                if (key.Equals("parameters", StringComparison.OrdinalIgnoreCase) || 
-                    key.Equals("$parameters", StringComparison.OrdinalIgnoreCase))
+                if (key.Equals("parameters", StringComparison.OrdinalIgnoreCase) || key.Equals("$parameters", StringComparison.OrdinalIgnoreCase))
                 {
                     var (parametersList, nextIndex) = ParseParameterArray(lines, i + 1);
                     if (parametersList.Count > 0)
@@ -134,10 +159,8 @@ public static class YamlFrontMatterParser
                 }
                 else
                 {
-                    // Regular array of strings
                     var arrayValues = new List<string>();
                     int j = i + 1;
-                    
                     while (j < lines.Length)
                     {
                         var nextLine = lines[j];
@@ -146,34 +169,26 @@ public static class YamlFrontMatterParser
                             j++;
                             continue;
                         }
-
-                        var trimmedNextLine = nextLine.TrimStart();
-                        if (trimmedNextLine.StartsWith("-"))
+                        var trimmed = nextLine.TrimStart();
+                        if (trimmed.StartsWith("-"))
                         {
-                            // Array item
-                            var itemValue = trimmedNextLine.Substring(1).Trim();
-                            
-                            // Remove quotes if present
-                            if ((itemValue.StartsWith("\"") && itemValue.EndsWith("\"")) ||
-                                (itemValue.StartsWith("'") && itemValue.EndsWith("'")))
+                            var item = trimmed.Substring(1).Trim();
+                            if ((item.StartsWith("\"") && item.EndsWith("\"")) || (item.StartsWith("'") && item.EndsWith("'")))
                             {
-                                itemValue = itemValue.Substring(1, itemValue.Length - 2);
+                                item = item.Substring(1, item.Length - 2);
                             }
-                            
-                            arrayValues.Add(itemValue);
+                            arrayValues.Add(item);
                             j++;
                         }
                         else
                         {
-                            // Next property or end of array
                             break;
                         }
                     }
-                    
                     if (arrayValues.Count > 0)
                     {
                         properties[key] = arrayValues;
-                        i = j - 1; // Skip processed lines
+                        i = j - 1;
                     }
                 }
             }
@@ -181,19 +196,14 @@ public static class YamlFrontMatterParser
             {
                 // Scalar value
                 var value = valueText;
-                
-                // Remove quotes if present
-                if ((value.StartsWith("\"") && value.EndsWith("\"")) ||
-                    (value.StartsWith("'") && value.EndsWith("'")))
+                if ((value.StartsWith("\"") && value.EndsWith("\"")) || (value.StartsWith("'") && value.EndsWith("'")))
                 {
                     value = value.Substring(1, value.Length - 2);
                 }
-                
                 properties[key] = value;
             }
         }
 
-        // Map to ComponentMetadata
         var metadata = new ComponentMetadata
         {
             Title = GetStringValue(properties, "title"),
@@ -206,99 +216,63 @@ public static class YamlFrontMatterParser
             Slug = GetStringValue(properties, "slug"),
             Parameters = ParseParameters(properties)
         };
-        
+
         return (metadata, errors);
     }
 
-    /// <summary>
-    /// Get string value from properties dictionary.
-    /// </summary>
     private static string? GetStringValue(Dictionary<string, object> properties, params string[] keys)
     {
         foreach (var key in keys)
         {
-            if (properties.TryGetValue(key, out var value))
+            if (properties.TryGetValue(key, out var value) && value is string s && !string.IsNullOrWhiteSpace(s))
             {
-                // If it's a string, return it
-                if (value is string stringValue && !string.IsNullOrWhiteSpace(stringValue))
-                {
-                    return stringValue;
-                }
+                return s;
             }
         }
-        
         return null;
     }
 
-    /// <summary>
-    /// Get array value from properties dictionary.
-    /// </summary>
     private static List<string>? GetArrayValue(Dictionary<string, object> properties, params string[] keys)
     {
         foreach (var key in keys)
         {
             if (properties.TryGetValue(key, out var value))
             {
-                // If it's already a list, return it
-                if (value is List<string> listValue && listValue.Count > 0)
-                {
-                    return listValue;
-                }
-                
-                // If it's a single string value, wrap it in a list
-                if (value is string stringValue && !string.IsNullOrWhiteSpace(stringValue))
-                {
-                    return new List<string> { stringValue };
-                }
+                if (value is List<string> list && list.Count > 0)
+                    return list;
+
+                if (value is string s && !string.IsNullOrWhiteSpace(s))
+                    return new List<string> { s };
             }
         }
-        
         return null;
     }
 
-    /// <summary>
-    /// Parse parameters array from properties dictionary.
-    /// Expected format:
-    /// $parameters:
-    ///   - name: Title
-    ///     type: string
-    ///   - name: Count
-    ///     type: int
-    /// </summary>
-    private static List<ParameterDefinition>? ParseParameters(Dictionary<string, object> properties)
+    private static IReadOnlyList<ParameterDefinition>? ParseParameters(Dictionary<string, object> properties)
     {
-        // Try both "parameters" and "$parameters" keys
-        if (!properties.TryGetValue("parameters", out var value) && 
-            !properties.TryGetValue("$parameters", out value))
+        if (!properties.TryGetValue("parameters", out var p) || p is not List<Dictionary<string, string>> arr || arr.Count == 0)
         {
             return null;
         }
 
-        // Parameters should be a list
-        if (value is not List<ParameterDefinition> paramList || paramList.Count == 0)
+        var list = new List<ParameterDefinition>(arr.Count);
+        foreach (var obj in arr)
         {
-            return null;
+            obj.TryGetValue("name", out var name);
+            obj.TryGetValue("type", out var type);
+            list.Add(new ParameterDefinition
+            {
+                Name = name ?? string.Empty,
+                Type = type ?? string.Empty
+            });
         }
-
-        return paramList;
+        return list;
     }
 
-    /// <summary>
-    /// Parse array of parameter objects (YAML nested structure).
-    /// Format:
-    ///   - name: Title
-    ///     type: string
-    ///   - name: Count
-    ///     type: int
-    /// </summary>
-    private static (List<ParameterDefinition> Parameters, int NextIndex) ParseParameterArray(string[] lines, int startIndex)
+    private static (List<Dictionary<string, string>> Items, int NextIndex) ParseParameterArray(string[] lines, int startIndex)
     {
-        var parameters = new List<ParameterDefinition>();
+        var items = new List<Dictionary<string, string>>();
         int i = startIndex;
-        
-        string? currentName = null;
-        string? currentType = null;
-        
         while (i < lines.Length)
         {
             var line = lines[i];
@@ -307,64 +281,68 @@ public static class YamlFrontMatterParser
                 i++;
                 continue;
             }
-
             var trimmed = line.TrimStart();
-            
-            // Check if this is the start of a new parameter object (-)
-            if (trimmed.StartsWith("-"))
+            if (!trimmed.StartsWith("-"))
             {
-                // Save previous parameter if complete
-                if (currentName != null && currentType != null)
+                break; // end of array
+            }
+
+            // Start new object
+            var current = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            // Support inline: - name: X
+            var rest = trimmed.Substring(1).Trim();
+            if (!string.IsNullOrEmpty(rest))
+            {
+                var idx = rest.IndexOf(':');
+                if (idx > 0)
                 {
-                    parameters.Add(new ParameterDefinition 
-                    { 
-                        Name = currentName, 
-                        Type = currentType 
-                    });
-                    currentName = null;
-                    currentType = null;
+                    var k = rest.Substring(0, idx).Trim();
+                    var v = rest.Substring(idx + 1).Trim();
+                    if ((v.StartsWith("\"") && v.EndsWith("\"")) || (v.StartsWith("'") && v.EndsWith("'")))
+                    {
+                        v = v.Substring(1, v.Length - 2);
+                    }
+                    current[k] = v;
                 }
-                
-                // Check if name is on the same line: "- name: Title"
-                var afterDash = trimmed.Substring(1).Trim();
-                if (afterDash.StartsWith("name:"))
+            }
+
+            i++;
+            // Parse indented key-value pairs under this dash item
+            while (i < lines.Length)
+            {
+                var l = lines[i];
+                if (string.IsNullOrWhiteSpace(l))
                 {
-                    currentName = afterDash.Substring(5).Trim();
+                    i++;
+                    continue;
                 }
-                
+                var lTrim = l.TrimStart();
+                if (lTrim.StartsWith("-"))
+                {
+                    break; // next array item
+                }
+                var cidx = l.IndexOf(':');
+                if (cidx == -1)
+                {
+                    // malformed line
+                    i++;
+                    continue;
+                }
+                var k2 = l.Substring(0, cidx).Trim();
+                var v2 = l.Substring(cidx + 1).Trim();
+                if ((v2.StartsWith("\"") && v2.EndsWith("\"")) || (v2.StartsWith("'") && v2.EndsWith("'")))
+                {
+                    v2 = v2.Substring(1, v2.Length - 2);
+                }
+                if (!string.IsNullOrWhiteSpace(k2))
+                {
+                    current[k2] = v2;
+                }
                 i++;
             }
-            else if (trimmed.StartsWith("name:"))
-            {
-                currentName = trimmed.Substring(5).Trim();
-                i++;
-            }
-            else if (trimmed.StartsWith("type:"))
-            {
-                currentType = trimmed.Substring(5).Trim();
-                i++;
-            }
-            else if (!trimmed.StartsWith(" ") && trimmed.Contains(":"))
-            {
-                // Different property, end of parameters array
-                break;
-            }
-            else
-            {
-                i++;
-            }
+
+            items.Add(current);
         }
-        
-        // Add the last parameter if complete
-        if (currentName != null && currentType != null)
-        {
-            parameters.Add(new ParameterDefinition 
-            { 
-                Name = currentName, 
-                Type = currentType 
-            });
-        }
-        
-        return (parameters, i);
+        return (items, i);
     }
 }

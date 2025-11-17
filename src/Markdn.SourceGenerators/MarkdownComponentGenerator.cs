@@ -1,14 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
-using Markdn.SourceGenerators.Emitters;
-using Markdn.SourceGenerators.Generators;
 using Markdn.SourceGenerators.Models;
 using Markdn.SourceGenerators.Parsers;
+using Markdig;
 
 namespace Markdn.SourceGenerators;
 
@@ -24,32 +22,12 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
         var markdownFiles = context.AdditionalTextsProvider
             .Where(text => text.Path.EndsWith(".md", StringComparison.OrdinalIgnoreCase));
 
-        // Combine with compilation to get root namespace
-        var filesWithCompilation = markdownFiles
-            .Combine(context.CompilationProvider);
-
-        // Read build property RootNamespace (if provided) from analyzer config options.
-        var rootNamespaceProvider = context.AnalyzerConfigOptionsProvider.Select((opts, ct) =>
-        {
-            if (opts.GlobalOptions.TryGetValue("build_property.RootNamespace", out var val))
-            {
-                return string.IsNullOrWhiteSpace(val) ? null : val.Trim();
-            }
-            return null;
-        });
-
-        // Combine files, compilation and root-namespace option
-        var combined = filesWithCompilation.Combine(rootNamespaceProvider);
-
-        // Generate source for each markdown file with knowledge of the project's RootNamespace
-        // Use an inline lambda to destructure the combined tuple to avoid complex
-        // tuple type signatures in the method declaration.
-        context.RegisterSourceOutput(combined, (spc, input) =>
+        // Generate source for each markdown file
+        context.RegisterSourceOutput(markdownFiles, (spc, file) =>
         {
             try
             {
-                var ((file, compilation), providedRootNamespace) = input;
-                GenerateSourceWithOptions(spc, file, compilation, providedRootNamespace);
+                GenerateRazorComponent(spc, file);
             }
             catch (Exception ex)
             {
@@ -57,7 +35,7 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
                     new DiagnosticDescriptor(
                         "MD999",
                         "Generator error",
-                        $"Error during source generation dispatch: {ex.Message}",
+                        $"Error during source generation: {ex.Message}",
                         "MarkdownGenerator",
                         DiagnosticSeverity.Error,
                         true),
@@ -67,11 +45,7 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
         });
     }
 
-    private static void GenerateSourceWithOptions(
-        SourceProductionContext context,
-        AdditionalText file,
-        Compilation compilation,
-        string? providedRootNamespace)
+    private static void GenerateRazorComponent(SourceProductionContext context, AdditionalText file)
     {
         var sourceText = file.GetText(context.CancellationToken);
         if (sourceText == null)
@@ -83,12 +57,11 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
         {
             var content = sourceText.ToString();
             var fileName = System.IO.Path.GetFileName(file.Path);
-            var componentName = ComponentNameGenerator.Generate(fileName);
 
-            // Parse YAML front matter and extract metadata
+            // Step 1: Parse YAML front matter using Markdig (via YamlFrontMatterParser)
             var (metadata, markdownContent, yamlErrors) = YamlFrontMatterParser.Parse(content);
 
-            // Report YAML parsing errors (T102)
+            // Report YAML parsing errors
             foreach (var error in yamlErrors)
             {
                 var diagnostic = Diagnostic.Create(
@@ -99,230 +72,34 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
                 context.ReportDiagnostic(diagnostic);
             }
 
-            // Validate parameter metadata (T085, T086, T087)
+            // Validate parameter metadata
             ValidateParameterMetadata(context, file, metadata);
 
-            // Preserve Razor syntax before Markdown processing
-            var razorPreserver = new RazorPreserver();
-            var contentWithPlaceholders = razorPreserver.ExtractRazorSyntax(markdownContent);
+            // Step 2: Determine slug route
+            // If slug is supplied => use it like @page "{slug}"
+            // else use the file path to generate slug
+            var slugRoute = ResolveSlugRoute(metadata, file.Path);
 
-            // T104: Surface parser-level component tag concerns early.
-            // The RazorPreserver collects component tag names it found; report a low-confidence
-            // MD006 (UnresolvableComponentReference) for names that are not valid C# identifiers
-            // (this helps catch obvious user mistakes like invalid characters or hyphens).
-            // Filter out empty/whitespace names up-front to keep the loop body focused.
-            var parserComponentNames = razorPreserver.GetComponentNames()
-                .Where(n => !string.IsNullOrWhiteSpace(n))
-                .Select(n => n!.Trim());
+            // Step 3: Parse Markdown to HTML using Markdig
+            var pipeline = MarkdigPipelineBuilder.Build();
+            var htmlContent = Markdown.ToHtml(markdownContent, pipeline);
 
-            foreach (var compName in parserComponentNames)
-            {
-                // If the name is not a valid C# identifier, warn early
-                if (!Microsoft.CodeAnalysis.CSharp.SyntaxFacts.IsValidIdentifier(compName))
-                {
-                    var diagnostic = Diagnostic.Create(
-                        Diagnostics.DiagnosticDescriptors.UnresolvableComponentReference,
-                        Location.None,
-                        compName,
-                        fileName);
-                    context.ReportDiagnostic(diagnostic);
-                }
-            }
+            // Step 4: Generate Razor file content
+            var razorContent = GenerateRazorFile(metadata, slugRoute, htmlContent);
 
-            // Report any Razor preservation/parsing errors (T103)
-            var razorErrors = razorPreserver.GetErrors();
-            foreach (var err in razorErrors)
-            {
-                var diagnostic = Diagnostic.Create(
-                    Diagnostics.DiagnosticDescriptors.MalformedRazorSyntax,
-                    Location.None,
-                    fileName,
-                    err);
-                context.ReportDiagnostic(diagnostic);
-            }
-
-            // Prefer the project's RootNamespace (from MSBuild) when available; fall back to assembly name
-            var rootNamespace = !string.IsNullOrWhiteSpace(providedRootNamespace)
-                ? providedRootNamespace!
-                : (compilation.AssemblyName ?? "Generated");
-            
-            // For namespace generation, we'll use a simple heuristic
-            // The file path typically contains project structure
-            var projectRoot = ComponentPathUtilities.GetProjectRootFromPath(file.Path);
-            var namespaceValue = metadata.Namespace ?? NamespaceGenerator.Generate(rootNamespace, file.Path, projectRoot);
-            var slugRoute = ResolveSlugRoute(metadata, file.Path, projectRoot);
-
-            // Convert Markdown content to HTML (with placeholders)
-            var htmlWithPlaceholders = ConvertMarkdownToHtml(contentWithPlaceholders);
-
-            // Restore Razor syntax after Markdown processing, but exclude @code blocks
-            // @code blocks are emitted separately, not in the BuildRenderTree
-            var htmlContent = razorPreserver.RestoreRazorSyntax(htmlWithPlaceholders, excludeCodeBlocks: true);
-
-            // Extract @code blocks for separate emission (T053-T055)
-            var codeBlocks = ExtractCodeBlocks(razorPreserver);
-
-            // Attempt to resolve referenced component types in the current compilation so
-            // we can emit fully-qualified type names (avoids needing fragile using directives).
-            // Strategy:
-            // 1) Scan the HTML for component tag simple names.
-            // 2) For each name, first try to find a type in this compilation by simple name
-            //    (FindTypeNamespaceBySimpleName). If found and it's a component, emit the
-            //    fully-qualified namespace for that type.
-            // 3) If not found, respect explicit front-matter `componentNamespaces` by trying
-            //    to resolve the type using those namespaces.
-            // 4) If still unresolved, try common candidate namespaces under the project's
-            //    root namespace as a last attempt.
-            // 5) If unresolved after all attempts, emit MD006 to clearly inform the user.
-
-            var componentTypeMap = new Dictionary<string, string>(StringComparer.Ordinal);
-            var componentNamePattern = new System.Text.RegularExpressions.Regex(@"<([A-Z][A-Za-z0-9_]*)\b");
-            var matches = componentNamePattern.Matches(htmlContent);
-            var componentNames = new HashSet<string>(StringComparer.Ordinal);
-
-            foreach (System.Text.RegularExpressions.Match m in matches)
-            {
-                var name = m.Groups[1].Value;
-                if (string.IsNullOrEmpty(name) || componentNames.Contains(name))
-                {
-                    continue;
-                }
-                componentNames.Add(name);
-
-                // 1) Try to find any type in the compilation with this simple name (preferred)
-                var discoveredNs = FindTypeNamespaceBySimpleName(compilation, name);
-                if (!string.IsNullOrEmpty(discoveredNs))
-                {
-                    componentTypeMap[name] = discoveredNs;
-                    continue;
-                }
-
-                // 2) If front-matter provides explicit component namespaces, attempt to resolve
-                if (metadata.ComponentNamespaces != null && metadata.ComponentNamespaces.Count > 0)
-                {
-                    foreach (var ns in metadata.ComponentNamespaces)
-                    {
-                        if (string.IsNullOrWhiteSpace(ns))
-                        {
-                            continue;
-                        }
-
-                        var full = ns.Trim().TrimEnd('.') + "." + name;
-                        var symbol = compilation.GetTypeByMetadataName(full);
-                        if (symbol != null && IsComponentType(symbol))
-                        {
-                            componentTypeMap[name] = symbol.ContainingNamespace?.ToDisplayString() ?? ns.Trim();
-                            break;
-                        }
-                    }
-
-                    // If type wasn't found in compilation but namespace is explicitly provided,
-                    // trust it and add to the map anyway. This handles Razor components that
-                    // haven't been compiled yet when the source generator runs.
-                    if (!componentTypeMap.ContainsKey(name))
-                    {
-                        // Use the first provided namespace as the resolution
-                        var firstNs = metadata.ComponentNamespaces.FirstOrDefault(s => !string.IsNullOrWhiteSpace(s));
-                        if (!string.IsNullOrEmpty(firstNs))
-                        {
-                            componentTypeMap[name] = firstNs.Trim().TrimEnd('.');
-                        }
-                    }
-
-                    if (componentTypeMap.ContainsKey(name))
-                        continue;
-                }
-
-                // 3) Try common candidate namespaces under the project's root namespace
-                var candidates = new[] {
-                    $"{rootNamespace}.Components.{name}",
-                    $"{rootNamespace}.Components.Shared.{name}",
-                    $"{rootNamespace}.Components.Pages.{name}",
-                    $"{rootNamespace}.Pages.{name}",
-                    $"{rootNamespace}.{name}"
-                };
-
-                foreach (var full in candidates)
-                {
-                    var symbol = compilation.GetTypeByMetadataName(full);
-                    if (symbol != null && IsComponentType(symbol))
-                    {
-                        var ns = symbol.ContainingNamespace?.ToDisplayString();
-                        if (!string.IsNullOrEmpty(ns))
-                        {
-                            componentTypeMap[name] = ns;
-                            break;
-                        }
-                    }
-                }
-
-                // 4) If still unresolved, report a diagnostic so the user knows how to fix it
-                if (!componentTypeMap.ContainsKey(name))
-                {
-                    var diagnostic = Diagnostic.Create(
-                        Diagnostics.DiagnosticDescriptors.UnresolvableComponentReference,
-                        Location.None,
-                        name,
-                        fileName);
-                    context.ReportDiagnostic(diagnostic);
-                }
-            }
-
-            // Determine which candidate namespaces actually exist in the compilation
-            List<string> availableNamespaces;
-            if (metadata.ComponentNamespaces != null && metadata.ComponentNamespaces.Count > 0)
-            {
-                // Use explicit namespaces provided in front-matter
-                availableNamespaces = metadata.ComponentNamespaces.Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s!.Trim()).ToList();
-            }
-            else
-            {
-                var namespaceCandidates = new[] {
-                    rootNamespace + ".Components",
-                    rootNamespace + ".Components.Shared",
-                    rootNamespace + ".Components.Pages",
-                    rootNamespace + ".Pages",
-                    rootNamespace
-                };
-
-                availableNamespaces = new List<string>();
-                foreach (var nsCandidate in namespaceCandidates)
-                {
-                    if (NamespaceExists(compilation, nsCandidate))
-                    {
-                        availableNamespaces.Add(nsCandidate);
-                    }
-                }
-            }
-
-            var source = ComponentCodeEmitter.Emit(
-                componentName,
-                namespaceValue,
-                htmlContent,
-                metadata,
-                codeBlocks,
-                componentTypeMap,
-                availableNamespaces,
-                slugRoute);
-
-            // Create unique hint name using relative path from project root
-            var relativePath = GetRelativePath(file.Path, projectRoot);
-            var hintName = relativePath.Replace(System.IO.Path.DirectorySeparatorChar, '_')
-                                      .Replace(System.IO.Path.AltDirectorySeparatorChar, '_')
-                                      .Replace(".md", ".md.g.cs");
-
+            // Step 5: Compute hint name and add source
+            var hintName = ComputeHintName(file.Path);
             context.AddSource(
                 hintName,
-                SourceText.From(source, Encoding.UTF8));
+                SourceText.From(razorContent, Encoding.UTF8));
         }
         catch (Exception ex)
         {
-            // Report any errors as diagnostics
             var diagnostic = Diagnostic.Create(
                 new DiagnosticDescriptor(
                     "MD999",
                     "Generator error",
-                    $"Error generating component: {ex.Message}",
+                    $"Error generating component for '{file.Path}': {ex.Message}",
                     "MarkdownGenerator",
                     DiagnosticSeverity.Error,
                     true),
@@ -331,160 +108,341 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
         }
     }
 
-    private static readonly string[] RoutePrefixDirectories = new[] { "pages", "components", "shared", "views", "content" };
+    private static readonly string[] _routePrefixDirectories = new[] { "pages", "components", "shared", "views", "content" };
 
-    private static string? ResolveSlugRoute(ComponentMetadata metadata, string filePath, string projectRoot)
+    /// <summary>
+    /// Resolve the slug route from metadata or file path
+    /// </summary>
+    private static string? ResolveSlugRoute(ComponentMetadata metadata, string filePath)
     {
-        var slug = metadata.Slug;
-        if (string.IsNullOrWhiteSpace(slug))
+        // If slug is supplied in front matter, use it
+        if (!string.IsNullOrWhiteSpace(metadata.Slug))
         {
-            slug = DeriveSlugFromPath(filePath, projectRoot);
+            return NormalizeSlugRoute(metadata.Slug!);
         }
 
-        if (string.IsNullOrWhiteSpace(slug))
-        {
-            return null;
-        }
-
-        return NormalizeSlugRoute(slug);
+        // Otherwise, derive from file path
+        return DeriveSlugFromPath(filePath);
     }
 
-    private static string? DeriveSlugFromPath(string filePath, string projectRoot)
+    /// <summary>
+    /// Derive slug from file path by removing known prefix directories
+    /// </summary>
+    private static string DeriveSlugFromPath(string filePath)
     {
-        var relativePath = GetRelativePath(filePath, projectRoot);
-        if (string.IsNullOrWhiteSpace(relativePath))
+        var path = filePath.Replace('\\', '/');
+        var lower = path.ToLowerInvariant();
+
+        int start = 0;
+        foreach (var dir in _routePrefixDirectories)
         {
-            return null;
+            var needle = "/" + dir + "/";
+            var idx = lower.IndexOf(needle, StringComparison.OrdinalIgnoreCase);
+            if (idx >= 0)
+            {
+                start = idx + needle.Length;
+                break;
+            }
+
+            if (lower.StartsWith(dir + "/", StringComparison.OrdinalIgnoreCase))
+            {
+                start = dir.Length + 1;
+                break;
+            }
         }
 
-        var slug = relativePath.Replace(System.IO.Path.DirectorySeparatorChar, '/')
-            .Replace(System.IO.Path.AltDirectorySeparatorChar, '/');
-
-        if (slug.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+        var relative = path.Substring(start);
+        if (relative.StartsWith("/"))
         {
-            slug = slug.Substring(0, slug.Length - 3);
+            relative = relative.Substring(1);
         }
 
-        return slug;
+        if (relative.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+        {
+            relative = relative.Substring(0, relative.Length - 3);
+        }
+
+        relative = relative.Trim('/');
+        if (string.IsNullOrEmpty(relative))
+        {
+            return "/";
+        }
+
+        return "/" + relative.ToLowerInvariant();
     }
 
+    /// <summary>
+    /// Normalize slug route to ensure it starts with / and is lowercase
+    /// </summary>
     private static string NormalizeSlugRoute(string slug)
     {
         var normalized = slug.Replace('\\', '/').Trim();
+
         if (normalized.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
         {
             normalized = normalized.Substring(0, normalized.Length - 3);
         }
 
-        normalized = normalized.Trim('/');
-        // Remove known folder prefixes only if they are the first segment in the path
-        foreach (var prefix in RoutePrefixDirectories)
+        // Remove known folder prefixes if they're at the start
+        foreach (var prefix in _routePrefixDirectories)
         {
-            if (normalized.StartsWith(prefix + "/", StringComparison.OrdinalIgnoreCase))
+            if (normalized.StartsWith("/" + prefix + "/", StringComparison.OrdinalIgnoreCase))
             {
                 normalized = normalized.Substring(prefix.Length + 1);
                 break;
             }
-            // Also handle case where the entire path is just the prefix
-            else if (normalized.Equals(prefix, StringComparison.OrdinalIgnoreCase))
+            if (normalized.StartsWith(prefix + "/", StringComparison.OrdinalIgnoreCase))
             {
-                normalized = string.Empty;
+                normalized = normalized.Substring(prefix.Length);
                 break;
             }
         }
+
+        normalized = normalized.Trim('/');
         if (string.IsNullOrEmpty(normalized))
         {
             return "/";
         }
 
-        return "/" + normalized.ToLowerInvariant();
-    }
-
-    private static string GetRelativePath(string filePath, string projectRoot)
-    {
-        // Remove project root from file path to get relative path
-        if (filePath.StartsWith(projectRoot, StringComparison.OrdinalIgnoreCase))
+        if (!normalized.StartsWith("/"))
         {
-            var relativePath = filePath.Substring(projectRoot.Length);
-            if (relativePath.StartsWith(System.IO.Path.DirectorySeparatorChar.ToString()) ||
-                relativePath.StartsWith(System.IO.Path.AltDirectorySeparatorChar.ToString()))
-            {
-                relativePath = relativePath.Substring(1);
-            }
-            return relativePath;
+            normalized = "/" + normalized;
         }
-        
-        // Fallback: use filename
-        return System.IO.Path.GetFileName(filePath) ?? "unknown.md";
+
+        return normalized.ToLowerInvariant();
     }
 
-    private static string ConvertMarkdownToHtml(string markdown)
+    /// <summary>
+    /// Generate Razor file content from metadata and HTML
+    /// </summary>
+    private static string GenerateRazorFile(ComponentMetadata metadata, string? slugRoute, string htmlContent)
     {
-        // Use basic parser due to source generator assembly isolation limitations
-        // Markdig integration deferred until runtime preprocessing solution available
-        return BasicMarkdownParser.ConvertToHtml(markdown);
-    }
+        var sb = new StringBuilder();
 
-    private static List<CodeBlock> ExtractCodeBlocks(RazorPreserver preserver)
-    {
-        // T053-T055: Extract @code blocks from preserved content
-        var codeBlocks = new List<CodeBlock>();
-        
-        // Get preserved blocks from the RazorPreserver
-        var preservedBlocks = preserver.GetPreservedBlocks();
-        
-        foreach (var kvp in preservedBlocks)
+        // Add @page directive if route is available
+        if (!string.IsNullOrWhiteSpace(slugRoute))
         {
-            var placeholder = kvp.Key;
-            var content = kvp.Value;
-            
-            // Check if this is a @code block
-            if (content.StartsWith("@code"))
+            sb.AppendLine($"@page \"{slugRoute}\"");
+            sb.AppendLine();
+        }
+
+        // Add @using directives from metadata
+        if (metadata.Using != null && metadata.Using.Count > 0)
+        {
+            foreach (var usingDirective in metadata.Using)
             {
-                // Extract code content (remove @code { and closing })
-                var codeContent = ExtractCodeBlockContent(content);
-                
-                codeBlocks.Add(new CodeBlock
+                sb.AppendLine($"@using {usingDirective}");
+            }
+            sb.AppendLine();
+        }
+
+        // Add layout attribute if specified
+        if (!string.IsNullOrEmpty(metadata.Layout))
+        {
+            sb.AppendLine($"@layout {metadata.Layout}");
+            sb.AppendLine();
+        }
+
+        // Add inherit directive if specified
+        if (!string.IsNullOrEmpty(metadata.Inherit))
+        {
+            sb.AppendLine($"@inherits {metadata.Inherit}");
+            sb.AppendLine();
+        }
+
+        // Add custom attributes if specified
+        if (metadata.Attribute != null && metadata.Attribute.Count > 0)
+        {
+            foreach (var attribute in metadata.Attribute)
+            {
+                sb.AppendLine($"@attribute [{attribute}]");
+            }
+            sb.AppendLine();
+        }
+
+        // Add PageTitle component if title is specified
+        if (!string.IsNullOrEmpty(metadata.Title))
+        {
+            sb.AppendLine($"<PageTitle>{EscapeHtml(metadata.Title!)}</PageTitle>");
+            sb.AppendLine();
+        }
+
+        // Add the HTML content
+        sb.AppendLine(htmlContent);
+
+        // Add @code block with parameters if specified
+        if (metadata.Parameters != null && metadata.Parameters.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("@code {");
+
+            foreach (var parameter in metadata.Parameters)
+            {
+                sb.AppendLine("    [Parameter]");
+                var defaultValue = IsReferenceType(parameter.Type) ? " = default!;" : "";
+                sb.AppendLine($"    public {parameter.Type} {parameter.Name} {{ get; set; }}{defaultValue}");
+                sb.AppendLine();
+            }
+
+            sb.AppendLine("}");
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Escape HTML special characters
+    /// </summary>
+    private static string EscapeHtml(string text)
+    {
+        return text.Replace("&", "&amp;")
+                   .Replace("<", "&lt;")
+                   .Replace(">", "&gt;")
+                   .Replace("\"", "&quot;");
+    }
+
+    /// <summary>
+    /// Check if a type is a reference type (needs = default! initialization)
+    /// </summary>
+    private static bool IsReferenceType(string typeName)
+    {
+        var valueTypes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "bool", "byte", "sbyte", "char", "decimal", "double", "float", "int", "uint",
+            "long", "ulong", "short", "ushort", "nint", "nuint"
+        };
+
+        if (valueTypes.Contains(typeName))
+        {
+            return false;
+        }
+
+        if (typeName.EndsWith("?"))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Compute hint name for generated file
+    /// </summary>
+    private static string ComputeHintName(string filePath)
+    {
+        var fileName = System.IO.Path.GetFileName(filePath);
+        if (string.IsNullOrEmpty(fileName))
+        {
+            fileName = "generated.md";
+        }
+
+        // Use simple string replacement for .NET Standard 2.0 compatibility
+        if (fileName.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
+        {
+            return fileName.Substring(0, fileName.Length - 3) + ".razor.g";
+        }
+
+        return fileName + ".razor.g";
+    }
+
+    /// <summary>
+    /// Validate parameter metadata and report diagnostics
+    /// </summary>
+    private static void ValidateParameterMetadata(
+        SourceProductionContext context,
+        AdditionalText file,
+        ComponentMetadata metadata)
+    {
+        var fileName = System.IO.Path.GetFileName(file.Path);
+
+        if (metadata.Parameters == null || metadata.Parameters.Count == 0)
+        {
+            return;
+        }
+
+        var seenNames = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var parameter in metadata.Parameters)
+        {
+            // Validate parameter name is valid C# identifier
+            if (!SyntaxFacts.IsValidIdentifier(parameter.Name))
+            {
+                var diagnostic = Diagnostic.Create(
+                    Diagnostics.DiagnosticDescriptors.InvalidParameterName,
+                    Location.None,
+                    parameter.Name,
+                    fileName);
+                context.ReportDiagnostic(diagnostic);
+            }
+
+            // Check for duplicate parameter names
+            if (!seenNames.Add(parameter.Name))
+            {
+                var diagnostic = Diagnostic.Create(
+                    Diagnostics.DiagnosticDescriptors.DuplicateParameterName,
+                    Location.None,
+                    parameter.Name,
+                    fileName);
+                context.ReportDiagnostic(diagnostic);
+            }
+
+            // Validate parameter type
+            if (string.IsNullOrWhiteSpace(parameter.Type))
+            {
+                var diagnostic = Diagnostic.Create(
+                    Diagnostics.DiagnosticDescriptors.InvalidParameterType,
+                    Location.None,
+                    parameter.Type,
+                    fileName);
+                context.ReportDiagnostic(diagnostic);
+            }
+            else
+            {
+                var trimmedType = parameter.Type.Trim();
+
+                if (trimmedType.Contains(" ") && !IsValidGenericType(trimmedType))
                 {
-                    Content = codeContent,
-                    Location = null // Location tracking can be added later
-                });
+                    var diagnostic = Diagnostic.Create(
+                        Diagnostics.DiagnosticDescriptors.InvalidParameterType,
+                        Location.None,
+                        parameter.Type,
+                        fileName);
+                    context.ReportDiagnostic(diagnostic);
+                }
+                else if (trimmedType.Contains("<<") || trimmedType.Contains(">>") ||
+                    trimmedType.StartsWith(".") || trimmedType.EndsWith(".") ||
+                    trimmedType.Contains(".."))
+                {
+                    var diagnostic = Diagnostic.Create(
+                        Diagnostics.DiagnosticDescriptors.InvalidParameterType,
+                        Location.None,
+                        parameter.Type,
+                        fileName);
+                    context.ReportDiagnostic(diagnostic);
+                }
+                else if (trimmedType.Length > 0 && char.IsDigit(trimmedType[0]))
+                {
+                    var diagnostic = Diagnostic.Create(
+                        Diagnostics.DiagnosticDescriptors.InvalidParameterType,
+                        Location.None,
+                        parameter.Type,
+                        fileName);
+                    context.ReportDiagnostic(diagnostic);
+                }
             }
         }
-        
-        return codeBlocks;
     }
 
-    private static string ExtractCodeBlockContent(string codeBlock)
-    {
-        // Remove "@code {" from start and "}" from end
-        var content = codeBlock.Trim();
-        
-        // Find the opening brace
-        var openBraceIndex = content.IndexOf('{');
-        if (openBraceIndex == -1)
-            return string.Empty;
-            
-        // Extract content between braces
-        var startIndex = openBraceIndex + 1;
-        var endIndex = content.LastIndexOf('}');
-        
-        if (endIndex <= startIndex)
-            return string.Empty;
-            
-        return content.Substring(startIndex, endIndex - startIndex).Trim();
-    }
-
+    /// <summary>
+    /// Check if a type name represents a valid generic type
+    /// </summary>
     private static bool IsValidGenericType(string typeName)
     {
-        // Basic check for generic types like List<string>, Dictionary<string, int>
-        // This is a simple heuristic - not a full C# type parser
         if (!typeName.Contains("<") || !typeName.Contains(">"))
         {
             return false;
         }
-        
-        // Count brackets to ensure they're balanced
+
         int angleBracketCount = 0;
         foreach (char c in typeName)
         {
@@ -503,199 +461,5 @@ public class MarkdownComponentGenerator : IIncrementalGenerator
         }
         return angleBracketCount == 0;
     }
-
-    private static void ValidateParameterMetadata(
-        SourceProductionContext context,
-        AdditionalText file,
-        ComponentMetadata metadata)
-    {
-        var fileName = System.IO.Path.GetFileName(file.Path);
-
-        if (metadata.Parameters == null || metadata.Parameters.Count == 0)
-        {
-            return;
-        }
-
-        var seenNames = new HashSet<string>(StringComparer.Ordinal);
-
-        foreach (var parameter in metadata.Parameters)
-        {
-            // T085: Validate parameter name is valid C# identifier
-            if (!SyntaxFacts.IsValidIdentifier(parameter.Name))
-            {
-                var diagnostic = Diagnostic.Create(
-                    Diagnostics.DiagnosticDescriptors.InvalidParameterName,
-                    Location.None,
-                    parameter.Name,
-                    fileName);
-                context.ReportDiagnostic(diagnostic);
-            }
-
-            // T087: Check for duplicate parameter names
-            if (!seenNames.Add(parameter.Name))
-            {
-                var diagnostic = Diagnostic.Create(
-                    Diagnostics.DiagnosticDescriptors.DuplicateParameterName,
-                    Location.None,
-                    parameter.Name,
-                    fileName);
-                context.ReportDiagnostic(diagnostic);
-            }
-
-            // T086: Validate parameter type is valid C# type syntax
-            // For now, do basic validation - check it's not empty and contains valid characters
-            if (string.IsNullOrWhiteSpace(parameter.Type))
-            {
-                var diagnostic = Diagnostic.Create(
-                    Diagnostics.DiagnosticDescriptors.InvalidParameterType,
-                    Location.None,
-                    parameter.Type,
-                    fileName);
-                context.ReportDiagnostic(diagnostic);
-            }
-            else
-            {
-                // Basic validation: check for common invalid patterns
-                var trimmedType = parameter.Type.Trim();
-                
-                // Check for spaces (types shouldn't have spaces unless generic)
-                if (trimmedType.Contains(" ") && !IsValidGenericType(trimmedType))
-                {
-                    var diagnostic = Diagnostic.Create(
-                        Diagnostics.DiagnosticDescriptors.InvalidParameterType,
-                        Location.None,
-                        parameter.Type,
-                        fileName);
-                    context.ReportDiagnostic(diagnostic);
-                }
-                // Check for other invalid characters
-                else if (trimmedType.Contains("<<") || trimmedType.Contains(">>") || 
-                    trimmedType.Contains("&&&") || trimmedType.Contains("|||") ||
-                    trimmedType.StartsWith(".") || trimmedType.EndsWith(".") ||
-                    trimmedType.Contains(".."))
-                {
-                    var diagnostic = Diagnostic.Create(
-                        Diagnostics.DiagnosticDescriptors.InvalidParameterType,
-                        Location.None,
-                        parameter.Type,
-                        fileName);
-                    context.ReportDiagnostic(diagnostic);
-                }
-                // Check for starting with number
-                else if (trimmedType.Length > 0 && char.IsDigit(trimmedType[0]))
-                {
-                    var diagnostic = Diagnostic.Create(
-                        Diagnostics.DiagnosticDescriptors.InvalidParameterType,
-                        Location.None,
-                        parameter.Type,
-                        fileName);
-                    context.ReportDiagnostic(diagnostic);
-                }
-            }
-        }
-    }
-
-    private static string? FindTypeNamespaceBySimpleName(Compilation compilation, string simpleName)
-    {
-        try
-        {
-            var stack = new Stack<INamespaceSymbol>();
-            stack.Push(compilation.GlobalNamespace);
-            while (stack.Count > 0)
-            {
-                var ns = stack.Pop();
-                foreach (var member in ns.GetTypeMembers())
-                {
-                    if (member.Name == simpleName)
-                    {
-                        if (IsComponentType(member))
-                        {
-                            return member.ContainingNamespace?.ToDisplayString();
-                        }
-                    }
-                }
-                foreach (var child in ns.GetNamespaceMembers())
-                {
-                    stack.Push(child);
-                }
-            }
-        }
-        catch
-        {
-            // best-effort: swallow and return null
-        }
-        return null;
-    }
-
-    private static bool IsComponentType(INamedTypeSymbol symbol)
-    {
-        try
-        {
-            var baseType = symbol.BaseType;
-            while (baseType != null)
-            {
-                var fullName = baseType.ToDisplayString();
-                if (fullName == "Microsoft.AspNetCore.Components.ComponentBase" || fullName.EndsWith(".ComponentBase"))
-                {
-                    return true;
-                }
-                baseType = baseType.BaseType;
-            }
-        }
-        catch
-        {
-            // ignore and return false
-        }
-        return false;
-    }
-
-    private static bool NamespaceExists(Compilation compilation, string namespaceName)
-    {
-        var ns = FindNamespaceSymbol(compilation.GlobalNamespace, namespaceName);
-        if (ns == null)
-            return false;
-
-        // Consider a namespace to "exist" for our purposes only if it contains any type members
-        // (placeholder/empty namespace declarations without types should not count).
-        return NamespaceHasAnyType(ns);
-    }
-
-    private static bool NamespaceHasAnyType(INamespaceSymbol ns)
-    {
-        try
-        {
-            if (ns.GetTypeMembers().Length > 0)
-                return true;
-
-            foreach (var child in ns.GetNamespaceMembers())
-            {
-                if (NamespaceHasAnyType(child))
-                    return true;
-            }
-        }
-        catch
-        {
-            // swallow and fall through
-        }
-        return false;
-    }
-
-    private static INamespaceSymbol? FindNamespaceSymbol(INamespaceSymbol ns, string target)
-    {
-        if (ns.ToDisplayString() == target)
-        {
-            return ns;
-        }
-
-        foreach (var child in ns.GetNamespaceMembers())
-        {
-            var found = FindNamespaceSymbol(child, target);
-            if (found != null)
-            {
-                return found;
-            }
-        }
-
-        return null;
-    }
 }
+

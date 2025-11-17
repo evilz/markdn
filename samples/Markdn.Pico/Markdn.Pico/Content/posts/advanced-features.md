@@ -4,6 +4,8 @@ pubDate: 2025-11-10T09:15:00Z
 description: "Explore advanced features of Markdn including custom components and dynamic routing."
 author: "John Doe"
 tags: ["advanced", "components", "routing"]
+componentNamespaces:
+    - Markdn.Pico.Components
 ---
 
 # Advanced Markdn Features
@@ -14,9 +16,9 @@ Once you're comfortable with the basics, it's time to explore some of Markdn's m
 
 You can embed custom Blazor components directly in your Markdown:
 
-```markdown
-<MyCustomComponent Parameter="value" />
-```
+
+<Heading Title="coucou" />
+
 
 ## Dynamic Routing
 

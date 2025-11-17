@@ -26,21 +26,20 @@ public class QueryBenchmarks
         // Create sample data
         _items = Enumerable.Range(1, 100).Select(i => new ContentItem
         {
-            Id = $"item-{i}",
             Slug = $"item-{i}",
             Title = $"Test Item {i}",
             FilePath = $"/content/item-{i}.md",
-            Content = $"Content for item {i}",
+            //Content = $"Content for item {i}",
             HtmlContent = $"<p>Content for item {i}</p>",
-            Data = new Dictionary<string, object>
-            {
-                ["published"] = i % 2 == 0,
-                ["category"] = i % 3 == 0 ? "featured" : "normal",
-                ["views"] = i * 10
-            },
+            // Data = new Dictionary<string, object>
+            // {
+            //     ["published"] = i % 2 == 0,
+            //     ["category"] = i % 3 == 0 ? "featured" : "normal",
+            //     ["views"] = i * 10
+            // },
             IsValid = true,
-            ValidationErrors = new List<string>(),
-            ParsedAt = DateTime.UtcNow
+            // ValidationErrors = new List<string>(),
+            // ParsedAt = DateTime.UtcNow
         }).ToList();
 
         _queryExecutor = new QueryExecutor(NullLogger<QueryExecutor>.Instance);

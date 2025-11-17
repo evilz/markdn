@@ -10,7 +10,7 @@ internal static class DiagnosticDescriptors
     private const string Category = "MarkdownGenerator";
 
     public static readonly DiagnosticDescriptor InvalidYamlFrontMatter = new(
-        id: "MD001",
+        id: "MD102",
         title: "Invalid YAML front matter",
         messageFormat: "Invalid YAML front matter in '{0}': {1}",
         category: Category,
@@ -26,7 +26,7 @@ internal static class DiagnosticDescriptors
         isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor InvalidParameterName = new(
-        id: "MD003",
+        id: "MD085",
         title: "Invalid parameter name",
         messageFormat: "Parameter name '{0}' is not a valid C# identifier in '{1}'",
         category: Category,
@@ -34,7 +34,7 @@ internal static class DiagnosticDescriptors
         isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor InvalidParameterType = new(
-        id: "MD004",
+        id: "MD086",
         title: "Invalid parameter type",
         messageFormat: "Parameter type '{0}' is not valid C# type syntax in '{1}'",
         category: Category,
@@ -42,7 +42,7 @@ internal static class DiagnosticDescriptors
         isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor DuplicateParameterName = new(
-        id: "MD005",
+        id: "MD087",
         title: "Duplicate parameter name",
         messageFormat: "Parameter name '{0}' is defined multiple times in '{1}'",
         category: Category,
@@ -54,15 +54,11 @@ internal static class DiagnosticDescriptors
         title: "Component reference may not be resolvable",
         messageFormat: "Component '{0}' may not be resolvable in '{1}'",
         category: Category,
-        // This diagnostic is low-confidence (heuristic) and can appear in projects
-        // that intentionally reference framework components (e.g., Counter). Treat
-        // it as informational by default so it doesn't break builds when warnings
-        // are treated as errors.
-        defaultSeverity: DiagnosticSeverity.Info,
+        defaultSeverity: DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor MalformedRazorSyntax = new(
-        id: "MD007",
+        id: "MD103",
         title: "Malformed Razor syntax",
         messageFormat: "Malformed Razor syntax in '{0}': {1}",
         category: Category,

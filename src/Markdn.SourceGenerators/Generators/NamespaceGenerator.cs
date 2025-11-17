@@ -12,23 +12,19 @@ internal static class NamespaceGenerator
     public static string Generate(string rootNamespace, string filePath, string projectRoot)
     {
         var directory = Path.GetDirectoryName(filePath) ?? string.Empty;
-        
-        // Get relative path from project root (manual implementation for netstandard2.0)
+
         var relativePath = GetRelativePath(projectRoot, directory);
-        
-        // If at root or in root directory, just use root namespace
-        if (string.IsNullOrEmpty(relativePath) || relativePath == "." || relativePath == string.Empty)
+
+        if (string.IsNullOrEmpty(relativePath) || relativePath == ".")
         {
             return rootNamespace;
         }
 
-        // Convert path separators to dots and clean up
         var namespaceSuffix = relativePath
             .Replace(Path.DirectorySeparatorChar, '.')
             .Replace(Path.AltDirectorySeparatorChar, '.')
             .Trim('.');
 
-        // Remove empty segments
         var segments = namespaceSuffix.Split(new[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
         if (segments.Length == 0)
         {
@@ -41,27 +37,52 @@ internal static class NamespaceGenerator
 
     private static string GetRelativePath(string relativeTo, string path)
     {
-        var relativeToUri = new Uri(EnsureTrailingSlash(relativeTo));
-        var pathUri = new Uri(EnsureTrailingSlash(path));
+        // Normalize separators
+        relativeTo = (relativeTo ?? string.Empty).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+        path = (path ?? string.Empty).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
 
-        if (relativeToUri.Scheme != pathUri.Scheme)
+        if (string.IsNullOrEmpty(path))
+            return string.Empty;
+
+        if (string.Equals(relativeTo, path, StringComparison.OrdinalIgnoreCase))
+            return ".";
+
+        // If both are rooted, use URI-based relative computation
+        if (Path.IsPathRooted(relativeTo) && Path.IsPathRooted(path))
         {
-            return path; // Can't make relative
+            try
+            {
+                var baseUri = new Uri(AppendDirectorySeparator(relativeTo));
+                var targetUri = new Uri(AppendDirectorySeparator(path));
+                if (baseUri.Scheme == targetUri.Scheme)
+                {
+                    var relativeUri = baseUri.MakeRelativeUri(targetUri);
+                    var rel = Uri.UnescapeDataString(relativeUri.ToString());
+                    return rel.Replace('/', Path.DirectorySeparatorChar).TrimEnd(Path.DirectorySeparatorChar);
+                }
+            }
+            catch
+            {
+                // fall back to manual
+            }
         }
 
-        var relativeUri = relativeToUri.MakeRelativeUri(pathUri);
-        var relativePath = Uri.UnescapeDataString(relativeUri.ToString());
+        // Manual fallback for relative/non-rooted inputs
+        // Common case in tests: relativeTo == "pages", path == "pages" or a subfolder
+        if (!string.IsNullOrEmpty(relativeTo) && path.StartsWith(relativeTo, StringComparison.OrdinalIgnoreCase))
+        {
+            var remainder = path.Substring(relativeTo.Length).TrimStart(Path.DirectorySeparatorChar);
+            return string.IsNullOrEmpty(remainder) ? "." : remainder;
+        }
 
-        return relativePath.Replace('/', Path.DirectorySeparatorChar);
+        return path;
     }
 
-    private static string EnsureTrailingSlash(string path)
+    private static string AppendDirectorySeparator(string p)
     {
-        if (!path.EndsWith(Path.DirectorySeparatorChar.ToString()) &&
-            !path.EndsWith(Path.AltDirectorySeparatorChar.ToString()))
-        {
-            return path + Path.DirectorySeparatorChar;
-        }
-        return path;
+        if (string.IsNullOrEmpty(p)) return p;
+        if (!p.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            return p + Path.DirectorySeparatorChar;
+        return p;
     }
 }
