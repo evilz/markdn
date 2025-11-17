@@ -12,4 +12,13 @@ public class MarkdownMetadata
     public string? Summary { get; set; }
     public DateTime? Date { get; set; }
     public List<string>? Tags { get; set; }
+    
+    // Component support
+    public List<string>? ComponentNamespaces { get; set; }
+    
+    // Code variables support (dictionary for flexible key-value pairs)
+    public Dictionary<string, object>? Variables { get; set; }
+    
+    // Component parameters support
+    public Dictionary<string, object>? Parameters { get; set; }
 }
