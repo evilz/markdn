@@ -1,4 +1,5 @@
 using Markdig;
+using System.Text.RegularExpressions;
 
 namespace MarkdownToRazorGenerator.Parsers;
 
@@ -26,6 +27,31 @@ public class MarkdownConverter
             return string.Empty;
         }
 
-        return Markdown.ToHtml(markdown, _pipeline);
+        var html = Markdown.ToHtml(markdown, _pipeline);
+        
+        // Post-process to unescape HTML entities within Razor expressions
+        return UnescapeRazorExpressions(html);
+    }
+
+    /// <summary>
+    /// Unescapes HTML entities within Razor expressions (@...) to preserve valid Razor syntax
+    /// </summary>
+    private string UnescapeRazorExpressions(string html)
+    {
+        // Match Razor expressions: @ followed by any characters until whitespace, newline, or HTML tag
+        // This pattern captures expressions like @DateTime.Now.ToString("HH:mm:ss") or @Model.Name
+        var pattern = @"@([A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*(\([^)]*\))*)";
+        
+        return Regex.Replace(html, pattern, match =>
+        {
+            var expression = match.Value;
+            // Unescape HTML entities within the Razor expression
+            expression = expression.Replace("&quot;", "\"")
+                                  .Replace("&#39;", "'")
+                                  .Replace("&lt;", "<")
+                                  .Replace("&gt;", ">")
+                                  .Replace("&amp;", "&");
+            return expression;
+        });
     }
 }

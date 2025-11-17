@@ -68,4 +68,33 @@ public class MarkdownConverterTests
         // Assert
         html.Should().BeEmpty();
     }
+
+    [Fact]
+    public void ToHtml_WithRazorExpression_PreservesRazorSyntax()
+    {
+        // Arrange
+        var markdown = "Greeting generated at: @DateTime.Now.ToString(\"HH:mm:ss\")";
+
+        // Act
+        var html = _converter.ToHtml(markdown);
+
+        // Assert
+        html.Should().Contain("@DateTime.Now.ToString(\"HH:mm:ss\")");
+        html.Should().NotContain("&quot;");
+    }
+
+    [Fact]
+    public void ToHtml_WithMultipleRazorExpressions_PreservesAll()
+    {
+        // Arrange
+        var markdown = "Hello @Model.Name, the time is @DateTime.Now.ToString(\"HH:mm\")";
+
+        // Act
+        var html = _converter.ToHtml(markdown);
+
+        // Assert
+        html.Should().Contain("@Model.Name");
+        html.Should().Contain("@DateTime.Now.ToString(\"HH:mm\")");
+        html.Should().NotContain("&quot;");
+    }
 }
