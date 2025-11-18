@@ -24,6 +24,35 @@ public static class MarkdownExtensions
             .Build();
 
     /// <summary>
+    /// Extracts and deserializes YAML front matter from markdown content as a dictionary
+    /// </summary>
+    /// <param name="markdown">The markdown content with YAML front matter</param>
+    /// <returns>The deserialized front matter as a dictionary, or null if no front matter exists</returns>
+    public static IDictionary<string, object>? GetFrontMatter(this string markdown)
+    {
+        var document = Markdown.Parse(markdown, Pipeline);
+        var block = document
+            .Descendants<YamlFrontMatterBlock>()
+            .FirstOrDefault();
+
+        if (block == null) 
+            return null;
+
+        var yaml = block.Lines.ToString();
+        var data = YamlDeserializer.Deserialize<object>(yaml);
+        
+        if (data is Dictionary<object, object> dict)
+        {
+            return dict.ToDictionary(
+                kvp => kvp.Key.ToString() ?? "",
+                kvp => kvp.Value
+            );
+        }
+        
+        return null;
+    }
+
+    /// <summary>
     /// Extracts and deserializes YAML front matter from markdown content
     /// </summary>
     /// <typeparam name="T">The type to deserialize the front matter into</typeparam>

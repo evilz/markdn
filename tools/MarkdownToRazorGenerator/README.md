@@ -99,11 +99,17 @@ using MarkdownToRazorGenerator.Extensions;
 var markdown = @"---
 title: My Post
 slug: my-post
+customField: customValue
 ---
 
 # Content Here";
 
-// Extract typed front matter
+// Extract as dictionary (flexible, supports any fields)
+var frontMatter = markdown.GetFrontMatter();
+Console.WriteLine(frontMatter?["title"]); // "My Post"
+Console.WriteLine(frontMatter?["customField"]); // "customValue"
+
+// Extract as typed object (when structure is known)
 var metadata = markdown.GetFrontMatter<MarkdownMetadata>();
 Console.WriteLine(metadata?.Title); // "My Post"
 
@@ -114,7 +120,7 @@ var yaml = markdown.GetFrontMatterYaml();
 var body = markdown.GetMarkdownBody(); // "# Content Here"
 ```
 
-These extension methods use Markdig's built-in `YamlFrontMatterBlock` parser for reliable and efficient parsing.
+These extension methods use Markdig's built-in `YamlFrontMatterBlock` parser for reliable and efficient parsing. The dictionary overload is useful when working with arbitrary or dynamic front matter fields, while the generic overload provides type safety when the structure is known.
 
 ### Front-Matter (YAML)
 

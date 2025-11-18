@@ -114,4 +114,71 @@ slug: test-slug
         // Assert
         yaml.Should().BeNull();
     }
+
+    [Fact]
+    public void GetFrontMatter_WithValidFrontMatter_ReturnsDictionary()
+    {
+        // Arrange
+        var markdown = @"---
+title: Test Title
+slug: test-slug
+customField: customValue
+count: 42
+---
+
+# Content Here";
+
+        // Act
+        var frontMatter = markdown.GetFrontMatter();
+
+        // Assert
+        frontMatter.Should().NotBeNull();
+        frontMatter.Should().ContainKey("title");
+        frontMatter!["title"].Should().Be("Test Title");
+        frontMatter.Should().ContainKey("slug");
+        frontMatter["slug"].Should().Be("test-slug");
+        frontMatter.Should().ContainKey("customField");
+        frontMatter["customField"].Should().Be("customValue");
+        frontMatter.Should().ContainKey("count");
+        frontMatter["count"].Should().Be(42);
+    }
+
+    [Fact]
+    public void GetFrontMatter_WithoutFrontMatter_ReturnsDictionaryNull()
+    {
+        // Arrange
+        var markdown = "# Just Markdown\n\nNo front matter here.";
+
+        // Act
+        var frontMatter = markdown.GetFrontMatter();
+
+        // Assert
+        frontMatter.Should().BeNull();
+    }
+
+    [Fact]
+    public void GetFrontMatter_WithComplexStructure_ReturnsDictionaryWithNestedObjects()
+    {
+        // Arrange
+        var markdown = @"---
+title: Test
+tags:
+  - tag1
+  - tag2
+metadata:
+  author: John
+  published: true
+---
+
+# Content";
+
+        // Act
+        var frontMatter = markdown.GetFrontMatter();
+
+        // Assert
+        frontMatter.Should().NotBeNull();
+        frontMatter.Should().ContainKey("title");
+        frontMatter.Should().ContainKey("tags");
+        frontMatter.Should().ContainKey("metadata");
+    }
 }
