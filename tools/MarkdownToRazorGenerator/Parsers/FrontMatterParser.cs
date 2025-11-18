@@ -1,6 +1,6 @@
+using MarkdownToRazorGenerator.Extensions;
 using MarkdownToRazorGenerator.Models;
 using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 
 namespace MarkdownToRazorGenerator.Parsers;
 
@@ -9,18 +9,11 @@ namespace MarkdownToRazorGenerator.Parsers;
 /// </summary>
 public class FrontMatterParser
 {
-    private readonly IDeserializer _deserializer;
     private readonly IDeserializer _dynamicDeserializer;
 
     public FrontMatterParser()
     {
-        _deserializer = new DeserializerBuilder()
-            .WithNamingConvention(CamelCaseNamingConvention.Instance)
-            .IgnoreUnmatchedProperties()
-            .Build();
-            
-        // Create a deserializer that attempts to preserve types by trying to convert strings
-        // This won't work with YamlDotNet's default behavior, so we'll need to manually convert
+        // Create a deserializer for dynamic type preservation in variables/parameters
         _dynamicDeserializer = new DeserializerBuilder()
             .Build();
     }
@@ -84,80 +77,50 @@ public class FrontMatterParser
 
         try
         {
-            // Find the second --- delimiter
-            var lines = content.Split('\n');
-            int firstDelimiterLine = -1;
-            int secondDelimiterLine = -1;
-
-            for (int i = 0; i < lines.Length; i++)
-            {
-                var trimmedLine = lines[i].Trim();
-                if (trimmedLine == "---")
-                {
-                    if (firstDelimiterLine == -1)
-                    {
-                        firstDelimiterLine = i;
-                    }
-                    else
-                    {
-                        secondDelimiterLine = i;
-                        break;
-                    }
-                }
-            }
-
-            if (firstDelimiterLine != -1 && secondDelimiterLine != -1 && secondDelimiterLine > firstDelimiterLine)
-            {
-                // Extract YAML content between delimiters
-                var yamlLines = lines.Skip(firstDelimiterLine + 1).Take(secondDelimiterLine - firstDelimiterLine - 1);
-                var yamlContent = string.Join('\n', yamlLines);
-
-                // Extract markdown body after second delimiter
-                var bodyLines = lines.Skip(secondDelimiterLine + 1);
-                markdownBody = string.Join('\n', bodyLines);
-
-                // Parse YAML
-                if (!string.IsNullOrWhiteSpace(yamlContent))
-                {
-                    try
-                    {
-                        metadata = _deserializer.Deserialize<MarkdownMetadata>(yamlContent) ?? new MarkdownMetadata();
-                        
-                        // Second pass: deserialize variables and parameters with type preservation
-                        // Deserialize without type constraints
-                        var dynamicData = _dynamicDeserializer.Deserialize<object>(yamlContent);
-                        
-                        if (dynamicData is Dictionary<object, object> dict)
-                        {
-                            // Extract variables with proper types
-                            if (dict.ContainsKey("variables") && dict["variables"] is Dictionary<object, object> vars)
-                            {
-                                metadata.Variables = vars.ToDictionary(
-                                    kvp => kvp.Key.ToString() ?? "",
-                                    kvp => ConvertYamlValue(kvp.Value) // Convert to proper type
-                                );
-                            }
-                            
-                            // Extract parameters with proper types
-                            if (dict.ContainsKey("parameters") && dict["parameters"] is Dictionary<object, object> parms)
-                            {
-                                metadata.Parameters = parms.ToDictionary(
-                                    kvp => kvp.Key.ToString() ?? "",
-                                    kvp => ConvertYamlValue(kvp.Value) // Convert to proper type
-                                );
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        errors.Add($"YAML parsing error: {ex.Message}");
-                    }
-                }
-            }
+            // Use the simplified extension method to extract front matter
+            metadata = content.GetFrontMatter<MarkdownMetadata>() ?? new MarkdownMetadata();
+            markdownBody = content.GetMarkdownBody();
         }
         catch (Exception ex)
         {
-            errors.Add($"Front-matter extraction error: {ex.Message}");
+            errors.Add($"YAML parsing error: {ex.Message}");
+            return (metadata, markdownBody, errors);
+        }
+        
+        // Second pass: deserialize variables and parameters with type preservation
+        var yamlContent = content.GetFrontMatterYaml();
+        
+        if (!string.IsNullOrWhiteSpace(yamlContent))
+        {
+            try
+            {
+                var dynamicData = _dynamicDeserializer.Deserialize<object>(yamlContent);
+                
+                if (dynamicData is Dictionary<object, object> dict)
+                {
+                    // Extract variables with proper types
+                    if (dict.ContainsKey("variables") && dict["variables"] is Dictionary<object, object> vars)
+                    {
+                        metadata.Variables = vars.ToDictionary(
+                            kvp => kvp.Key.ToString() ?? "",
+                            kvp => ConvertYamlValue(kvp.Value) // Convert to proper type
+                        );
+                    }
+                    
+                    // Extract parameters with proper types
+                    if (dict.ContainsKey("parameters") && dict["parameters"] is Dictionary<object, object> parms)
+                    {
+                        metadata.Parameters = parms.ToDictionary(
+                            kvp => kvp.Key.ToString() ?? "",
+                            kvp => ConvertYamlValue(kvp.Value) // Convert to proper type
+                        );
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                errors.Add($"YAML parsing error: {ex.Message}");
+            }
         }
 
         return (metadata, markdownBody, errors);
