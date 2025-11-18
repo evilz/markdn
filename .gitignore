@@ -360,6 +360,10 @@ Desktop.ini
 # Content directory (user data - may want to customize)
 content/
 
+# Generated Razor files from Markdown (build artifacts)
+# Generated files are placed next to their .md source files
+**/content/**/*.razor
+
 # Logs
 logs/
 *.log

@@ -11,13 +11,3 @@ Current date: @DateTime.Now.ToString("yyyy-MM-dd")
 
 ## Name Display
 
-Hello, @name! Welcome to hot reload testing.
-
-@code {
-    private string name = "World";
-    
-    protected override void OnInitialized()
-    {
-        name = "Blazor Developer";
-    }
-}

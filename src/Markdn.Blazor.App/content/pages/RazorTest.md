@@ -1,10 +1,10 @@
 ---
 title: Razor Syntax Test
 namespace: Markdn.Blazor.App.Pages
-componentNamespaces:
-    - Markdn.Blazor.App.Components
-    - Markdn.Blazor.App.Components.Shared
-    - Markdn.Blazor.App.Components.Pages
+#componentNamespaces:
+#    - Markdn.Blazor.App.Components
+#    - Markdn.Blazor.App.Components.Shared
+#    - Markdn.Blazor.App.Components.Pages
 ---
 
 # Razor Syntax Preservation Test
@@ -13,23 +13,11 @@ This page demonstrates Razor syntax preservation through Markdown processing.
 
 ## Code Block Test
 
-@code {
-    private int counter = 0;
-    private string message = "Hello from Razor!";
-    
-    private void IncrementCounter()
-    {
-        counter++;
-    }
-}
 
 ## Expression Test
 
 Current time: @DateTime.Now
 
-Message: @message
-
-Counter value: @(counter * 2)
 
 ## Component Test
 
@@ -39,5 +27,4 @@ Counter value: @(counter * 2)
 
 You can mix **Markdown** with Razor expressions seamlessly.
 
-- List item with @message
 - Another item with @DateTime.Now.ToString()
