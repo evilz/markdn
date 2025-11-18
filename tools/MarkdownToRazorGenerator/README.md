@@ -8,7 +8,7 @@ This tool provides an alternative approach to the source generator for creating 
 
 ## Features
 
-- 📝 **YAML Front-Matter Parsing**: Uses YamlDotNet to extract metadata from Markdown files
+- 📝 **YAML Front-Matter Parsing**: Uses Markdig's YamlFrontMatter extension with simplified extension methods
 - 🔄 **Markdig Conversion**: Converts Markdown to HTML with advanced extensions (tables, task lists, etc.)
 - 🎯 **Automatic Routing**: Generates `@page` directives based on file structure or metadata
 - 📄 **Page Title Generation**: Creates `<PageTitle>` from front-matter or file content
@@ -22,6 +22,8 @@ The tool is structured as follows:
 
 ```
 tools/MarkdownToRazorGenerator/
+├── Extensions/
+│   └── MarkdownExtensions.cs      # Markdown front-matter extension methods
 ├── Models/
 │   └── MarkdownMetadata.cs       # Front-matter data model
 ├── Parsers/
@@ -86,6 +88,33 @@ The target is automatically included in projects configured for this feature:
 ```
 
 ## Markdown File Format
+
+### Using Extension Methods
+
+The tool provides convenient extension methods for working with markdown content and front matter:
+
+```csharp
+using MarkdownToRazorGenerator.Extensions;
+
+var markdown = @"---
+title: My Post
+slug: my-post
+---
+
+# Content Here";
+
+// Extract typed front matter
+var metadata = markdown.GetFrontMatter<MarkdownMetadata>();
+Console.WriteLine(metadata?.Title); // "My Post"
+
+// Get raw YAML front matter
+var yaml = markdown.GetFrontMatterYaml();
+
+// Get markdown body (without front matter)
+var body = markdown.GetMarkdownBody(); // "# Content Here"
+```
+
+These extension methods use Markdig's built-in `YamlFrontMatterBlock` parser for reliable and efficient parsing.
 
 ### Front-Matter (YAML)
 
