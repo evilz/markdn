@@ -55,6 +55,12 @@ public sealed class ComponentMetadata
     public IReadOnlyList<ParameterDefinition>? Parameters { get; init; }
 
     /// <summary>
+    /// Variables defined in the YAML front matter (excluding special keys like $namespace, parameters, etc.)
+    /// These will be generated as dynamic fields initialized with ExpandoObject
+    /// </summary>
+    public IReadOnlyDictionary<string, object>? Variables { get; init; }
+
+    /// <summary>
     /// Empty metadata instance (no YAML front matter)
     /// </summary>
     public static ComponentMetadata Empty { get; } = new();

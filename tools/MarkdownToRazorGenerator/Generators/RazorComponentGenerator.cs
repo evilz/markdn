@@ -72,9 +72,50 @@ public class RazorComponentGenerator
             {
                 foreach (var variable in metadata.Variables)
                 {
+                    var varName = SanitizeFieldName(variable.Key);
                     var varType = InferType(variable.Value);
                     var varValue = FormatValue(variable.Value);
-                    sb.AppendLine($"    private {varType} {variable.Key} = {varValue};");
+                    sb.AppendLine($"    private {varType} {varName} = {varValue};");
+                }
+            }
+            
+            // Add helper method for creating ExpandoObject from dictionary
+            if (metadata.Variables != null && metadata.Variables.Count > 0)
+            {
+                bool hasExpandoVars = false;
+                foreach (var variable in metadata.Variables)
+                {
+                    if (variable.Value is Dictionary<string, object>)
+                    {
+                        hasExpandoVars = true;
+                        break;
+                    }
+                    if (variable.Value is List<object> list)
+                    {
+                        foreach (var item in list)
+                        {
+                            if (item is Dictionary<string, object>)
+                            {
+                                hasExpandoVars = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                if (hasExpandoVars)
+                {
+                    sb.AppendLine();
+                    sb.AppendLine("    private static dynamic CreateExpando(Dictionary<string, object> dict)");
+                    sb.AppendLine("    {");
+                    sb.AppendLine("        var expando = new System.Dynamic.ExpandoObject();");
+                    sb.AppendLine("        var expandoDict = (IDictionary<string, object>)expando;");
+                    sb.AppendLine("        foreach (var kvp in dict)");
+                    sb.AppendLine("        {");
+                    sb.AppendLine("            expandoDict[kvp.Key] = kvp.Value;");
+                    sb.AppendLine("        }");
+                    sb.AppendLine("        return expando;");
+                    sb.AppendLine("    }");
                 }
             }
             
@@ -116,6 +157,8 @@ public class RazorComponentGenerator
             float => "float",
             bool => "bool",
             DateTime => "DateTime",
+            Dictionary<string, object> => "dynamic",
+            List<object> => "dynamic",
             _ => value.GetType().Name
         };
     }
@@ -127,6 +170,16 @@ public class RazorComponentGenerator
     {
         if (value == null) return "null";
         
+        if (value is Dictionary<string, object> dict)
+        {
+            return GenerateExpandoInitializer(dict, 1);
+        }
+        
+        if (value is List<object> list)
+        {
+            return GenerateListInitializer(list, 1);
+        }
+        
         return value switch
         {
             string s => $"\"{s.Replace("\"", "\\\"")}\"",
@@ -134,6 +187,187 @@ public class RazorComponentGenerator
             DateTime dt => $"DateTime.Parse(\"{dt:O}\")",
             _ => value.ToString() ?? "null"
         };
+    }
+
+    /// <summary>
+    /// Generate ExpandoObject initializer from dictionary
+    /// </summary>
+    private string GenerateExpandoInitializer(Dictionary<string, object> dict, int indentLevel)
+    {
+        if (dict.Count == 0)
+        {
+            return "new System.Dynamic.ExpandoObject()";
+        }
+
+        var sb = new StringBuilder();
+        sb.Append("CreateExpando(new Dictionary<string, object> {");
+
+        bool first = true;
+        foreach (var kvp in dict)
+        {
+            if (!first)
+            {
+                sb.Append(", ");
+            }
+            first = false;
+
+            var propName = kvp.Key.Replace("\"", "\\\"");
+            var propValue = FormatNestedValue(kvp.Value, indentLevel + 1);
+            sb.Append($" {{ \"{propName}\", {propValue} }}");
+        }
+
+        sb.Append(" })");
+        
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Generate list initializer
+    /// </summary>
+    private string GenerateListInitializer(List<object> list, int indentLevel)
+    {
+        if (list.Count == 0)
+        {
+            return "new System.Collections.Generic.List<dynamic>()";
+        }
+
+        var sb = new StringBuilder();
+        sb.Append("new System.Collections.Generic.List<dynamic> {");
+
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (i > 0)
+            {
+                sb.Append(", ");
+            }
+
+            var itemValue = FormatNestedValue(list[i], indentLevel + 1);
+            sb.Append($" {itemValue}");
+        }
+
+        sb.Append(" }");
+        
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Format nested value (for use inside ExpandoObject or List initializers)
+    /// </summary>
+    private string FormatNestedValue(object? value, int indentLevel)
+    {
+        if (value == null) return "null";
+        
+        if (value is Dictionary<string, object> dict)
+        {
+            return GenerateExpandoInitializer(dict, indentLevel);
+        }
+        
+        if (value is List<object> list)
+        {
+            return GenerateListInitializer(list, indentLevel);
+        }
+        
+        return value switch
+        {
+            string s => $"@\"{s.Replace("\"", "\"\"")}\"",
+            bool b => b.ToString().ToLower(),
+            DateTime dt => $"DateTime.Parse(\"{dt:O}\")",
+            int i => i.ToString(),
+            long l => l.ToString() + "L",
+            double d => d.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            float f => f.ToString(System.Globalization.CultureInfo.InvariantCulture) + "f",
+            _ => value.ToString() ?? "null"
+        };
+    }
+
+    /// <summary>
+    /// Sanitize property name for ExpandoObject (must be valid C# identifier)
+    /// </summary>
+    private string SanitizePropertyName(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return "Property";
+        }
+
+        var sb = new StringBuilder();
+        bool capitalizeNext = true;
+
+        for (int i = 0; i < name.Length; i++)
+        {
+            char c = name[i];
+            
+            if (c == '-' || c == '_' || c == ' ')
+            {
+                capitalizeNext = true;
+            }
+            else if (char.IsLetterOrDigit(c))
+            {
+                if (sb.Length == 0)
+                {
+                    // First character should be uppercase for property
+                    sb.Append(char.ToUpper(c));
+                    capitalizeNext = false;
+                }
+                else if (capitalizeNext)
+                {
+                    sb.Append(char.ToUpper(c));
+                    capitalizeNext = false;
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+            }
+        }
+
+        var result = sb.ToString();
+        return string.IsNullOrEmpty(result) ? "Property" : result;
+    }
+    
+    /// <summary>
+    /// Sanitize field name (convert kebab-case to camelCase, handle invalid chars)
+    /// </summary>
+    private string SanitizeFieldName(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return "field";
+        }
+
+        var sb = new StringBuilder();
+        bool capitalizeNext = false;
+
+        for (int i = 0; i < name.Length; i++)
+        {
+            char c = name[i];
+            
+            if (c == '-' || c == '_' || c == ' ')
+            {
+                capitalizeNext = true;
+            }
+            else if (char.IsLetterOrDigit(c))
+            {
+                if (sb.Length == 0)
+                {
+                    // First character should be lowercase
+                    sb.Append(char.ToLower(c));
+                    capitalizeNext = false;
+                }
+                else if (capitalizeNext)
+                {
+                    sb.Append(char.ToUpper(c));
+                    capitalizeNext = false;
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+            }
+        }
+
+        var result = sb.ToString();
+        return string.IsNullOrEmpty(result) ? "field" : result;
     }
     
     /// <summary>
