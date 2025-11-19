@@ -111,9 +111,11 @@ public class RazorComponentGenerator
         {
             string => "string",
             int => "int",
+            byte => "int", // Promote byte to int for simplicity
+            short => "int", // Promote short to int for simplicity
             long => "long",
             double => "double",
-            float => "float",
+            float => "double", // Promote float to double for simplicity
             bool => "bool",
             DateTime => "DateTime",
             _ => value.GetType().Name

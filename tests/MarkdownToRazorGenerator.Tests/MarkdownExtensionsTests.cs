@@ -181,4 +181,49 @@ metadata:
         frontMatter.Should().ContainKey("tags");
         frontMatter.Should().ContainKey("metadata");
     }
+
+    [Fact]
+    public void GetFrontMatter_WithVariablesAndParameters_PreservesTypes()
+    {
+        // Arrange
+        var markdown = @"---
+title: Test Page
+variables:
+  count: 42
+  price: 19.99
+  isActive: true
+  name: ""Test""
+parameters:
+  pageSize: 10
+  enabled: false
+  factor: 2.5
+---
+
+# Content";
+
+        // Act
+        var frontMatter = markdown.GetFrontMatter();
+
+        // Assert
+        frontMatter.Should().NotBeNull();
+        frontMatter.Should().ContainKey("variables");
+        frontMatter.Should().ContainKey("parameters");
+        
+        // Verify variables types are preserved
+        var variables = frontMatter!["variables"] as Dictionary<object, object>;
+        variables.Should().NotBeNull();
+        // YamlDotNet may deserialize small integers as byte/short, so check for numeric types
+        variables!["count"].Should().BeAssignableTo<IConvertible>().Which.ToInt32(null).Should().Be(42);
+        // Check for floating point number (could be float or double)
+        variables["price"].Should().BeAssignableTo<IConvertible>().Which.ToDouble(null).Should().BeApproximately(19.99, 0.001);
+        variables["isActive"].Should().BeOfType<bool>().And.Be(true);
+        variables["name"].Should().BeOfType<string>().And.Be("Test");
+        
+        // Verify parameters types are preserved
+        var parameters = frontMatter["parameters"] as Dictionary<object, object>;
+        parameters.Should().NotBeNull();
+        parameters!["pageSize"].Should().BeAssignableTo<IConvertible>().Which.ToInt32(null).Should().Be(10);
+        parameters["enabled"].Should().BeOfType<bool>().And.Be(false);
+        parameters["factor"].Should().BeAssignableTo<IConvertible>().Which.ToDouble(null).Should().BeApproximately(2.5, 0.001);
+    }
 }

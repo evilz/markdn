@@ -101,4 +101,47 @@ invalid yaml here: [[[
         // Assert
         result.Should().BeNull();
     }
+
+    [Fact]
+    public void Parse_WithVariablesAndParameters_PreservesTypes()
+    {
+        // Arrange
+        var content = @"---
+title: Test Page
+variables:
+  count: 42
+  price: 19.99
+  isActive: true
+  name: Test String
+parameters:
+  pageSize: 10
+  enabled: false
+  factor: 2.5
+---
+
+# Content Here";
+
+        // Act
+        var (metadata, body, errors) = _parser.Parse(content);
+
+        // Assert
+        errors.Should().BeEmpty();
+        metadata.Title.Should().Be("Test Page");
+        
+        // Verify variables are present and types are preserved
+        metadata.Variables.Should().NotBeNull();
+        metadata.Variables.Should().HaveCount(4);
+        // YamlDotNet may deserialize small integers as byte/short, so check for numeric types
+        metadata.Variables!["count"].Should().BeAssignableTo<IConvertible>().Which.ToInt32(null).Should().Be(42);
+        metadata.Variables["price"].Should().BeAssignableTo<IConvertible>().Which.ToDouble(null).Should().BeApproximately(19.99, 0.001);
+        metadata.Variables["isActive"].Should().BeOfType<bool>().And.Be(true);
+        metadata.Variables["name"].Should().BeOfType<string>().And.Be("Test String");
+        
+        // Verify parameters are present and types are preserved
+        metadata.Parameters.Should().NotBeNull();
+        metadata.Parameters.Should().HaveCount(3);
+        metadata.Parameters!["pageSize"].Should().BeAssignableTo<IConvertible>().Which.ToInt32(null).Should().Be(10);
+        metadata.Parameters["enabled"].Should().BeOfType<bool>().And.Be(false);
+        metadata.Parameters["factor"].Should().BeAssignableTo<IConvertible>().Which.ToDouble(null).Should().BeApproximately(2.5, 0.001);
+    }
 }

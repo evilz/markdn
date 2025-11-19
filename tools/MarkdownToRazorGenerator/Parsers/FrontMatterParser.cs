@@ -1,6 +1,5 @@
 using MarkdownToRazorGenerator.Extensions;
 using MarkdownToRazorGenerator.Models;
-using YamlDotNet.Serialization;
 
 namespace MarkdownToRazorGenerator.Parsers;
 
@@ -9,50 +8,6 @@ namespace MarkdownToRazorGenerator.Parsers;
 /// </summary>
 public class FrontMatterParser
 {
-    private readonly IDeserializer _dynamicDeserializer;
-
-    public FrontMatterParser()
-    {
-        // Create a deserializer for dynamic type preservation in variables/parameters
-        _dynamicDeserializer = new DeserializerBuilder()
-            .Build();
-    }
-    
-    /// <summary>
-    /// Converts a YAML-deserialized value to its proper .NET type
-    /// </summary>
-    private object ConvertYamlValue(object value)
-    {
-        if (value is not string strValue)
-        {
-            return value; // Already the right type
-        }
-        
-        // Try to convert string to appropriate type
-        if (bool.TryParse(strValue, out var boolValue))
-        {
-            return boolValue;
-        }
-        
-        if (int.TryParse(strValue, out var intValue))
-        {
-            return intValue;
-        }
-        
-        if (long.TryParse(strValue, out var longValue))
-        {
-            return longValue;
-        }
-        
-        if (double.TryParse(strValue, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var doubleValue))
-        {
-            return doubleValue;
-        }
-        
-        // Return as string if no conversion applies
-        return strValue;
-    }
-
     /// <summary>
     /// Extracts front-matter and body from markdown content
     /// </summary>
@@ -80,47 +35,35 @@ public class FrontMatterParser
             // Use the simplified extension method to extract front matter
             metadata = content.GetFrontMatter<MarkdownMetadata>() ?? new MarkdownMetadata();
             markdownBody = content.GetMarkdownBody();
+            
+            // Get front matter as dictionary to extract variables and parameters with proper types
+            var frontMatterDict = content.GetFrontMatter();
+            
+            if (frontMatterDict != null)
+            {
+                // Extract variables with proper types from dictionary
+                if (frontMatterDict.ContainsKey("variables") && frontMatterDict["variables"] is Dictionary<object, object> vars)
+                {
+                    metadata.Variables = vars.ToDictionary(
+                        kvp => kvp.Key.ToString() ?? "",
+                        kvp => kvp.Value
+                    );
+                }
+                
+                // Extract parameters with proper types from dictionary
+                if (frontMatterDict.ContainsKey("parameters") && frontMatterDict["parameters"] is Dictionary<object, object> parms)
+                {
+                    metadata.Parameters = parms.ToDictionary(
+                        kvp => kvp.Key.ToString() ?? "",
+                        kvp => kvp.Value
+                    );
+                }
+            }
         }
         catch (Exception ex)
         {
             errors.Add($"YAML parsing error: {ex.Message}");
             return (metadata, markdownBody, errors);
-        }
-        
-        // Second pass: deserialize variables and parameters with type preservation
-        var yamlContent = content.GetFrontMatterYaml();
-        
-        if (!string.IsNullOrWhiteSpace(yamlContent))
-        {
-            try
-            {
-                var dynamicData = _dynamicDeserializer.Deserialize<object>(yamlContent);
-                
-                if (dynamicData is Dictionary<object, object> dict)
-                {
-                    // Extract variables with proper types
-                    if (dict.ContainsKey("variables") && dict["variables"] is Dictionary<object, object> vars)
-                    {
-                        metadata.Variables = vars.ToDictionary(
-                            kvp => kvp.Key.ToString() ?? "",
-                            kvp => ConvertYamlValue(kvp.Value) // Convert to proper type
-                        );
-                    }
-                    
-                    // Extract parameters with proper types
-                    if (dict.ContainsKey("parameters") && dict["parameters"] is Dictionary<object, object> parms)
-                    {
-                        metadata.Parameters = parms.ToDictionary(
-                            kvp => kvp.Key.ToString() ?? "",
-                            kvp => ConvertYamlValue(kvp.Value) // Convert to proper type
-                        );
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                errors.Add($"YAML parsing error: {ex.Message}");
-            }
         }
 
         return (metadata, markdownBody, errors);
