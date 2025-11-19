@@ -14,4 +14,9 @@ public sealed class ParameterDefinition
     /// C# type name (e.g., "string", "int", "List&lt;User&gt;")
     /// </summary>
     public required string Type { get; init; }
+
+    /// <summary>
+    /// Optional default value for the parameter
+    /// </summary>
+    public string? DefaultValue { get; init; }
 }

@@ -1,3 +1,4 @@
+using System.Linq;
 using MarkdownToRazorGenerator.Models;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -30,6 +31,21 @@ public class FrontMatterParser
     /// </summary>
     private object ConvertYamlValue(object value)
     {
+        // Handle dictionaries (nested objects)
+        if (value is Dictionary<object, object> dict)
+        {
+            return dict.ToDictionary(
+                kvp => kvp.Key.ToString() ?? "",
+                kvp => ConvertYamlValue(kvp.Value)
+            );
+        }
+        
+        // Handle lists (arrays)
+        if (value is List<object> list)
+        {
+            return list.Select(item => ConvertYamlValue(item)).ToList();
+        }
+        
         if (value is not string strValue)
         {
             return value; // Already the right type

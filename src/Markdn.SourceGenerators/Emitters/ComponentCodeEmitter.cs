@@ -42,6 +42,210 @@ public static class ComponentCodeEmitter
         // This includes string, custom classes, interfaces, etc.
         return true;
     }
+
+    /// <summary>
+    /// Sanitize field name (convert kebab-case to camelCase, handle invalid chars)
+    /// </summary>
+    private static string SanitizeFieldName(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return "field";
+        }
+
+        var sb = new StringBuilder();
+        bool capitalizeNext = false;
+
+        for (int i = 0; i < name.Length; i++)
+        {
+            char c = name[i];
+            
+            if (c == '-' || c == '_' || c == ' ')
+            {
+                capitalizeNext = true;
+            }
+            else if (char.IsLetterOrDigit(c))
+            {
+                if (sb.Length == 0)
+                {
+                    // First character should be lowercase
+                    sb.Append(char.ToLower(c));
+                    capitalizeNext = false;
+                }
+                else if (capitalizeNext)
+                {
+                    sb.Append(char.ToUpper(c));
+                    capitalizeNext = false;
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+            }
+        }
+
+        var result = sb.ToString();
+        return string.IsNullOrEmpty(result) ? "field" : result;
+    }
+
+    /// <summary>
+    /// Generate ExpandoObject initializer from a value
+    /// </summary>
+    private static string GenerateExpandoInitializer(object? value, int indentLevel)
+    {
+        if (value == null)
+        {
+            return "null";
+        }
+
+        // Handle dictionaries (objects)
+        if (value is Dictionary<string, object> dict)
+        {
+            return GenerateExpandoFromDictionary(dict, indentLevel);
+        }
+
+        // Handle lists (arrays)
+        if (value is List<object> list)
+        {
+            return GenerateListInitializer(list, indentLevel);
+        }
+
+        // Handle scalar values
+        return FormatScalarValue(value);
+    }
+
+    /// <summary>
+    /// Generate ExpandoObject initializer from dictionary
+    /// </summary>
+    private static string GenerateExpandoFromDictionary(Dictionary<string, object> dict, int indentLevel)
+    {
+        if (dict.Count == 0)
+        {
+            return "new System.Dynamic.ExpandoObject()";
+        }
+
+        var sb = new StringBuilder();
+        var indent = new string(' ', indentLevel * 4);
+        var innerIndent = new string(' ', (indentLevel + 1) * 4);
+
+        sb.Append("(dynamic)new System.Dynamic.ExpandoObject()");
+        sb.AppendLine(" {");
+
+        bool first = true;
+        foreach (var kvp in dict)
+        {
+            if (!first)
+            {
+                sb.AppendLine(",");
+            }
+            first = false;
+
+            var propName = SanitizePropertyName(kvp.Key);
+            var propValue = GenerateExpandoInitializer(kvp.Value, indentLevel + 1);
+            sb.Append($"{innerIndent}{propName} = {propValue}");
+        }
+
+        sb.AppendLine();
+        sb.Append($"{indent}}}");
+        
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Generate list initializer
+    /// </summary>
+    private static string GenerateListInitializer(List<object> list, int indentLevel)
+    {
+        if (list.Count == 0)
+        {
+            return "new System.Collections.Generic.List<dynamic>()";
+        }
+
+        var sb = new StringBuilder();
+        var indent = new string(' ', indentLevel * 4);
+        var innerIndent = new string(' ', (indentLevel + 1) * 4);
+
+        sb.Append("new System.Collections.Generic.List<dynamic>");
+        sb.AppendLine(" {");
+
+        for (int i = 0; i < list.Count; i++)
+        {
+            if (i > 0)
+            {
+                sb.AppendLine(",");
+            }
+
+            var itemValue = GenerateExpandoInitializer(list[i], indentLevel + 1);
+            sb.Append($"{innerIndent}{itemValue}");
+        }
+
+        sb.AppendLine();
+        sb.Append($"{indent}}}");
+        
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Sanitize property name for ExpandoObject (must be valid C# identifier)
+    /// </summary>
+    private static string SanitizePropertyName(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return "Property";
+        }
+
+        var sb = new StringBuilder();
+        bool capitalizeNext = true;
+
+        for (int i = 0; i < name.Length; i++)
+        {
+            char c = name[i];
+            
+            if (c == '-' || c == '_' || c == ' ')
+            {
+                capitalizeNext = true;
+            }
+            else if (char.IsLetterOrDigit(c))
+            {
+                if (sb.Length == 0)
+                {
+                    // First character should be uppercase for property
+                    sb.Append(char.ToUpper(c));
+                    capitalizeNext = false;
+                }
+                else if (capitalizeNext)
+                {
+                    sb.Append(char.ToUpper(c));
+                    capitalizeNext = false;
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+            }
+        }
+
+        var result = sb.ToString();
+        return string.IsNullOrEmpty(result) ? "Property" : result;
+    }
+
+    /// <summary>
+    /// Format scalar value for code generation
+    /// </summary>
+    private static string FormatScalarValue(object value)
+    {
+        return value switch
+        {
+            string s => $"@\"{s.Replace("\"", "\"\"")}\"",
+            bool b => b ? "true" : "false",
+            int i => i.ToString(),
+            long l => l.ToString() + "L",
+            double d => d.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            float f => f.ToString(System.Globalization.CultureInfo.InvariantCulture) + "f",
+            _ => $"\"{value}\""
+        };
+    }
     /// <summary>
     /// Generate complete component source code.
     /// </summary>
@@ -153,10 +357,31 @@ public static class ComponentCodeEmitter
             foreach (var parameter in metadata.Parameters)
             {
                 sb.AppendLine("        [Microsoft.AspNetCore.Components.Parameter]");
-                var defaultValue = IsReferenceType(parameter.Type) ? " = default!;" : "";
+                string defaultValue;
+                if (!string.IsNullOrEmpty(parameter.DefaultValue))
+                {
+                    defaultValue = $" = {parameter.DefaultValue};";
+                }
+                else
+                {
+                    defaultValue = IsReferenceType(parameter.Type) ? " = default!;" : "";
+                }
                 sb.AppendLine($"        public {parameter.Type} {parameter.Name} {{ get; set; }}{defaultValue}");
                 sb.AppendLine();
             }
+        }
+
+        // Variables as dynamic fields (using ExpandoObject)
+        if (metadata.Variables != null && metadata.Variables.Count > 0)
+        {
+            sb.AppendLine("        // Variables from YAML front matter");
+            foreach (var variable in metadata.Variables)
+            {
+                var fieldName = SanitizeFieldName(variable.Key);
+                var expandoInitializer = GenerateExpandoInitializer(variable.Value, 2);
+                sb.AppendLine($"        private dynamic {fieldName} = {expandoInitializer};");
+            }
+            sb.AppendLine();
         }
 
     // BuildRenderTree method (using RenderTreeBuilderEmitter)
