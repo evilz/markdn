@@ -143,14 +143,13 @@ variables:
         }
 
         [Fact]
-        public void Parse_YamlAnchorsAndAliases_AreResolved()
+        public void Parse_YamlAnchorsAndAliases_AtTopLevel_AreResolved()
         {
             var content = @"---
-variables:
-    bill-to: &id001
-        name: John
-        address: 123 Main
-    ship-to: *id001
+bill-to: &id001
+    name: John
+    address: 123 Main
+ship-to: *id001
 ---
 # Content";
 

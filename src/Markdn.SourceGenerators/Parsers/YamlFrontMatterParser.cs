@@ -650,7 +650,13 @@ public static class YamlFrontMatterParser
         {
             if (properties.TryGetValue(key, out var value))
             {
-                // If it's already a list, return it
+                // If it's a List<object>, convert to List<string>
+                if (value is List<object> listObj && listObj.Count > 0)
+                {
+                    return listObj.Select(o => o?.ToString() ?? "").Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
+                }
+                
+                // If it's already a List<string>, return it
                 if (value is List<string> listValue && listValue.Count > 0)
                 {
                     return listValue;
