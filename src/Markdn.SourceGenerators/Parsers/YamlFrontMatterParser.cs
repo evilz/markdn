@@ -223,10 +223,21 @@ public static class YamlFrontMatterParser
             "title", "namespace", "$namespace", "using", "$using", 
             "componentNamespaces", "$componentNamespaces", "layout", "$layout",
             "inherit", "$inherit", "attribute", "$attribute", "slug", "url",
-            "parameters", "$parameters"
+            "parameters", "$parameters", "variables"
         };
         
         var variables = new Dictionary<string, object>(StringComparer.Ordinal);
+        
+        // If "variables" key exists, use its content as the variables
+        if (properties.TryGetValue("variables", out var variablesObj) && variablesObj is Dictionary<string, object> varsDict)
+        {
+            foreach (var kvp in varsDict)
+            {
+                variables[kvp.Key] = kvp.Value;
+            }
+        }
+        
+        // Also include any top-level non-reserved keys as variables
         foreach (var kvp in properties)
         {
             if (!reservedKeys.Contains(kvp.Key))
