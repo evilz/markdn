@@ -100,11 +100,11 @@ public class Program
                         route = SlugGenerator.GenerateRoute(slug, directoryType);
                     }
 
-                    // Convert markdown to HTML
-                    var htmlContent = markdownConverter.ToHtml(markdownBody);
+                    // Convert markdown to HTML with section support
+                    var (htmlContent, sections) = markdownConverter.ToHtmlWithSections(markdownBody);
 
-                    // Generate Razor component with HTML content
-                    var razorContent = razorGenerator.Generate(metadata, htmlContent, route, title);
+                    // Generate Razor component with HTML content and sections
+                    var razorContent = razorGenerator.Generate(metadata, htmlContent, route, title, sections);
 
                     // Write output file next to the original .md file
                     // Use PascalCase naming for Razor component compliance

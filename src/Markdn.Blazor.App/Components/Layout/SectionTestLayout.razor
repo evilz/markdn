@@ -1,0 +1,107 @@
+@inherits LayoutComponentBase
+
+<div class="page-with-sections">
+    <div class="page-header-section">
+        <SectionOutlet SectionName="PageHeader" />
+    </div>
+
+    <div class="content-wrapper">
+        <aside class="sidebar-section">
+            <SectionOutlet SectionName="Sidebar" />
+        </aside>
+
+        <main class="main-content">
+            <article>
+                @Body
+            </article>
+        </main>
+    </div>
+</div>
+
+<style>
+    .page-with-sections {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    .page-header-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .page-header-section h1 {
+        margin: 0;
+        font-size: 2rem;
+    }
+
+    .content-wrapper {
+        display: flex;
+        flex: 1;
+        gap: 2rem;
+        padding: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    .sidebar-section {
+        flex: 0 0 250px;
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        height: fit-content;
+        position: sticky;
+        top: 2rem;
+    }
+
+    .sidebar-section h2 {
+        margin-top: 0;
+        font-size: 1.25rem;
+        color: #333;
+    }
+
+    .sidebar-section ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .sidebar-section li {
+        margin: 0.5rem 0;
+    }
+
+    .sidebar-section a {
+        color: #667eea;
+        text-decoration: none;
+    }
+
+    .sidebar-section a:hover {
+        text-decoration: underline;
+    }
+
+    .main-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .main-content article {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    @*media (max-width: 768px) *@
+    @@media (max-width: 768px) {
+        .content-wrapper {
+            flex-direction: column;
+        }
+
+        .sidebar-section {
+            position: static;
+            flex: 1 1 auto;
+        }
+    }
+</style>
