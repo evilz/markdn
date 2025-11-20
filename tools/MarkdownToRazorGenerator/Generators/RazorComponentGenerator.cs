@@ -13,6 +13,14 @@ public class RazorComponentGenerator
     /// </summary>
     public string Generate(MarkdownMetadata metadata, string htmlContent, string route, string title)
     {
+        return Generate(metadata, htmlContent, route, title, new List<Parsers.SectionInfo>());
+    }
+
+    /// <summary>
+    /// Generates a Razor component file content with section support
+    /// </summary>
+    public string Generate(MarkdownMetadata metadata, string htmlContent, string route, string title, List<Parsers.SectionInfo> sections)
+    {
         var sb = new StringBuilder();
 
         // Add @page directive
@@ -43,6 +51,18 @@ public class RazorComponentGenerator
         // Add PageTitle
         sb.AppendLine($"<PageTitle>{EscapeForRazor(title)}</PageTitle>");
         sb.AppendLine();
+
+        // Add SectionContent components for each section
+        if (sections != null && sections.Count > 0)
+        {
+            foreach (var section in sections)
+            {
+                sb.AppendLine($"<SectionContent SectionName=\"{section.Name}\">");
+                sb.AppendLine(section.Content);
+                sb.AppendLine("</SectionContent>");
+                sb.AppendLine();
+            }
+        }
 
         // Output the HTML content directly (no wrapper)
         sb.AppendLine(htmlContent);
