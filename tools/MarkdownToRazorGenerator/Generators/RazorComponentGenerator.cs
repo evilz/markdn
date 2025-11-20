@@ -51,6 +51,10 @@ public class RazorComponentGenerator
         // Add PageTitle
         sb.AppendLine($"<PageTitle>{EscapeForRazor(title)}</PageTitle>");
         sb.AppendLine();
+        
+        // Wrap content in CascadingValue to pass metadata to layout
+        sb.AppendLine("<CascadingValue Value=\"@_pageMetadata\">");
+        sb.AppendLine();
 
         // Add SectionContent components for each section
         if (sections != null && sections.Count > 0)
@@ -67,80 +71,125 @@ public class RazorComponentGenerator
         // Output the HTML content directly (no wrapper)
         sb.AppendLine(htmlContent);
         
-        // Add @code block if there are variables or parameters
-        if ((metadata.Variables != null && metadata.Variables.Count > 0) || 
-            (metadata.Parameters != null && metadata.Parameters.Count > 0))
+        // Close CascadingValue
+        sb.AppendLine();
+        sb.AppendLine("</CascadingValue>");
+        
+        // Add @code block - always needed for _pageMetadata
+        sb.AppendLine();
+        sb.AppendLine("@code {");
+        
+        // Define PageMetadata class inline for this component
+        sb.AppendLine("    private class PageMetadata");
+        sb.AppendLine("    {");
+        sb.AppendLine("        public string? Title { get; set; }");
+        sb.AppendLine("        public string? Slug { get; set; }");
+        sb.AppendLine("        public string? Route { get; set; }");
+        sb.AppendLine("        public string? Summary { get; set; }");
+        sb.AppendLine("        public DateTime? Date { get; set; }");
+        sb.AppendLine("        public List<string>? Tags { get; set; }");
+        sb.AppendLine("        public Dictionary<string, object>? AdditionalData { get; set; }");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        
+        // Add PageMetadata instance to pass to layout
+        sb.AppendLine($"    private readonly PageMetadata _pageMetadata = new()");
+        sb.AppendLine("    {");
+        if (!string.IsNullOrWhiteSpace(title))
         {
-            sb.AppendLine();
-            sb.AppendLine("@code {");
-            
-            // Add parameters
-            if (metadata.Parameters != null && metadata.Parameters.Count > 0)
+            sb.AppendLine($"        Title = {FormatValue(title)},");
+        }
+        if (!string.IsNullOrWhiteSpace(metadata.Slug))
+        {
+            sb.AppendLine($"        Slug = {FormatValue(metadata.Slug)},");
+        }
+        if (!string.IsNullOrWhiteSpace(route))
+        {
+            sb.AppendLine($"        Route = {FormatValue(route)},");
+        }
+        if (!string.IsNullOrWhiteSpace(metadata.Summary))
+        {
+            sb.AppendLine($"        Summary = {FormatValue(metadata.Summary)},");
+        }
+        if (metadata.Date.HasValue)
+        {
+            sb.AppendLine($"        Date = {FormatValue(metadata.Date.Value)},");
+        }
+        if (metadata.Tags != null && metadata.Tags.Count > 0)
+        {
+            sb.Append("        Tags = new List<string> { ");
+            sb.Append(string.Join(", ", metadata.Tags.Select(t => FormatValue(t))));
+            sb.AppendLine(" },");
+        }
+        sb.AppendLine("    };");
+        sb.AppendLine();
+        
+        // Add parameters
+        if (metadata.Parameters != null && metadata.Parameters.Count > 0)
+        {
+            foreach (var param in metadata.Parameters)
             {
-                foreach (var param in metadata.Parameters)
-                {
-                    var paramType = InferType(param.Value);
-                    var paramValue = FormatValue(param.Value);
-                    sb.AppendLine($"    [Parameter]");
-                    sb.AppendLine($"    public {paramType} {CapitalizeFirst(param.Key)} {{ get; set; }} = {paramValue};");
-                    sb.AppendLine();
-                }
+                var paramType = InferType(param.Value);
+                var paramValue = FormatValue(param.Value);
+                sb.AppendLine($"    [Parameter]");
+                sb.AppendLine($"    public {paramType} {CapitalizeFirst(param.Key)} {{ get; set; }} = {paramValue};");
+                sb.AppendLine();
             }
-            
-            // Add variables
-            if (metadata.Variables != null && metadata.Variables.Count > 0)
+        }
+        
+        // Add variables
+        if (metadata.Variables != null && metadata.Variables.Count > 0)
+        {
+            foreach (var variable in metadata.Variables)
             {
-                foreach (var variable in metadata.Variables)
-                {
-                    var varName = SanitizeFieldName(variable.Key);
-                    var varType = InferType(variable.Value);
-                    var varValue = FormatValue(variable.Value);
-                    sb.AppendLine($"    private {varType} {varName} = {varValue};");
-                }
+                var varName = SanitizeFieldName(variable.Key);
+                var varType = InferType(variable.Value);
+                var varValue = FormatValue(variable.Value);
+                sb.AppendLine($"    private {varType} {varName} = {varValue};");
             }
-            
-            // Add helper method for creating ExpandoObject from dictionary
-            if (metadata.Variables != null && metadata.Variables.Count > 0)
+        }
+        
+        // Add helper method for creating ExpandoObject from dictionary
+        if (metadata.Variables != null && metadata.Variables.Count > 0)
+        {
+            bool hasExpandoVars = false;
+            foreach (var variable in metadata.Variables)
             {
-                bool hasExpandoVars = false;
-                foreach (var variable in metadata.Variables)
+                if (variable.Value is Dictionary<string, object>)
                 {
-                    if (variable.Value is Dictionary<string, object>)
+                    hasExpandoVars = true;
+                    break;
+                }
+                if (variable.Value is List<object> list)
+                {
+                    foreach (var item in list)
                     {
-                        hasExpandoVars = true;
-                        break;
-                    }
-                    if (variable.Value is List<object> list)
-                    {
-                        foreach (var item in list)
+                        if (item is Dictionary<string, object>)
                         {
-                            if (item is Dictionary<string, object>)
-                            {
-                                hasExpandoVars = true;
-                                break;
-                            }
+                            hasExpandoVars = true;
+                            break;
                         }
                     }
                 }
-                
-                if (hasExpandoVars)
-                {
-                    sb.AppendLine();
-                    sb.AppendLine("    private static dynamic CreateExpando(Dictionary<string, object> dict)");
-                    sb.AppendLine("    {");
-                    sb.AppendLine("        var expando = new System.Dynamic.ExpandoObject();");
-                    sb.AppendLine("        var expandoDict = (IDictionary<string, object>)expando;");
-                    sb.AppendLine("        foreach (var kvp in dict)");
-                    sb.AppendLine("        {");
-                    sb.AppendLine("            expandoDict[kvp.Key] = kvp.Value;");
-                    sb.AppendLine("        }");
-                    sb.AppendLine("        return expando;");
-                    sb.AppendLine("    }");
-                }
             }
             
-            sb.AppendLine("}");
+            if (hasExpandoVars)
+            {
+                sb.AppendLine();
+                sb.AppendLine("    private static dynamic CreateExpando(Dictionary<string, object> dict)");
+                sb.AppendLine("    {");
+                sb.AppendLine("        var expando = new System.Dynamic.ExpandoObject();");
+                sb.AppendLine("        var expandoDict = (IDictionary<string, object>)expando;");
+                sb.AppendLine("        foreach (var kvp in dict)");
+                sb.AppendLine("        {");
+                sb.AppendLine("            expandoDict[kvp.Key] = kvp.Value;");
+                sb.AppendLine("        }");
+                sb.AppendLine("        return expando;");
+                sb.AppendLine("    }");
+            }
         }
+        
+        sb.AppendLine("}");
 
         return sb.ToString();
     }
