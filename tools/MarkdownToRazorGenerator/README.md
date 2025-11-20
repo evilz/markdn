@@ -13,6 +13,7 @@ This tool provides an alternative approach to the source generator for creating 
 - 🎯 **Automatic Routing**: Generates `@page` directives based on file structure or metadata
 - 📄 **Page Title Generation**: Creates `<PageTitle>` from front-matter or file content
 - 🎨 **Layout Support**: Respects custom layout specifications from front-matter
+- 🧩 **Section Support**: Define `<Section Name="...">` tags to use Blazor's SectionOutlet/SectionContent
 - 🔧 **MSBuild Integration**: Runs automatically before Razor compilation
 - ⚙️ **Configurable Paths**: Customize input and output directories via MSBuild properties
 
@@ -138,6 +139,96 @@ The generator implements intelligent fallbacks when front-matter is missing:
 1. `route` from front-matter
 2. `/{directory-type}/{slug}` (e.g., `/blog/my-post`)
 3. `/{slug}` if directory type is unknown
+
+## Section Support (SectionOutlet/SectionContent)
+
+The generator supports Blazor's `SectionOutlet` and `SectionContent` components, allowing you to define content sections in your Markdown that render in specific areas of your layout.
+
+### Usage
+
+Define sections in your Markdown using `<Section Name="...">` tags:
+
+```markdown
+---
+title: My Page
+layout: MyLayout
+---
+
+<Section Name="PageHeader">
+# Welcome!
+This appears in the PageHeader section
+</Section>
+
+<Section Name="Sidebar">
+- [Link 1](/link1)
+- [Link 2](/link2)
+</Section>
+
+# Main Content
+
+This is the main page content that appears in @Body
+```
+
+### Generated Output
+
+The sections are converted to `<SectionContent>` components:
+
+```razor
+@page "/my-page"
+@using Microsoft.AspNetCore.Components
+
+@layout MyLayout
+
+<PageTitle>My Page</PageTitle>
+
+<SectionContent SectionName="PageHeader">
+<h1>Welcome!</h1>
+<p>This appears in the PageHeader section</p>
+</SectionContent>
+
+<SectionContent SectionName="Sidebar">
+<ul>
+<li><a href="/link1">Link 1</a></li>
+<li><a href="/link2">Link 2</a></li>
+</ul>
+</SectionContent>
+
+<h1>Main Content</h1>
+<p>This is the main page content that appears in @Body</p>
+```
+
+### Layout Example
+
+Use `<SectionOutlet>` in your layout to display section content:
+
+```razor
+@inherits LayoutComponentBase
+
+<div class="page">
+    <header>
+        <SectionOutlet SectionName="PageHeader" />
+    </header>
+    
+    <div class="content-wrapper">
+        <aside>
+            <SectionOutlet SectionName="Sidebar" />
+        </aside>
+        
+        <main>
+            @Body
+        </main>
+    </div>
+</div>
+```
+
+**Key Features:**
+- Full Markdown support inside sections
+- Sections in code blocks are automatically ignored
+- Multiple sections per page
+- Case-insensitive tag names
+- Supports both single and double quotes
+
+For detailed documentation, see [Section Support Guide](../../docs/section-outlet-support.md).
 
 ## Generated Razor Files
 
