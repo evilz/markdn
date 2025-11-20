@@ -67,7 +67,7 @@ public sealed class CollectionAttribute : System.Attribute
         });
 
         var contentFiles = context.AdditionalTextsProvider
-            .Where(static text => 
+            .Where(static text =>
                 text.Path.EndsWith(".md", StringComparison.OrdinalIgnoreCase) ||
                 text.Path.EndsWith(".yaml", StringComparison.OrdinalIgnoreCase) ||
                 text.Path.EndsWith(".yml", StringComparison.OrdinalIgnoreCase) ||
@@ -349,7 +349,7 @@ public sealed class CollectionAttribute : System.Attribute
                 var resourceLiteral = EscapeForStringLiteral(resourceName);
                 var suffixLiteral = EscapeForStringLiteral(file.ResourceSuffix);
                 var slugLiteral = EscapeForStringLiteral(file.Slug);
-                
+
                 // Only generate component reference for Markdown files
                 if (!string.IsNullOrEmpty(file.ComponentFullTypeName))
                 {
@@ -684,10 +684,10 @@ public sealed class CollectionAttribute : System.Attribute
         }
 
         var definition = named.ConstructedFrom.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        return definition.Contains("IEnumerable", StringComparison.Ordinal) ||
-               definition.Contains("IReadOnlyList", StringComparison.Ordinal) ||
-               definition.Contains("IList", StringComparison.Ordinal) ||
-               definition.Contains("List", StringComparison.Ordinal);
+        return definition.Contains("IEnumerable") ||
+               definition.Contains("IReadOnlyList") ||
+               definition.Contains("IList") ||
+               definition.Contains("List");
     }
 
     private static IReadOnlyList<ResolvedContentFile> ResolveContentFiles(ImmutableArray<ContentFile> files, string? projectDir, string rootNamespace)
@@ -707,7 +707,7 @@ public sealed class CollectionAttribute : System.Attribute
             {
                 normalized = normalized.Substring(1);
             }
-            
+
             // Auto-generate slug from file path (removing extension and normalizing)
             var slug = GenerateSlugFromPath(normalized);
             var suffix = normalized.Replace('/', '.');
@@ -726,7 +726,7 @@ public sealed class CollectionAttribute : System.Attribute
 
         return list;
     }
-    
+
     private static string GenerateSlugFromPath(string normalizedPath)
     {
         // Remove file extension
@@ -736,7 +736,7 @@ public sealed class CollectionAttribute : System.Attribute
         {
             pathWithoutExtension = pathWithoutExtension.Substring(0, lastDot);
         }
-        
+
         // Convert to slug format (lowercase, replace separators with hyphens)
         return pathWithoutExtension
             .ToLowerInvariant()
