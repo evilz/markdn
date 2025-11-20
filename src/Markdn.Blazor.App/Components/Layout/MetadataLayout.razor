@@ -1,0 +1,128 @@
+@using Microsoft.AspNetCore.Components.Sections
+@inherits LayoutComponentBase
+
+<div class="page-with-metadata">
+    <div class="metadata-banner">
+        @if (_pageMetadata != null)
+        {
+            <div class="metadata-content">
+                <h2>@_pageMetadata.Title</h2>
+                @if (_pageMetadata.Date != null)
+                {
+                    <p class="date">Published: @_pageMetadata.Date.Value.ToString("MMMM dd, yyyy")</p>
+                }
+                @if (_pageMetadata.Summary != null)
+                {
+                    <p class="summary">@_pageMetadata.Summary</p>
+                }
+                @if (_pageMetadata.Tags != null && _pageMetadata.Tags.Count > 0)
+                {
+                    <div class="tags">
+                        <strong>Tags:</strong>
+                        @foreach (var tag in _pageMetadata.Tags)
+                        {
+                            <span class="tag">@tag</span>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <main>
+        <article class="content">
+            @Body
+        </article>
+    </main>
+</div>
+
+<style>
+    .page-with-metadata {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    .metadata-banner {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .metadata-content {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .metadata-content h2 {
+        margin: 0 0 0.5rem 0;
+        font-size: 2rem;
+    }
+
+    .metadata-content .date {
+        margin: 0.5rem 0;
+        opacity: 0.9;
+        font-size: 0.9rem;
+    }
+
+    .metadata-content .summary {
+        margin: 1rem 0;
+        font-size: 1.1rem;
+    }
+
+    .tags {
+        margin-top: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .tag {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.85rem;
+    }
+
+    main {
+        flex: 1;
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    .content {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    @@media (max-width: 768px) {
+        .metadata-banner {
+            padding: 1rem;
+        }
+
+        .metadata-content h2 {
+            font-size: 1.5rem;
+        }
+
+        main {
+            padding: 1rem;
+        }
+    }
+</style>
+
+@code {
+    private dynamic? _pageMetadata;
+
+    [CascadingParameter]
+    private dynamic? PageMetadata
+    {
+        get => _pageMetadata;
+        set => _pageMetadata = value;
+    }
+}
