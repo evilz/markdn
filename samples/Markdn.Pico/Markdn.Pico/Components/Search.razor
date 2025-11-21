@@ -1,0 +1,10 @@
+<label for="@Purpose">@Label</label>
+<input type="search" id="@Id" name="@Name" placeholder="@Placeholder" />
+
+@code {
+    [Parameter] public string Purpose { get; set; } = "";
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public string Placeholder { get; set; } = "";
+    [Parameter] public string Id { get; set; } = "";
+    [Parameter] public string Name { get; set; } = "";
+}

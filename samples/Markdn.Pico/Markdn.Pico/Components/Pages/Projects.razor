@@ -1,0 +1,58 @@
+@page "/projects"
+@using Markdn.Pico.Models
+@using Markdn.Pico.Services
+@inject IPostsService PostsService
+
+<PageTitle>Projects - Markdn.Pico</PageTitle>
+
+<section class="container">
+    <hgroup>
+        <h1>Projects</h1>
+        <p>My projects</p>
+    </hgroup>
+
+    <div class="grid">
+        @foreach (var project in _projects)
+        {
+            <article>
+                <header>
+                    <h3><a href="@project.Route">@project.Title</a></h3>
+                </header>
+                <p>@project.Description</p>
+                <footer>
+                    <small>
+                        @foreach (var tag in project.Tags)
+                        {
+                            <span class="secondary me-2">#@tag</span>
+                        }
+                    </small>
+                </footer>
+            </article>
+        }
+    </div>
+</section>
+
+@code {
+    private List<Post> _projects = new();
+
+    protected override void OnInitialized()
+    {
+        // Filter posts that are in the Projects folder
+        // Note: PostsService currently scans all .md files. 
+        // We need to filter by path or some other metadata.
+        // Since PostsService doesn't expose path, we rely on Route starting with /projects/
+        // But wait, PostsService sets route based on slug.
+        // We might need to update PostsService to handle different collections better.
+        // For now, let's assume projects have a tag "project" or we check the route if we can.
+        
+        // Actually, PostsService sets route = $"/posts/{post.Slug}";
+        // This is hardcoded in PostsService.cs.
+        // I need to update PostsService to handle different routes based on directory.
+        
+        var allPosts = PostsService.GetAllPosts();
+        // Temporary hack: filter by tag or something, or update service.
+        // I will update PostsService to detect directory.
+        
+        _projects = allPosts.Where(p => p.Tags.Contains("project") || (p.Route != null && p.Route.Contains("/projects/"))).ToList();
+    }
+}

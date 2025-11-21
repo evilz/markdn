@@ -1,0 +1,24 @@
+<nav>
+  <ul>
+    <li>
+      <details class="dropdown">
+        <summary role="button" class="secondary">@Summary</summary>
+        <ul>
+            @foreach (var el in Elements)
+            {
+                <li>
+                    <a href="#" data-theme-switcher="@el">
+                        @(char.ToUpper(el[0]) + el.Substring(1))
+                    </a>
+                </li>
+            }
+        </ul>
+      </details>
+    </li>
+  </ul>
+</nav>
+
+@code {
+    [Parameter] public string Summary { get; set; } = "";
+    [Parameter] public IEnumerable<string> Elements { get; set; } = Enumerable.Empty<string>();
+}

@@ -1,0 +1,14 @@
+<label for="@Purpose">
+  @Label
+  <input type="range" min="@Min" max="@Max" value="@Value" id="@Id" name="@Name" />
+</label>
+
+@code {
+    [Parameter] public string Purpose { get; set; } = "";
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public string Min { get; set; } = "";
+    [Parameter] public string Max { get; set; } = "";
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public string Id { get; set; } = "";
+    [Parameter] public string Name { get; set; } = "";
+}

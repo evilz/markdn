@@ -1,8 +1,3 @@
-using Markdn.Content;
-
-namespace Markdn.Pico.Models;
-
-[Collection("Content/Posts/*.md", Name = "Posts")]
 public class Post
 {
     public string Slug { get; set; } = default!;
@@ -10,4 +5,6 @@ public class Post
     public DateTime PubDate { get; set; }
     public string? Description { get; set; }
     public string Content { get; set; } = string.Empty;
+    public string? Route { get; set; }
+    public List<string> Tags { get; set; } = new();
 }

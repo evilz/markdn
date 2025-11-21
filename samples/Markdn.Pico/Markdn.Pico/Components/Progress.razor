@@ -1,0 +1,14 @@
+@if (string.IsNullOrEmpty(Value))
+{
+    <progress id="@Id" />
+}
+else
+{
+    <progress id="@Id" value="@Value" max="@Max" />
+}
+
+@code {
+    [Parameter] public string Id { get; set; } = "";
+    [Parameter] public string Value { get; set; } = "";
+    [Parameter] public string Max { get; set; } = "";
+}

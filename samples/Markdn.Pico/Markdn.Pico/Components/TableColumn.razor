@@ -1,0 +1,12 @@
+<tr>
+  <th scope="col">@Label</th>
+  @foreach (var name in ColumnNames)
+  {
+      <th scope="col">@name</th>
+  }
+</tr>
+
+@code {
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public IEnumerable<string> ColumnNames { get; set; } = Enumerable.Empty<string>();
+}

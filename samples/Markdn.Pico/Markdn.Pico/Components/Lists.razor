@@ -1,0 +1,12 @@
+<h3>@Title</h3>
+<ul>
+  @foreach (var ctx in Ctxs)
+  {
+      <li>@ctx</li>
+  }
+</ul>
+
+@code {
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public IEnumerable<string> Ctxs { get; set; } = Enumerable.Empty<string>();
+}

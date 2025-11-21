@@ -1,0 +1,12 @@
+<tr>
+  <th scope="col">@Label</th>
+  @foreach (var value in Values)
+  {
+      <td scope="row">@value</td>
+  }
+</tr>
+
+@code {
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public IEnumerable<string> Values { get; set; } = Enumerable.Empty<string>();
+}
