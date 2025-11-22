@@ -7,6 +7,7 @@
         
         <!-- Markdown to Razor Generator Configuration -->
         <MarkdownPattern>Content/**/*.md</MarkdownPattern>
+        <MarkdownGeneratorTimestampFile>$(IntermediateOutputPath)markdown-razor-generated.timestamp</MarkdownGeneratorTimestampFile>
     </PropertyGroup>
 
 
@@ -33,8 +34,17 @@
         <PackageReference Include="YamlDotNet" Version="16.3.0" />
     </ItemGroup>
 
-    <!-- Pre-build target to generate Razor files from Markdown -->
-    <Target Name="GenerateRazorFromMarkdown" BeforeTargets="CoreCompile">
+
+    <!-- Define markdown source files for incremental build tracking -->
+    <ItemGroup>
+        <MarkdownSourceFiles Include="$(MarkdownPattern)" />
+    </ItemGroup>
+
+    <!-- Pre-build target to generate Razor files from Markdown with incremental build support -->
+    <Target Name="GenerateRazorFromMarkdown" 
+            BeforeTargets="CoreCompile"
+            Inputs="@(MarkdownSourceFiles)"
+            Outputs="$(MarkdownGeneratorTimestampFile)">
         <Message Text="Generating .razor pages from markdown..." Importance="high" />
 
         <!-- Build the generator tool first -->
@@ -42,7 +52,11 @@
 
         <!-- Run the generator tool -->
         <Exec Command="dotnet run --no-build --project &quot;$(MSBuildThisFileDirectory)..\..\..\tools\MarkdownToRazorGenerator\MarkdownToRazorGenerator.csproj&quot; &quot;$(MSBuildProjectDirectory)&quot; --pattern &quot;$(MarkdownPattern)&quot;" WorkingDirectory="$(MSBuildProjectDirectory)" />
+
+        <!-- Create timestamp file to track last generation time -->
+        <Touch Files="$(MarkdownGeneratorTimestampFile)" AlwaysCreate="true" />
     </Target>
+
 
     <!-- Link generated .razor files as dependent on their .md source files -->
     <ItemGroup>
