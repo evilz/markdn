@@ -1,0 +1,12 @@
+<label for="@Purpose">
+  @Label
+  <input type="color" id="@Id" name="@Name" value="@Value" />
+</label>
+
+@code {
+    [Parameter] public string Purpose { get; set; } = "";
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public string Id { get; set; } = "";
+    [Parameter] public string Name { get; set; } = "";
+    [Parameter] public string Value { get; set; } = "";
+}

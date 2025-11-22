@@ -1,0 +1,16 @@
+<label for="@Purpose">@Label</label>
+<select id="@Id" name="@Name" required>
+  <option value="" selected>Select</option>
+  @foreach (var option in Options)
+  {
+      <option value="@option">@option</option>
+  }
+</select>
+
+@code {
+    [Parameter] public string Purpose { get; set; } = "";
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public string Id { get; set; } = "";
+    [Parameter] public string Name { get; set; } = "";
+    [Parameter] public IEnumerable<string> Options { get; set; } = Enumerable.Empty<string>();
+}

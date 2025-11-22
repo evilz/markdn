@@ -1,0 +1,76 @@
+@page "/tags"
+@page "/tags/{TagName}"
+@using Markdn.Pico.Models
+@using Markdn.Pico.Services
+@inject IPostsService PostsService
+
+<section class="container">
+    @if (string.IsNullOrEmpty(TagName))
+    {
+        <hgroup>
+            <h1>Tags</h1>
+            <p>All tags</p>
+        </hgroup>
+
+        <div class="grid">
+            @foreach (var tag in _allTags)
+            {
+                <article>
+                    <header>
+                        <h3><a href="/tags/@tag.Key">#@tag.Key</a></h3>
+                    </header>
+                    <p>@tag.Value posts</p>
+                </article>
+            }
+        </div>
+    }
+    else
+    {
+        <hgroup>
+            <h1>#@TagName</h1>
+            <p>Posts tagged with @TagName</p>
+        </hgroup>
+
+        <div class="grid">
+            @foreach (var post in _taggedPosts)
+            {
+                <article>
+                    <header>
+                        <small>@post.PubDate.ToString("MMMM dd, yyyy")</small>
+                    </header>
+                    <h3><a href="@post.Route">@post.Title</a></h3>
+                    <p>@post.Description</p>
+                </article>
+            }
+        </div>
+        
+        <p><a href="/tags">← All Tags</a></p>
+    }
+</section>
+
+@code {
+    [Parameter]
+    public string? TagName { get; set; }
+
+    private Dictionary<string, int> _allTags = new();
+    private List<Post> _taggedPosts = new();
+
+    protected override void OnParametersSet()
+    {
+        var allPosts = PostsService.GetAllPosts();
+
+        if (string.IsNullOrEmpty(TagName))
+        {
+            _allTags = allPosts
+                .SelectMany(p => p.Tags)
+                .GroupBy(t => t)
+                .ToDictionary(g => g.Key, g => g.Count());
+        }
+        else
+        {
+            _taggedPosts = allPosts
+                .Where(p => p.Tags.Contains(TagName, StringComparer.OrdinalIgnoreCase))
+                .ToList();
+        }
+    }
+}

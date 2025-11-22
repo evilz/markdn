@@ -362,7 +362,10 @@ content/
 
 # Generated Razor files from Markdown (build artifacts)
 # Generated files are placed next to their .md source files
-**/content/**/*.razor
+**/[Cc]ontent/**/*.razor
+
+# Markdown generator timestamp file
+markdown-razor-generated.timestamp
 
 # Logs
 logs/

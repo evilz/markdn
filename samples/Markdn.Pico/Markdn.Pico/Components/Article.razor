@@ -1,0 +1,16 @@
+<article id="@Id">
+  <Heading Title="@Title" H="2" Description="@Description" />
+  @if (!string.IsNullOrEmpty(Addition))
+  {
+      <footer>
+        <small>@Addition</small>
+      </footer>
+  }
+</article>
+
+@code {
+    [Parameter] public string Id { get; set; } = "";
+    [Parameter] public string Title { get; set; } = "";
+    [Parameter] public string Description { get; set; } = "";
+    [Parameter] public string Addition { get; set; } = "";
+}

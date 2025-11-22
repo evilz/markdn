@@ -1,0 +1,89 @@
+@page "/blog"
+@page "/blog/{Page:int}"
+@using Markdn.Pico.Models
+@using Markdn.Pico.Services
+@inject IPostsService PostsService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Blog - Markdn.Pico</PageTitle>
+
+<section class="container">
+    <hgroup>
+        <h1>Blog</h1>
+        <p>All posts</p>
+    </hgroup>
+
+    <div class="grid">
+        @foreach (var post in _posts)
+        {
+            <article>
+                <header>
+                    <small>@post.PubDate.ToString("MMMM dd, yyyy")</small>
+                </header>
+                <h3><a href="@post.Route">@post.Title</a></h3>
+                <p>@post.Description</p>
+                <footer>
+                    <small>
+                        @foreach (var tag in post.Tags)
+                        {
+                            <a href="/tags/@tag" class="secondary me-2">#@tag</a>
+                        }
+                    </small>
+                </footer>
+            </article>
+        }
+    </div>
+
+    <nav aria-label="Pagination">
+        <ul class="pagination">
+            @if (_currentPage > 1)
+            {
+                <li><a href="/blog/@(_currentPage - 1)">Previous</a></li>
+            }
+            else
+            {
+                <li><button disabled>Previous</button></li>
+            }
+
+            <li><small>Page @_currentPage of @_totalPages</small></li>
+
+            @if (_currentPage < _totalPages)
+            {
+                <li><a href="/blog/@(_currentPage + 1)">Next</a></li>
+            }
+            else
+            {
+                <li><button disabled>Next</button></li>
+            }
+        </ul>
+    </nav>
+</section>
+
+@code {
+    [Parameter]
+    public int Page { get; set; } = 1;
+
+    private const int PageSize = 5;
+    private List<Post> _posts = new();
+    private int _currentPage = 1;
+    private int _totalPages = 1;
+
+    protected override void OnParametersSet()
+    {
+        if (Page < 1) Page = 1;
+        _currentPage = Page;
+
+        var allPosts = PostsService.GetAllPosts();
+        _totalPages = (int)Math.Ceiling((double)allPosts.Count / PageSize);
+
+        if (_currentPage > _totalPages && _totalPages > 0)
+        {
+            _currentPage = _totalPages;
+        }
+
+        _posts = allPosts
+            .Skip((_currentPage - 1) * PageSize)
+            .Take(PageSize)
+            .ToList();
+    }
+}

@@ -1,0 +1,12 @@
+<label for="@Purpose">
+  <input type="checkbox" id="@Id" name="@Name" checked="@(Checked == "true")" />
+  @Label
+</label>
+
+@code {
+    [Parameter] public string Purpose { get; set; } = "";
+    [Parameter] public string Label { get; set; } = "";
+    [Parameter] public string Id { get; set; } = "";
+    [Parameter] public string Name { get; set; } = "";
+    [Parameter] public string Checked { get; set; } = "false";
+}
