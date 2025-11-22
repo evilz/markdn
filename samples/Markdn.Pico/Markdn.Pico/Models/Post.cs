@@ -1,3 +1,5 @@
+namespace Markdn.Pico.Models;
+
 public class Post
 {
     public string Slug { get; set; } = default!;

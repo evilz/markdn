@@ -1,0 +1,57 @@
+@page "/advanced-features"
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+
+<PageTitle>Advanced Markdn Features</PageTitle>
+
+<CascadingValue Value="@_pageMetadata">
+
+<h1 id="advanced-markdn-features">Advanced Markdn Features</h1>
+<p>Once you're comfortable with the basics, it's time to explore some of Markdn's more advanced features.</p>
+<h2 id="custom-blazor-components-in-markdown">Custom Blazor Components in Markdown</h2>
+<p>You can embed custom Blazor components directly in your Markdown:</p>
+<pre><code class="language-markdown">&lt;MyCustomComponent Parameter=&quot;value&quot; /&gt;
+</code></pre>
+<h2 id="dynamic-routing">Dynamic Routing</h2>
+<p>Markdn automatically generates routes for your content based on the file structure and frontmatter.</p>
+<h2 id="type-safe-frontmatter">Type-Safe Frontmatter</h2>
+<p>With Markdn's source generator, you get compile-time type safety for all your frontmatter properties:</p>
+<pre><code class="language-csharp">// This is type-safe!
+string title = post.Title;
+DateTime pubDate = post.PubDate;
+List&lt;string&gt; tags = post.Tags;
+</code></pre>
+<h2 id="query-and-filter">Query and Filter</h2>
+<p>Use LINQ to query your content collections:</p>
+<pre><code class="language-csharp">var recentPosts = contentService
+    .GetCollection()
+    .Where(p =&gt; p.PubDate &gt; DateTime.Now.AddMonths(-1))
+    .OrderByDescending(p =&gt; p.PubDate)
+    .Take(5);
+</code></pre>
+<h2 id="whats-next">What's Next?</h2>
+<p>Check out the documentation for more advanced use cases and best practices!</p>
+
+
+</CascadingValue>
+
+@code {
+    private class PageMetadata
+    {
+        public string? Title { get; set; }
+        public string? Slug { get; set; }
+        public string? Route { get; set; }
+        public string? Summary { get; set; }
+        public DateTime? Date { get; set; }
+        public List<string>? Tags { get; set; }
+        public Dictionary<string, object>? AdditionalData { get; set; }
+    }
+
+    private readonly PageMetadata _pageMetadata = new()
+    {
+        Title = "Advanced Markdn Features",
+        Route = "/advanced-features",
+        Tags = new List<string> { "advanced", "components", "routing" },
+    };
+
+}

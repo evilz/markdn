@@ -8,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddScoped<IPostsService, PostsService>();
+builder.Services.AddSingleton<IPostsService, PostsService>();
 
 var app = builder.Build();
 
@@ -46,10 +46,10 @@ app.MapGet("/rss.xml", async (IPostsService postsService, HttpContext context) =
     foreach (var post in posts)
     {
         rss.AppendLine("<item>");
-        rss.AppendLine($"<title>{post.Title}</title>");
-        rss.AppendLine($"<description>{post.Description}</description>");
-        rss.AppendLine($"<link>{context.Request.Scheme}://{context.Request.Host}{post.Route}</link>");
-        rss.AppendLine($"<guid>{context.Request.Scheme}://{context.Request.Host}{post.Route}</guid>");
+        rss.AppendLine($"<title>{System.Security.SecurityElement.Escape(post.Title)}</title>");
+        rss.AppendLine($"<description>{System.Security.SecurityElement.Escape(post.Description ?? string.Empty)}</description>");
+        rss.AppendLine($"<link>{context.Request.Scheme}://{context.Request.Host}{System.Security.SecurityElement.Escape(post.Route ?? string.Empty)}</link>");
+        rss.AppendLine($"<guid>{context.Request.Scheme}://{context.Request.Host}{System.Security.SecurityElement.Escape(post.Route ?? string.Empty)}</guid>");
         rss.AppendLine($"<pubDate>{post.PubDate:R}</pubDate>");
         rss.AppendLine("</item>");
     }
@@ -57,7 +57,7 @@ app.MapGet("/rss.xml", async (IPostsService postsService, HttpContext context) =
     rss.AppendLine("</channel>");
     rss.AppendLine("</rss>");
     
-    context.Response.ContentType = "application/xml";
+    context.Response.ContentType = "application/rss+xml";
     await context.Response.WriteAsync(rss.ToString());
 });
 
@@ -78,7 +78,7 @@ app.MapGet("/sitemap.xml", async (IPostsService postsService, HttpContext contex
     foreach (var post in posts)
     {
         sitemap.AppendLine("<url>");
-        sitemap.AppendLine($"<loc>{context.Request.Scheme}://{context.Request.Host}{post.Route}</loc>");
+        sitemap.AppendLine($"<loc>{context.Request.Scheme}://{context.Request.Host}{System.Security.SecurityElement.Escape(post.Route ?? string.Empty)}</loc>");
         sitemap.AppendLine($"<lastmod>{post.PubDate:yyyy-MM-dd}</lastmod>");
         sitemap.AppendLine("<changefreq>weekly</changefreq>");
         sitemap.AppendLine("<priority>0.8</priority>");

@@ -16,11 +16,14 @@ public interface IPostsService
 public class PostsService : IPostsService
 {
     private readonly IWebHostEnvironment _environment;
+    private readonly ILogger<PostsService> _logger;
     private List<Post>? _cachedPosts;
+    private readonly object _cacheLock = new object();
 
-    public PostsService(IWebHostEnvironment environment)
+    public PostsService(IWebHostEnvironment environment, ILogger<PostsService> logger)
     {
         _environment = environment;
+        _logger = logger;
     }
 
     public List<Post> GetAllPosts()
@@ -30,75 +33,92 @@ public class PostsService : IPostsService
             return _cachedPosts;
         }
 
-        var contentPath = Path.Combine(_environment.ContentRootPath, "Content", "Posts");
-        if (!Directory.Exists(contentPath))
+        lock (_cacheLock)
         {
-            return new List<Post>();
-        }
-
-        var posts = new List<Post>();
-        var pipeline = new MarkdownPipelineBuilder()
-            .UseYamlFrontMatter()
-            .Build();
-
-        var deserializer = new DeserializerBuilder()
-            .WithNamingConvention(CamelCaseNamingConvention.Instance)
-            .IgnoreUnmatchedProperties()
-            .Build();
-
-        foreach (var file in Directory.GetFiles(contentPath, "*.md", SearchOption.AllDirectories))
-        {
-            try
+            // Double-check pattern for thread safety
+            if (_cachedPosts != null)
             {
-                var markdown = File.ReadAllText(file);
-                var document = Markdown.Parse(markdown, pipeline);
-                var yamlBlock = document.Descendants<YamlFrontMatterBlock>().FirstOrDefault();
+                return _cachedPosts;
+            }
 
-                if (yamlBlock != null)
+            var contentPath = Path.Combine(_environment.ContentRootPath, "Content", "Posts");
+            if (!Directory.Exists(contentPath))
+            {
+                return new List<Post>();
+            }
+
+            var posts = new List<Post>();
+            var pipeline = new MarkdownPipelineBuilder()
+                .UseYamlFrontMatter()
+                .Build();
+
+            var deserializer = new DeserializerBuilder()
+                .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                .IgnoreUnmatchedProperties()
+                .Build();
+
+            foreach (var file in Directory.GetFiles(contentPath, "*.md", SearchOption.AllDirectories))
+            {
+                try
                 {
-                    var yaml = markdown.Substring(yamlBlock.Span.Start, yamlBlock.Span.Length);
-                    // Remove --- markers
-                    yaml = yaml.Replace("---", "").Trim();
-                    
-                    var post = deserializer.Deserialize<Post>(yaml);
-                    
-                    // Set slug from filename if not in yaml
-                    if (string.IsNullOrEmpty(post.Slug))
-                    {
-                        post.Slug = Path.GetFileNameWithoutExtension(file);
-                    }
+                    var markdown = File.ReadAllText(file);
+                    var document = Markdown.Parse(markdown, pipeline);
+                    var yamlBlock = document.Descendants<YamlFrontMatterBlock>().FirstOrDefault();
 
-                    // Set route if not present
-                    if (string.IsNullOrEmpty(post.Route))
+                    if (yamlBlock != null)
                     {
-                        var directory = Path.GetDirectoryName(file);
-                        var dirName = Path.GetFileName(directory)?.ToLowerInvariant();
+                        // Extract YAML content between the start and end of the block
+                        var yaml = markdown.AsSpan(yamlBlock.Span.Start, yamlBlock.Span.Length).ToString();
                         
-                        if (dirName == "pages")
+                        // Remove only the leading and trailing --- markers
+                        var lines = yaml.Split('\n', StringSplitOptions.None);
+                        if (lines.Length > 2 && lines[0].Trim() == "---")
                         {
-                            post.Route = $"/{post.Slug}";
+                            // Skip first and last lines if they are markers
+                            var yamlContent = string.Join('\n', lines.Skip(1).Take(lines.Length - 2));
+                            yaml = yamlContent.Trim();
                         }
-                        else if (dirName == "projects")
+                        
+                        var post = deserializer.Deserialize<Post>(yaml);
+                        
+                        // Set slug from filename if not in yaml
+                        if (string.IsNullOrEmpty(post.Slug))
                         {
-                            post.Route = $"/projects/{post.Slug}";
+                            post.Slug = Path.GetFileNameWithoutExtension(file);
                         }
-                        else
-                        {
-                            post.Route = $"/posts/{post.Slug}";
-                        }
-                    }
 
-                    posts.Add(post);
+                        // Set route if not present
+                        if (string.IsNullOrEmpty(post.Route))
+                        {
+                            var directory = Path.GetDirectoryName(file);
+                            var dirName = Path.GetFileName(directory)?.ToLowerInvariant();
+                            
+                            if (dirName == "pages")
+                            {
+                                post.Route = $"/{post.Slug}";
+                            }
+                            else if (dirName == "projects")
+                            {
+                                post.Route = $"/projects/{post.Slug}";
+                            }
+                            else
+                            {
+                                post.Route = $"/posts/{post.Slug}";
+                            }
+                        }
+
+                        posts.Add(post);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error parsing {File}", file);
                 }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error parsing {file}: {ex.Message}");
-            }
-        }
 
-        _cachedPosts = posts.OrderByDescending(p => p.PubDate).ToList();
-        return _cachedPosts;
+            _cachedPosts = posts.OrderByDescending(p => p.PubDate).ToList();
+            return _cachedPosts;
+        }
     }
 
     public Post? GetPostBySlug(string slug)
