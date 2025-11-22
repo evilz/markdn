@@ -1,0 +1,50 @@
+@page "/getting-started"
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+
+<PageTitle>Getting Started with Markdn</PageTitle>
+
+<CascadingValue Value="@_pageMetadata">
+
+<h1 id="getting-started-with-markdn">Getting Started with Markdn</h1>
+<p>Welcome to Markdn! This guide will help you understand the basics of using Markdn for your Blazor applications.</p>
+<h2 id="what-is-markdn">What is Markdn?</h2>
+<p>Markdn is a modern, type-safe content management system that lets you write content in Markdown and automatically generates Blazor components from it.</p>
+<h2 id="key-features">Key Features</h2>
+<ul>
+<li><strong>Type-Safe Content Collections</strong>: Define schemas for your content and get compile-time type safety</li>
+<li><strong>Markdown to Blazor</strong>: Automatically convert Markdown files to Blazor Razor components</li>
+<li><strong>Frontmatter Support</strong>: Use YAML frontmatter to add metadata to your content</li>
+<li><strong>Source Generation</strong>: Leverage C# source generators for optimal performance</li>
+</ul>
+<h2 id="getting-started">Getting Started</h2>
+<ol>
+<li>Create a collections.json file</li>
+<li>Add markdown files with frontmatter</li>
+<li>Use the generated content service</li>
+</ol>
+<p>That's it! You're now ready to use Markdn in your project.</p>
+
+
+</CascadingValue>
+
+@code {
+    private class PageMetadata
+    {
+        public string? Title { get; set; }
+        public string? Slug { get; set; }
+        public string? Route { get; set; }
+        public string? Summary { get; set; }
+        public DateTime? Date { get; set; }
+        public List<string>? Tags { get; set; }
+        public Dictionary<string, object>? AdditionalData { get; set; }
+    }
+
+    private readonly PageMetadata _pageMetadata = new()
+    {
+        Title = "Getting Started with Markdn",
+        Route = "/getting-started",
+        Tags = new List<string> { "tutorial", "getting-started", "blazor" },
+    };
+
+}

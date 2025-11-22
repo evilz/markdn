@@ -1,0 +1,42 @@
+@page "/product-1"
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+
+<PageTitle>Laptop Pro</PageTitle>
+
+<CascadingValue Value="@_pageMetadata">
+
+<h1 id="laptop-pro">Laptop Pro</h1>
+<p>High-performance laptop for developers and creators.</p>
+<h2 id="specifications">Specifications</h2>
+<ul>
+<li>16GB RAM</li>
+<li>512GB SSD</li>
+<li>Intel i7 Processor</li>
+<li>1.5kg weight</li>
+<li>Silver color</li>
+</ul>
+
+
+</CascadingValue>
+
+@code {
+    private class PageMetadata
+    {
+        public string? Title { get; set; }
+        public string? Slug { get; set; }
+        public string? Route { get; set; }
+        public string? Summary { get; set; }
+        public DateTime? Date { get; set; }
+        public List<string>? Tags { get; set; }
+        public Dictionary<string, object>? AdditionalData { get; set; }
+    }
+
+    private readonly PageMetadata _pageMetadata = new()
+    {
+        Title = "Laptop Pro",
+        Slug = "product-1",
+        Route = "/product-1",
+    };
+
+}
