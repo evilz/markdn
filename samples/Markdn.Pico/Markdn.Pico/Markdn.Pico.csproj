@@ -7,6 +7,7 @@
         
         <!-- Markdown to Razor Generator Configuration -->
         <MarkdownPattern>Content/**/*.md</MarkdownPattern>
+        <MarkdownGeneratorTimestampFile>$(IntermediateOutputPath)markdown-razor-generated.timestamp</MarkdownGeneratorTimestampFile>
     </PropertyGroup>
 
 
@@ -43,7 +44,7 @@
     <Target Name="GenerateRazorFromMarkdown" 
             BeforeTargets="CoreCompile"
             Inputs="@(MarkdownSourceFiles)"
-            Outputs="$(IntermediateOutputPath)markdown-razor-generated.timestamp">
+            Outputs="$(MarkdownGeneratorTimestampFile)">
         <Message Text="Generating .razor pages from markdown..." Importance="high" />
 
         <!-- Build the generator tool first -->
@@ -53,7 +54,7 @@
         <Exec Command="dotnet run --no-build --project &quot;$(MSBuildThisFileDirectory)..\..\..\tools\MarkdownToRazorGenerator\MarkdownToRazorGenerator.csproj&quot; &quot;$(MSBuildProjectDirectory)&quot; --pattern &quot;$(MarkdownPattern)&quot;" WorkingDirectory="$(MSBuildProjectDirectory)" />
 
         <!-- Create timestamp file to track last generation time -->
-        <Touch Files="$(IntermediateOutputPath)markdown-razor-generated.timestamp" AlwaysCreate="true" />
+        <Touch Files="$(MarkdownGeneratorTimestampFile)" AlwaysCreate="true" />
     </Target>
 
 
