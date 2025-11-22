@@ -364,6 +364,9 @@ content/
 # Generated files are placed next to their .md source files
 **/[Cc]ontent/**/*.razor
 
+# Markdown generator timestamp file
+markdown-razor-generated.timestamp
+
 # Logs
 logs/
 *.log
