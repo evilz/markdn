@@ -15,6 +15,7 @@ public interface IPostsService
 
 public class PostsService : IPostsService
 {
+    private static readonly List<Post> EmptyPostsList = new();
     private readonly IWebHostEnvironment _environment;
     private readonly ILogger<PostsService> _logger;
     private List<Post>? _cachedPosts;
@@ -44,7 +45,7 @@ public class PostsService : IPostsService
             var contentPath = Path.Combine(_environment.ContentRootPath, "Content", "Posts");
             if (!Directory.Exists(contentPath))
             {
-                return new List<Post>();
+                return EmptyPostsList;
             }
 
             var posts = new List<Post>();
@@ -68,14 +69,14 @@ public class PostsService : IPostsService
                     if (yamlBlock != null)
                     {
                         // Extract YAML content between the start and end of the block
-                        var yaml = markdown.AsSpan(yamlBlock.Span.Start, yamlBlock.Span.Length).ToString();
+                        var yaml = markdown.Substring(yamlBlock.Span.Start, yamlBlock.Span.Length);
                         
                         // Remove only the leading and trailing --- markers
                         var lines = yaml.Split('\n', StringSplitOptions.None);
-                        if (lines.Length > 2 && lines[0].Trim() == "---")
+                        if (lines.Length > 2 && lines[0].Trim() == "---" && lines[^1].Trim() == "---")
                         {
                             // Skip first and last lines if they are markers
-                            var yamlContent = string.Join('\n', lines.Skip(1).Take(lines.Length - 2));
+                            var yamlContent = string.Join('\n', lines[1..^1]);
                             yaml = yamlContent.Trim();
                         }
                         

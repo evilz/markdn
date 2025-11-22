@@ -45,11 +45,12 @@ app.MapGet("/rss.xml", async (IPostsService postsService, HttpContext context) =
     
     foreach (var post in posts)
     {
+        var escapedRoute = Uri.EscapeDataString(post.Route ?? string.Empty);
         rss.AppendLine("<item>");
         rss.AppendLine($"<title>{System.Security.SecurityElement.Escape(post.Title)}</title>");
         rss.AppendLine($"<description>{System.Security.SecurityElement.Escape(post.Description ?? string.Empty)}</description>");
-        rss.AppendLine($"<link>{context.Request.Scheme}://{context.Request.Host}{System.Security.SecurityElement.Escape(post.Route ?? string.Empty)}</link>");
-        rss.AppendLine($"<guid>{context.Request.Scheme}://{context.Request.Host}{System.Security.SecurityElement.Escape(post.Route ?? string.Empty)}</guid>");
+        rss.AppendLine($"<link>{context.Request.Scheme}://{context.Request.Host}{escapedRoute}</link>");
+        rss.AppendLine($"<guid>{context.Request.Scheme}://{context.Request.Host}{escapedRoute}</guid>");
         rss.AppendLine($"<pubDate>{post.PubDate:R}</pubDate>");
         rss.AppendLine("</item>");
     }
@@ -77,8 +78,9 @@ app.MapGet("/sitemap.xml", async (IPostsService postsService, HttpContext contex
     
     foreach (var post in posts)
     {
+        var escapedRoute = Uri.EscapeDataString(post.Route ?? string.Empty);
         sitemap.AppendLine("<url>");
-        sitemap.AppendLine($"<loc>{context.Request.Scheme}://{context.Request.Host}{System.Security.SecurityElement.Escape(post.Route ?? string.Empty)}</loc>");
+        sitemap.AppendLine($"<loc>{context.Request.Scheme}://{context.Request.Host}{escapedRoute}</loc>");
         sitemap.AppendLine($"<lastmod>{post.PubDate:yyyy-MM-dd}</lastmod>");
         sitemap.AppendLine("<changefreq>weekly</changefreq>");
         sitemap.AppendLine("<priority>0.8</priority>");
