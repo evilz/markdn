@@ -69,7 +69,7 @@ public class PostsService : IPostsService
                     if (yamlBlock != null)
                     {
                         // Extract YAML content between the start and end of the block
-                        var yaml = markdown.Substring(yamlBlock.Span.Start, yamlBlock.Span.Length);
+                        var yaml = markdown[yamlBlock.Span.Start..(yamlBlock.Span.Start + yamlBlock.Span.Length)];
                         
                         // Remove only the leading and trailing --- markers
                         var lines = yaml.Split('\n', StringSplitOptions.None);
