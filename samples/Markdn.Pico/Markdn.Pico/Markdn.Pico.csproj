@@ -36,7 +36,7 @@
 
     <!-- Define markdown source files for incremental build tracking -->
     <ItemGroup>
-        <MarkdownSourceFiles Include="Content\**\*.md" />
+        <MarkdownSourceFiles Include="$(MarkdownPattern)" />
     </ItemGroup>
 
     <!-- Pre-build target to generate Razor files from Markdown with incremental build support -->
