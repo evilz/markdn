@@ -7,44 +7,44 @@
 <p>Find the perfect accommodation for your stay.</p>
 
 <div class="search-form">
-    <EditForm Model="@searchModel" OnValidSubmit="@HandleSearch" FormName="HotelSearchForm">
+    <EditForm Model="@SearchModel" OnValidSubmit="@HandleSearch" FormName="HotelSearchForm">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
         <div class="mb-3">
             <label for="place" class="form-label">Location/Place:</label>
-            <InputText id="place" @bind-Value="searchModel.Place" class="form-control" placeholder="Enter city or region" />
+            <InputText id="place" @bind-Value="SearchModel.Place" class="form-control" placeholder="Enter city or region" />
         </div>
 
         <div class="row">
             <div class="col-md-6 mb-3">
                 <label for="checkIn" class="form-label">Check-in Date:</label>
-                <InputDate id="checkIn" @bind-Value="searchModel.CheckInDate" class="form-control" />
+                <InputDate id="checkIn" @bind-Value="SearchModel.CheckInDate" class="form-control" />
             </div>
             <div class="col-md-6 mb-3">
                 <label for="checkOut" class="form-label">Check-out Date:</label>
-                <InputDate id="checkOut" @bind-Value="searchModel.CheckOutDate" class="form-control" />
+                <InputDate id="checkOut" @bind-Value="SearchModel.CheckOutDate" class="form-control" />
             </div>
         </div>
 
         <div class="mb-3">
             <label for="beds" class="form-label">Number of Beds:</label>
-            <InputNumber id="beds" @bind-Value="searchModel.NumberOfBeds" class="form-control" min="1" />
+            <InputNumber id="beds" @bind-Value="SearchModel.NumberOfBeds" class="form-control" min="1" />
         </div>
 
         <div class="mb-3">
             <label for="guests" class="form-label">Number of Guests:</label>
-            <InputNumber id="guests" @bind-Value="searchModel.NumberOfGuests" class="form-control" min="1" />
+            <InputNumber id="guests" @bind-Value="SearchModel.NumberOfGuests" class="form-control" min="1" />
         </div>
 
         <div class="mb-3">
             <label class="form-label">Accommodation Type:</label>
             <div class="form-check">
-                <InputCheckbox id="hotelCheck" @bind-Value="searchModel.IncludeHotels" class="form-check-input" />
+                <InputCheckbox id="hotelCheck" @bind-Value="SearchModel.IncludeHotels" class="form-check-input" />
                 <label class="form-check-label" for="hotelCheck">Hotels</label>
             </div>
             <div class="form-check">
-                <InputCheckbox id="bnbCheck" @bind-Value="searchModel.IncludeBnB" class="form-check-input" />
+                <InputCheckbox id="bnbCheck" @bind-Value="SearchModel.IncludeBnB" class="form-check-input" />
                 <label class="form-check-label" for="bnbCheck">B&Bs (Bed & Breakfast)</label>
             </div>
         </div>
@@ -94,7 +94,7 @@
 
 @code {
     [SupplyParameterFromForm]
-    private HotelSearchModel searchModel { get; set; } = new();
+    private HotelSearchModel SearchModel { get; set; } = new();
     private bool searchPerformed = false;
     private List<AccommodationResult> searchResults = new();
 
@@ -108,7 +108,7 @@
 
     private void ClearSearch()
     {
-        searchModel = new();
+        SearchModel = new();
         searchPerformed = false;
         searchResults.Clear();
     }
@@ -118,7 +118,7 @@
         // Generate mock results based on search criteria
         var results = new List<AccommodationResult>();
         
-        if (string.IsNullOrWhiteSpace(searchModel.Place))
+        if (string.IsNullOrWhiteSpace(SearchModel.Place))
         {
             return results;
         }
@@ -128,9 +128,9 @@
         {
             new AccommodationResult
             {
-                Name = "Grand Hotel " + searchModel.Place,
+                Name = "Grand Hotel " + SearchModel.Place,
                 Type = "Hotel",
-                Location = searchModel.Place,
+                Location = SearchModel.Place,
                 Beds = 2,
                 Price = "$150"
             },
@@ -138,7 +138,7 @@
             {
                 Name = "Cozy B&B",
                 Type = "Bed & Breakfast",
-                Location = searchModel.Place,
+                Location = SearchModel.Place,
                 Beds = 1,
                 Price = "$85"
             },
@@ -146,30 +146,36 @@
             {
                 Name = "Luxury Suites",
                 Type = "Hotel",
-                Location = searchModel.Place,
+                Location = SearchModel.Place,
                 Beds = 3,
                 Price = "$220"
             }
         };
 
         // Filter based on accommodation type
-        if (searchModel.IncludeHotels && !searchModel.IncludeBnB)
+        if (!SearchModel.IncludeHotels && !SearchModel.IncludeBnB)
+        {
+            // If neither is selected, return empty results
+            return results;
+        }
+        else if (SearchModel.IncludeHotels && !SearchModel.IncludeBnB)
         {
             results = mockData.Where(m => m.Type == "Hotel").ToList();
         }
-        else if (!searchModel.IncludeHotels && searchModel.IncludeBnB)
+        else if (!SearchModel.IncludeHotels && SearchModel.IncludeBnB)
         {
             results = mockData.Where(m => m.Type == "Bed & Breakfast").ToList();
         }
-        else if (searchModel.IncludeHotels || searchModel.IncludeBnB)
+        else
         {
+            // Both selected, show all
             results = mockData;
         }
 
         // Filter by number of beds
-        if (searchModel.NumberOfBeds > 0)
+        if (SearchModel.NumberOfBeds > 0)
         {
-            results = results.Where(r => r.Beds >= searchModel.NumberOfBeds).ToList();
+            results = results.Where(r => r.Beds >= SearchModel.NumberOfBeds).ToList();
         }
 
         return results;
