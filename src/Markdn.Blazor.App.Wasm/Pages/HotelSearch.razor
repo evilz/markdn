@@ -1,0 +1,197 @@
+@page "/hotel-search"
+
+<PageTitle>Hotel & B&B Search</PageTitle>
+
+<h1>Search for Hotels & B&Bs</h1>
+
+<p>Find the perfect accommodation for your stay.</p>
+
+<div class="search-form">
+    <EditForm Model="@searchModel" OnValidSubmit="@HandleSearch" FormName="HotelSearchForm">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="mb-3">
+            <label for="place" class="form-label">Location/Place:</label>
+            <InputText id="place" @bind-Value="searchModel.Place" class="form-control" placeholder="Enter city or region" />
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="checkIn" class="form-label">Check-in Date:</label>
+                <InputDate id="checkIn" @bind-Value="searchModel.CheckInDate" class="form-control" />
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="checkOut" class="form-label">Check-out Date:</label>
+                <InputDate id="checkOut" @bind-Value="searchModel.CheckOutDate" class="form-control" />
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="beds" class="form-label">Number of Beds:</label>
+            <InputNumber id="beds" @bind-Value="searchModel.NumberOfBeds" class="form-control" min="1" />
+        </div>
+
+        <div class="mb-3">
+            <label for="guests" class="form-label">Number of Guests:</label>
+            <InputNumber id="guests" @bind-Value="searchModel.NumberOfGuests" class="form-control" min="1" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Accommodation Type:</label>
+            <div class="form-check">
+                <InputCheckbox id="hotelCheck" @bind-Value="searchModel.IncludeHotels" class="form-check-input" />
+                <label class="form-check-label" for="hotelCheck">Hotels</label>
+            </div>
+            <div class="form-check">
+                <InputCheckbox id="bnbCheck" @bind-Value="searchModel.IncludeBnB" class="form-check-input" />
+                <label class="form-check-label" for="bnbCheck">B&Bs (Bed & Breakfast)</label>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Search</button>
+        <button type="button" class="btn btn-secondary ms-2" @onclick="ClearSearch">Clear</button>
+    </EditForm>
+</div>
+
+@if (searchPerformed)
+{
+    <div class="mt-4">
+        <h2>Search Results</h2>
+        @if (searchResults.Count > 0)
+        {
+            <div class="alert alert-info">
+                Found @searchResults.Count results for your search.
+            </div>
+            <div class="row">
+                @foreach (var result in searchResults)
+                {
+                    <div class="col-md-6 col-lg-4 mb-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title">@result.Name</h5>
+                                <p class="card-text">
+                                    <strong>Type:</strong> @result.Type<br />
+                                    <strong>Location:</strong> @result.Location<br />
+                                    <strong>Beds:</strong> @result.Beds<br />
+                                    <strong>Price:</strong> @result.Price per night
+                                </p>
+                                <button class="btn btn-sm btn-primary">View Details</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning">
+                No accommodations found matching your criteria. Please try different search parameters.
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [SupplyParameterFromForm]
+    private HotelSearchModel searchModel { get; set; } = new();
+    private bool searchPerformed = false;
+    private List<AccommodationResult> searchResults = new();
+
+    private void HandleSearch()
+    {
+        searchPerformed = true;
+        
+        // Simulate search results
+        searchResults = GenerateMockResults();
+    }
+
+    private void ClearSearch()
+    {
+        searchModel = new();
+        searchPerformed = false;
+        searchResults.Clear();
+    }
+
+    private List<AccommodationResult> GenerateMockResults()
+    {
+        // Generate mock results based on search criteria
+        var results = new List<AccommodationResult>();
+        
+        if (string.IsNullOrWhiteSpace(searchModel.Place))
+        {
+            return results;
+        }
+
+        // Sample mock data
+        var mockData = new List<AccommodationResult>
+        {
+            new AccommodationResult
+            {
+                Name = "Grand Hotel " + searchModel.Place,
+                Type = "Hotel",
+                Location = searchModel.Place,
+                Beds = 2,
+                Price = "$150"
+            },
+            new AccommodationResult
+            {
+                Name = "Cozy B&B",
+                Type = "Bed & Breakfast",
+                Location = searchModel.Place,
+                Beds = 1,
+                Price = "$85"
+            },
+            new AccommodationResult
+            {
+                Name = "Luxury Suites",
+                Type = "Hotel",
+                Location = searchModel.Place,
+                Beds = 3,
+                Price = "$220"
+            }
+        };
+
+        // Filter based on accommodation type
+        if (searchModel.IncludeHotels && !searchModel.IncludeBnB)
+        {
+            results = mockData.Where(m => m.Type == "Hotel").ToList();
+        }
+        else if (!searchModel.IncludeHotels && searchModel.IncludeBnB)
+        {
+            results = mockData.Where(m => m.Type == "Bed & Breakfast").ToList();
+        }
+        else if (searchModel.IncludeHotels || searchModel.IncludeBnB)
+        {
+            results = mockData;
+        }
+
+        // Filter by number of beds
+        if (searchModel.NumberOfBeds > 0)
+        {
+            results = results.Where(r => r.Beds >= searchModel.NumberOfBeds).ToList();
+        }
+
+        return results;
+    }
+
+    public class HotelSearchModel
+    {
+        public string Place { get; set; } = string.Empty;
+        public DateTime? CheckInDate { get; set; } = DateTime.Today;
+        public DateTime? CheckOutDate { get; set; } = DateTime.Today.AddDays(1);
+        public int NumberOfBeds { get; set; } = 1;
+        public int NumberOfGuests { get; set; } = 2;
+        public bool IncludeHotels { get; set; } = true;
+        public bool IncludeBnB { get; set; } = true;
+    }
+
+    public class AccommodationResult
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+        public string Location { get; set; } = string.Empty;
+        public int Beds { get; set; }
+        public string Price { get; set; } = string.Empty;
+    }
+}
