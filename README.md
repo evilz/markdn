@@ -2,6 +2,17 @@
 
 A lightweight, file-based headless CMS for serving content via REST API and source-generated collections. Built with ASP.NET Core 8.0 for high performance and simplicity.
 
+## Packages
+
+Install the source generator as a development-only analyzer:
+
+```xml
+<PackageReference Include="Markdn.SourceGenerators" Version="0.1.0"
+                  OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+```
+
+Install the Markdown-to-Razor command-line tool with `dotnet tool install --global Markdn.Tool`.
+
 ## Features
 
 - 📝 **Multi-Format Support**: Store content as Markdown (`.md`), YAML (`.yaml`, `.yml`), TOML (`.toml`), or JSON (`.json`) files

@@ -10,6 +10,17 @@
     <!-- Source Generator Metadata -->
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <IsPackable>true</IsPackable>
+    <PackageId>Markdn.SourceGenerators</PackageId>
+    <Version>0.1.0</Version>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/evilz/markdn</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);AddAnalyzerFilesToPackage</TargetsForTfmSpecificContentInPackage>
     
     <!-- Documentation -->
     <Title>Markdn Source Generators</Title>
@@ -25,5 +36,20 @@
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="README.md" />
+  </ItemGroup>
+
+  <Target Name="AddAnalyzerFilesToPackage"
+          DependsOnTargets="BuildOnlySettings;ResolveReferences"
+          Returns="@(TfmSpecificPackageFile)">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(TargetPath)" PackagePath="analyzers/dotnet/cs" />
+      <TfmSpecificPackageFile Include="@(ReferenceCopyLocalPaths)"
+                              PackagePath="analyzers/dotnet/cs"
+                              Condition="!$([System.String]::Copy('%(Filename)').StartsWith('Microsoft.CodeAnalysis'))" />
+    </ItemGroup>
+  </Target>
 
 </Project>
