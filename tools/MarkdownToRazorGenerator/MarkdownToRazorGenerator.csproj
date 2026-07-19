@@ -5,12 +5,27 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>markdn</ToolCommandName>
+    <PackageId>Markdn.Tool</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Markdn</Authors>
+    <Description>Convert Markdown content into generated Razor components.</Description>
+    <PackageTags>markdown;razor;blazor;dotnet-tool</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/evilz/markdn</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Markdig" Version="0.37.0" />
     <PackageReference Include="YamlDotNet" Version="16.2.0" />
     <PackageReference Include="Microsoft.Extensions.FileSystemGlobbing" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="README.md" />
   </ItemGroup>
 
 </Project>

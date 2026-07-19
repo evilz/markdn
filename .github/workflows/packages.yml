@@ -1,0 +1,33 @@
+name: NuGet packages
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Pack source generator and CLI
+        run: |
+          dotnet pack src/Markdn.SourceGenerators/Markdn.SourceGenerators.csproj -c Release -o artifacts
+          dotnet pack tools/MarkdownToRazorGenerator/MarkdownToRazorGenerator.csproj -c Release -o artifacts
+      - name: Verify package contents
+        run: |
+          unzip -l artifacts/Markdn.SourceGenerators.*.nupkg | tee generator-package.txt
+          grep -q 'analyzers/dotnet/cs/Markdn.SourceGenerators.dll' generator-package.txt
+          unzip -l artifacts/Markdn.Tool.*.nupkg | tee tool-package.txt
+          grep -q 'tools/net8.0/any/MarkdownToRazorGenerator.dll' tool-package.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages
+          path: artifacts/*.nupkg
