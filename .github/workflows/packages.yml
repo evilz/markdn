@@ -27,6 +27,9 @@ jobs:
           grep -q 'analyzers/dotnet/cs/Markdn.SourceGenerators.dll' generator-package.txt
           unzip -l artifacts/Markdn.Tool.*.nupkg | tee tool-package.txt
           grep -q 'tools/net8.0/any/MarkdownToRazorGenerator.dll' tool-package.txt
+      - name: Test packages as a consumer
+        shell: bash
+        run: bash scripts/test-packages.sh "$GITHUB_WORKSPACE/artifacts" "$RUNNER_TEMP/markdn-package-smoke"
       - uses: actions/upload-artifact@v4
         with:
           name: nuget-packages

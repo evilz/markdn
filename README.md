@@ -8,7 +8,7 @@ Install the source generator as a development-only analyzer:
 
 ```xml
 <PackageReference Include="Markdn.SourceGenerators" Version="0.1.0"
-                  OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+                  OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
 ```
 
 Install the Markdown-to-Razor command-line tool with `dotnet tool install --global Markdn.Tool`.
